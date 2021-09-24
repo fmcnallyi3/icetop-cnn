@@ -298,7 +298,7 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         out_array /= maxValues
 
     if reco != None:
-        th, _ = y['{}_dir'.format(reco)].transpose()
+        th, _ = y['{}dir'.format(reco)].transpose()
         thetaCut = ~np.isnan(th)
         out_array = out_array[thetaCut]
         th = np.pi - th[thetaCut]
