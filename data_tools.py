@@ -298,13 +298,15 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         out_array /= maxValues
 
     if reco != None:
-        th, _ = y['{}dir'.format(reco)].transpose()
+        th, _ = y['{}dir'.format(reco)].transpose().astype('float64')
         thetaCut = ~np.isnan(th)
+        thetaCut = np.logical_and(thetaCut,th>(np.pi/2))
         out_array = out_array[thetaCut]
         th = np.pi - th[thetaCut]
-        th /= th.max()
         if cosz:
             th = np.cos(th)
+        else:
+            th /= th.max()
         out_array = [out_array, th]
 
     return out_array
