@@ -300,7 +300,7 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
     if reco != None:
         th, _ = y['{}dir'.format(reco)].transpose().astype('float64')
         thetaCut = ~np.isnan(th)
-        thetaCut = np.logical_and(thetaCut,th>(np.pi/2))
+        thetaCut = np.logical_and(thetaCut,th>np.pi/2.0)
         out_array = out_array[thetaCut]
         th = np.pi - th[thetaCut]
         if cosz:
