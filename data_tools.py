@@ -310,10 +310,11 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         nanCut = ~np.isnan(th)
         th = th[nanCut]
         out_array = out_array[nanCut]
-        out_array = [out_array, th]
-        for key in y.keys():
-            y[key] = y[key][nanCut]
-        
+        y_i = y
+        for keys in y_i.keys():
+            y_i[keys] = y_i[keys][nanCut]
+        out_array = [out_array, th,y_i]
+
     return out_array
 
 
