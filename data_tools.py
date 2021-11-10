@@ -53,7 +53,7 @@ def qualityCut(x, y, qmax=6, edgeCut=True, reco='plane', zmax=40,
         r = '{}_dir'.format(reco)
         if reco == None:
             r = 'plane_dir'
-        zenith, _ = np.transpose(y[r])
+        zenith, _ = np.transpose(y[r]).astype('float')
         zenith = np.pi - zenith
         cut *= zenith <= zmax * np.pi/180
         out['Events after zenith cut'] = cut.sum()
@@ -214,6 +214,7 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
  - Can normalize charge, time, or both
 """
 def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
+             #recocut=False):
 
     qtDict = {'q':q, 't':t}
     new_dim = 4
@@ -297,19 +298,22 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         # Normalize
         out_array /= maxValues
 
+    # Keep NaN's in with reconstruction so we can tell which events to ignore
     if reco != None:
-        th, _ = y['{}dir'.format(reco)].transpose().astype(float)
-        thetaCut = ~np.isnan(th)
-        thetaCut = np.logical_and(thetaCut,th>np.pi/2.0)
-        out_array = out_array[thetaCut]
-        th = th.reshape(-1,1)
-        th = np.pi - th[thetaCut]
+        th, _ = y['{}_dir'.format(reco)].transpose()
+        th = th.astype('float')
+        th = np.pi - th
         if cosz:
             th = np.cos(th)
-        else:
-            th /= th.max()
+        if normed and not cosz:
+            th /= np.nanmax(th)
+        nanCut = ~np.isnan(th)
+        th = th[nanCut]
+        out_array = out_array[nanCut]
         out_array = [out_array, th]
-
+        for key in y.keys():
+            y[key] = y[key][nanCut]
+        
     return out_array
 
 
