@@ -1,8 +1,12 @@
+#!/usr/bin/env python
+
 from glob import glob
 import numpy as np
 from collections import defaultdict
 import sys
 import ast
+
+
 # Modified logarithm convenient for dealing with zeros and maintaining sign
 def modLog(n):
     return np.sign(n) * np.log10(np.abs(n) + 1)
@@ -146,13 +150,13 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
     if mode not in ['assessment', 'train', None]:
         print('Invalid mode choice')
         raise
-        
+
     xfiles = sorted(glob('%s/x_*.npy' % filePath))
     yfiles = sorted(glob('%s/y_*.npy' % filePath))
 
     compDict = {'p':'12360','h':'12630','o':'12631','f':'12362'}
     simList = [compDict[c] for c in comp]
-        
+
     xfiles = [f for f in xfiles if any([sim in f for sim in simList])]
     yfiles = [f for f in yfiles if any([sim in f for sim in simList])]
     #xfiles = [f for f in xfiles if '12630' not in f and '12631' not in f]
@@ -212,24 +216,24 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
 def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
 
     qtDict = {'q':q, 't':t}
-    new_dim = 4# this lets you choose which data of the 4 layers to get
+    new_dim = 4
     for k, mergeType in qtDict.items():
         # False = remove the layer
         if mergeType == False:
-            new_dim -= 2 
+            new_dim -= 2
         # None indicates do nothing to the layers, everything else merges
         elif mergeType != None:
             new_dim -= 1
 
     out_shape = (x.shape[0], x.shape[1], x.shape[2], new_dim)
-    out_array = np.zeros(out_shape)#the shape of our data array
+    out_array = np.zeros(out_shape)
 
     ## Suggestions for alternate methods of merging layers
     ## - use charge associated with earliest arrival time 
     ## - use time associated with maximum charge
 
     # Setup for merging tanks to stations in common ways
-    for k, mergeType in qtDict.items(): 
+    for k, mergeType in qtDict.items():
 
         if mergeType == False:
             continue
@@ -294,19 +298,17 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         out_array /= maxValues
 
     if reco != None:
-        th, _ = y['{}_dir'.format(reco)].transpose().astype(float)
+        th, _ = y['{}_dir'.format(reco)].transpose()
         thetaCut = ~np.isnan(th)
-        #thetaCut = np.logical_and(thetaCut, th>np.pi/2)
         out_array = out_array[thetaCut]
         th = np.pi - th[thetaCut]
-        
+        th /= th.max()
         if cosz:
             th = np.cos(th)
-        if normed and not cosz:
-            th /= th.max()
         out_array = [out_array, th]
 
     return out_array
+
 
 def load_mc(filePath):
 
@@ -333,6 +335,7 @@ def nameModel(prep, prefix=''):
     for key, value in prep.items():
         outstr = '{}_{}.{}'.format(outstr, key, value)
     return outstr
+
 
 def name2prep(name):
     prep = {}
