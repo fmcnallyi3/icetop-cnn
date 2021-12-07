@@ -298,14 +298,21 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         out_array /= maxValues
 
     if reco != None:
+            
         th, _ = y['{}_dir'.format(reco)].transpose()
-        thetaCut = ~np.isnan(th)
-        out_array = out_array[thetaCut]
-        th = np.pi - th[thetaCut]
-        th /= th.max()
+        th = th.astype('float')
+        th = np.pi - th
         if cosz:
             th = np.cos(th)
-        out_array = [out_array, th]
+        if normed and not cosz:
+            th /= np.nanmax(th)
+        nanCut = ~np.isnan(th)
+        th = th[nanCut]
+        out_array = out_array[nanCut]
+        y_i = y
+        for keys in y_i.keys():
+            y_i[keys] = y_i[keys][nanCut]
+        out_array = [out_array, th,y_i]
 
     return out_array
 
@@ -345,3 +352,11 @@ def name2prep(name):
         except ValueError:
             prep[key] = value
     return prep
+
+
+
+
+
+
+
+
