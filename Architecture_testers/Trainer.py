@@ -34,19 +34,56 @@ class Trainer:
     
     #save everything function (private)
     
-        #to csv
+        def __save():
             #save csv, DO NOT SAVE DATA PREP DIRECTLY, reconstuct from index
-            #save model location
-            #save epock
+            #save model location???
+            #save epoch
             #save iteration index
+            
+            #create row for saved information
+            best_loss=history.history(['loss'][-1])
+            num_epoch=len(history.history(['loss']))
+            new_row=[best_loss, num_epoch]
+            
+            #save said information
+            with open('DataResults/results%.csv' %it, 'a') as f_object:
+                csv_writer=writer(f_object)
+                csv_writer.writerow(new_row)
+                f_object.close()
+            
+            
         #save model
+        
+        def fileName():
+            #call this at the start of training set to determine where to save the file
+            #naming convention
+            it=1 #should this be universal?
+            while(os.path.isfile('DataResults/results%.csv' %it):
+                  it+=1
+            
+            
     
     #reconstruct data_prep from index(private)
+        def __fetch_dataprep():
+              #retrieves the index
     #######################################################################
     
     #analysis methods
     
     #get_lowest_loss 
+         def get_lowest_loss(r=None):
+              #retrieves the lowest or a range of the lowest loss
+              if r=None:
+                  return min(history.history(['loss']))
+                  #get the lowest loss value in the list
+              elif r>0:
+                  return np.partition(history.history['loss'],r)
+                  #get a list of length r of the lowest loss values
+              else:
+                  return 
+                  #ask the use to enter a valid number 
+                  
+    #get_num_epochs
     
     #get_lowest_loss (with respect to number of epochs) (i.e loss vs epoch)
     
