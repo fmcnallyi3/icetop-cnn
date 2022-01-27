@@ -307,13 +307,7 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
             th = np.cos(th)
         if normed and not cosz:
             th /= np.nanmax(th)
-        nanCut = ~np.isnan(th)
-        th = th[nanCut]
-        out_array = out_array[nanCut]
-        y_i = y
-        for keys in y_i.keys():
-            y_i[keys] = y_i[keys][nanCut]
-        out_array = [out_array, th,y_i]
+        out_array = [out_array, th]
 
     return out_array
 
@@ -353,7 +347,6 @@ def name2prep(name):
         except ValueError:
             prep[key] = value
     return prep
-
 
 
 
