@@ -3,6 +3,7 @@
 import keras
 import numpy as np
 from keras import layers, models
+from data_tools import load_preprocessed, dataPrep
 class Backup:
     
     
@@ -19,6 +20,10 @@ class Backup:
         self.name=None
         self.data_prep = None #if the user is in specific mode
         self.specific = False #true when the user wants to test a a single model-data_prep combo
+        self.x = None
+        self.y = None
+        self.energy = None
+        self.history = {}
 
         if name != None:
             self.name = name
@@ -33,6 +38,12 @@ class Backup:
             self.model = None #FIX WITH DEFAULT BUILDER
             self.generate_data_prep() 
             self.specific = False
+
+        #prepare to get the data, customize to your simFiles path
+        simPrefix = '/Users/kmays/simFiles'
+        self.x, self.y = load_preprocessed(simPrefix, 'train')
+        self.energy = self.y['energy']
+        
         
 
     
@@ -99,19 +110,20 @@ class Backup:
                                                                       'normed': norm, 'reco': rec,'cosz' : cosz }
                             i = i + 1
     
+
     
-    #define_model(tuned_model) (public)
+    #define_model and data prep to train on
     def define_model(self, data_prep, model = None): #MODIFY MODEL HERE
         
-            
-        if data_prep['q'] == None:
-            size = 2
+        #customizes the layers based on each data prep combo
+        if data_prep['q'] == None and data_prep['t']==None:
+            size = 4
+        elif data_prep['q'] == None or data_prep['t']==None:
+            size = 3
         else:
-            size = 1
-            
-        #do the layers account for time?
+            size = 2
 
-
+        #default model to work with
         ip1 = keras.Input(shape=(10,10,size))
         l = layers.Conv2D(64,kernel_size=3,padding='same',use_bias=False)(ip1)
         l = layers.BatchNormalization()(l)
@@ -135,48 +147,37 @@ class Backup:
         l = layers.Dropout(.5)(l)
         output = layers.Dense(1)
 
-        #self.model = models.Model(inputs = ips, outputs = output,name=self.name)
+        #include name parameter later
+        self.model = models.Model(inputs = ips, outputs = output)
         model.compile(loss='mean_squared_error', optimizer='SGD', metrics=['mse'])
         model.summary()
         self.model = model
 
-    
-        
-    
-    #define_data_prep(data_prep) #if the user wants to run on only one (public)
-    """ def set_data_prep(self, data_prep):
-        
-        if not self.specific:
-            raise Exception ('You must be in specific mode to use this method')
-        
-        self.data_prep = data_prep """
-    
+        #define the data prep 
+        self.x= dataPrep(self.x, self.y, **data_prep)    
 
 
     #train (public)
         #employ early stopping 
         #different behavior depending on if in specific mode or not
     def train(self, numEpochs=None):
-        early_stop=keras.callbacks.EarlyStopping()
+        #applies to one or many iterations of train
+        callback=keras.callbacks.EarlyStopping(monitor='loss')
         if numEpochs==None:
             numEpochs=100
-        if data_prep['cosz']==False:
-            x={"charge":x_i[0]}
+        if self.data_prep['cosz']==False:
+            x={"charge":self.x[0]}
         else:
-            x={"charge":x_i[0],"zenith":x_i[1].reshape(-1,1)}
+            x={"charge":self.x[0],"zenith":self.x[1].reshape(-1,1)}
 
         if self.specific:
             #train specific model
-            history=model.fit(x, temp_y, epochs=numEpochs, validation_split=0.15, )
+            history=self.model.fit(x, self.energy, epochs=numEpochs, validation_split=0.15)
         else:
             for data_prep in self.data_preps:
-                #where's data/where does it fit in
-                model, data = self.define_model(data_prep)
-                early_stop = keras.callbacks.EarlyStopping()
-                
-                history=model.fit()#fix this
-                #fit the model
-        save()
+                self.define_model(data_prep)                
+                self.history=self.model.fit(x, self.energy, epochs=numEpochs, validation_split=0.15, callbacks=callback)#fix this
+        self.save()
                 
     
     #save everything function (private)
@@ -187,7 +188,8 @@ class Backup:
         #stored into a csv file at each iteration
                     
         #create row for saved information
-        best_loss=history.history(['loss'][-1])
+        best_loss=self.history
+        history.history(['loss'][-1])
         num_epoch=len(history.history(['loss']))
         #data_prep_index=data_preps...
         new_row=[best_loss, num_epoch]
