@@ -11,19 +11,21 @@ class Backup:
     
     
     #constructor(give default model)
-    def __init__(self, model = None , data_prep = None):
+    def __init__(self, name = None, model = None , data_prep = None):
         #either use enters a specific model- data_prep combo or the program produces a
         self.model = None #only used when in specific
         self.data_preps = {} #list of all possible data preps based on user choice
         self.eval_info = None # list[
+        self.name=None
         self.data_prep = None #if the user is in specific mode
         self.specific = False #true when the user wants to test a a single model-data_prep combo
 
-        
-        if model != None and data_prep != None: # if user wants to test only one model
-            
-            self.model == model 
-            self.data_prep == data_prep
+        if name != None:
+            self.name = name
+        if model != None: # if user wants to test only one model
+            self.model = model 
+        if data_prep != None:
+            self.data_prep = data_prep #user passes a specific dictionary
             self.specific = True
         elif model != None or data_prep != None: #if user gives only model or data_prep
             raise Exception("To train a specific model, you must pass model = your_model and data_prep = your_data_prep")
@@ -54,8 +56,7 @@ class Backup:
         if q == None and normed == None and  reco == None and cosz == None: #generates all combos
             pass
 
-        elif q == False and normed == False and  reco == False and cosz == False: #if you want to exclude some entirely
-            #this should be or?
+        elif q == False or normed == False or  reco == False or cosz == False: #if you want to exclude some entirely
             if not q:
                 default_options['q'] = None
             if not t:
@@ -102,77 +103,85 @@ class Backup:
     #define_model(tuned_model) (public)
     def define_model(self, data_prep, model = None): #MODIFY MODEL HERE
         
-        
-        if (model == None):#this is the default model
             
-            if data_prep['q'] == None:
-                size = 2
-            else:
-                size = 1
-                
-            
-
-
-            ip1 = keras.Input(shape=(10,10,size))
-            l = layers.Conv2D(64,kernel_size=3,padding='same',use_bias=False)(ip1)
-            l = layers.BatchNormalization()(l)
-            l = layers.LeakyReLU(alpha=.3)(l)
-            l = layers.Conv2D(32,kernel_size=3,padding='same',use_bias=False)(l)
-            l = layers.BatchNormalization()(l)
-            l = layers.LeakyReLU(alpha=.3)(l)
-            l = layers.Dropout(.6)(l)
-            l = layers.Flatten()(l)
-
-            if data_prep['reco'] == None:
-                ips = ip1
-            else:
-                ip2 = keras.Input(shape= (1,))
-                merge = layers.Concatenate()([l,ip2])
-                ips= [ip1,ip2]
-
-            l = layers.Dense(1,use_bias=False)(l)
-            l = layers.BatchNormalization()(l)
-            l = layers.LeakyReLU(alpha=.3)(l)
-            l = layers.Dropout(.5)(l)
-            output = layers.Dense(1)
-
-            model = models.Model(inputs = ips, outputs = output,name=nameModel(prep,prefix='test'))
-            model.summary()
-            return model
-
-           
+        if data_prep['q'] == None:
+            size = 2
         else:
-            model = model
-            model.summary()
+            size = 1
             
+        #do the layers account for time?
+
+
+        ip1 = keras.Input(shape=(10,10,size))
+        l = layers.Conv2D(64,kernel_size=3,padding='same',use_bias=False)(ip1)
+        l = layers.BatchNormalization()(l)
+        l = layers.LeakyReLU(alpha=.3)(l)
+        l = layers.Conv2D(32,kernel_size=3,padding='same',use_bias=False)(l)
+        l = layers.BatchNormalization()(l)
+        l = layers.LeakyReLU(alpha=.3)(l)
+        l = layers.Dropout(.6)(l)
+        l = layers.Flatten()(l)
+
+        if data_prep['reco'] == None:
+            ips = ip1
+        else:
+            ip2 = keras.Input(shape= (1,))
+            merge = layers.Concatenate()([l,ip2])
+            ips= [ip1,ip2]
+
+        l = layers.Dense(1,use_bias=False)(l)
+        l = layers.BatchNormalization()(l)
+        l = layers.LeakyReLU(alpha=.3)(l)
+        l = layers.Dropout(.5)(l)
+        output = layers.Dense(1)
+
+        #self.model = models.Model(inputs = ips, outputs = output,name=self.name)
         model.compile(loss='mean_squared_error', optimizer='SGD', metrics=['mse'])
+        model.summary()
+        self.model = model
+
+    
+        
     
     #define_data_prep(data_prep) #if the user wants to run on only one (public)
-    def set_data_prep(self, data_prep):
+    """ def set_data_prep(self, data_prep):
         
         if not self.specific:
             raise Exception ('You must be in specific mode to use this method')
         
-        self.data_prep = data_prep
+        self.data_prep = data_prep """
     
-    
+
+
     #train (public)
         #employ early stopping 
         #different behavior depending on if in specific mode or not
-    def train(self):
-        
+    def train(self, numEpochs=None):
+        early_stop=keras.callbacks.EarlyStopping()
+        if numEpochs==None:
+            numEpochs=100
+        if data_prep['cosz']==False:
+            x={"charge":x_i[0]}
+        else:
+            x={"charge":x_i[0],"zenith":x_i[1].reshape(-1,1)}
+
         if self.specific:
             #train specific model
-            pass
+            history=model.fit(x, temp_y, epochs=numEpochs, validation_split=0.15, )
         else:
             for data_prep in self.data_preps:
+                #where's data/where does it fit in
                 model, data = self.define_model(data_prep)
-                model.fit()#fix this
+                early_stop = keras.callbacks.EarlyStopping()
+                
+                history=model.fit()#fix this
+                #fit the model
+        save()
                 
     
     #save everything function (private)
     
-    def __save():
+    def save():
         #save csv, DO NOT SAVE DATA PREP DIRECTLY, reconstuct from index
         #records data prep index, lowest loss, and number of epochs
         #stored into a csv file at each iteration
@@ -193,16 +202,15 @@ class Backup:
             
         #save model
         
-    def nameModel(self,prep=None):
+    def nameModel(self):
+        #name of the saved data
         #call this at the start of training set to determine where to save the file
         #naming convention
-        if:
-            prep==None
-            
-        it=1 #should this be universal?
-        while(os.path.isfile('DataResults/results%.csv' %it)):
-              it+1
-        key+=it
+            it=1 
+            while(os.path.isfile('DataResults/results%.csv' %it)):
+                it+1
+            key+=it
+            return key
             
             
     
