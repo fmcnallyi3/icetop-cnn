@@ -2,6 +2,7 @@
 #won't properly import packages???????
 import keras
 import numpy as np
+import writer
 from keras import layers, models
 from data_tools import load_preprocessed, dataPrep
 class Backup:
@@ -176,27 +177,27 @@ class Backup:
         else:
             for data_prep in self.data_preps:
                 self.define_model(data_prep)                
-                self.history=self.model.fit(x, self.energy, epochs=numEpochs, validation_split=0.15, callbacks=callback)#fix this
+                self.history=self.model.fit(self.x, self.energy, epochs=numEpochs, validation_split=0.15, callbacks=callback)#fix this
+        
+        #save the combo's last loss value and number of epochs here
         self.save()
                 
     
     #save everything function (private)
     
-    def save():
+    def save(self):
         #save csv, DO NOT SAVE DATA PREP DIRECTLY, reconstuct from index
-        #records data prep index, lowest loss, and number of epochs
+        #records lowest loss, and number of epochs
         #stored into a csv file at each iteration
                     
         #create row for saved information
-        best_loss=self.history
-        history.history(['loss'][-1])
-        num_epoch=len(history.history(['loss']))
-        #data_prep_index=data_preps...
+        best_loss=self.history.history(['loss'][-1])
+        num_epoch=len(self.history.history(['loss']))
         new_row=[best_loss, num_epoch]
         
          #make sure to append to file
         #save the dataprep index as its own column so the info isn't lost?
-        with open('DataResults/results%.csv' %it, 'a') as f_object:
+        with open('DataResults/results%.csv' %self.nameModel(), 'a') as f_object:
             csv_writer=writer(f_object)
             csv_writer.writerow(new_row)
             f_object.close()
@@ -209,6 +210,7 @@ class Backup:
         #call this at the start of training set to determine where to save the file
         #naming convention
             it=1 
+            key = None
             while(os.path.isfile('DataResults/results%.csv' %it)):
                 it+1
             key+=it
