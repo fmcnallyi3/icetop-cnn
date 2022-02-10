@@ -28,7 +28,7 @@ numepochs = int(sys.argv[2])
 name = str(sys.argv[1])
 
 print("Loading model '%s'..." % name)
-model = models.load_model(name+'.h5')
+model = models.load_model("untrainedModel/"+name+'.h5')
 prep = np.load(name+'.npy',allow_pickle=True).item()
 #model.summary()
 
