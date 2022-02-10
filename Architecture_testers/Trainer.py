@@ -2,12 +2,14 @@ from data_tools import load_preprocessed, dataPrep
 import numpy as np
 from tensorflow import keras
 from keras import layers, models, callbacks
+import pickle
+
 class Trainer:
     
     def __init__(self, name = None, model = None , data_prep = None):
         self.model = None 
         self.data_preps = [] #list of all possible data preps based on user choice
-        self.data_prep=None
+        #self.data_prep=None
         self.name=None
 
         #self.test_specific = False #is true when the user wants to test a particular data_prep
@@ -15,9 +17,19 @@ class Trainer:
         if model!=None:
             self.model=model
         if data_prep!=None:
-            self.data_prep=data_prep
+            self.data_preps=[data_prep]
         if name!=None:
             self.name=name
+        elif(data_prep != None):
+            self.name=""
+            for _,value in data_prep.items():
+                if not value:
+                    self.name+=value
+                elif value is None:
+                    self.name+='None'
+                else:
+                    self.name+='False'
+            
         
         #load the simulation files
         simPrefix = '/Users/kmays/simFiles'
@@ -68,22 +80,22 @@ class Trainer:
 
     def compileModel(self, data_prep):
         #4 layers | t=none & q = none
-        if data_prep["t"] == None & self.data_prep["q"] == None:
-            dimesions=4
+        if data_prep["t"] == None & data_prep["q"] == None:
+            dimensions=4
         #3 layers | t!=none & t!= false & q = none
         elif data_prep["t"] == False:
-            if self.data_prep["q"] == None:
+            if data_prep["q"] == None:
                 dimensions=2
             else:
-                dimesions=1
+                dimensions=1
         else:
-            dimesions=3
+            dimensions=3
         #3 layers | t=none & q != none
         #2 layers | t=false & q = none
         #1 layer | t=false & q != none
 
         #actual model layers
-        charge_input = keras.Input(shape=(10,10,dimesions,),name="charge")
+        charge_input = keras.Input(shape=(10,10,dimensions,),name="charge")
         charge_input=keras.Input(shape=(10,10,2,))
 
         conv1_layer = layers.Conv2D(64,kernel_size=3,padding='same',activation='relu')(charge_input)
@@ -97,27 +109,48 @@ class Trainer:
         dense3_layer = layers.Dense(256,activation="relu")(dense2_layer)
         output = layers.Dense(1)(dense3_layer)
 
-        model = models.Model(inputs=[charge_input,zenith_input],outputs=output,name=self.name)
-        model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae','mse'])
+        self.model = models.Model(inputs=[charge_input,zenith_input],outputs=output,name=self.name)
+        self.model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae','mse'])
 
     #outside training loop:
         #load data, name., data_prep combos, 
     #every iteration:
         #specific data prep, model, save function.
     
-    def train(self):
-        if self.data_prep !=None:
-            self.x_i = dataPrep(self.x, self.y, **self.data_prep)
-            self.compileModel(self.data_prep)
+    def train(self,numepochs=100):
+        #if self.data_prep !=None:
+        #    self.x_i = dataPrep(self.x, self.y, **self.data_prep)
+        #    self.compileModel(self.data_prep)
+        #    
+        #    csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(self.name))
+        #    early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
+        #    checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % self.name,save_best_only=True)
+        #    self.callbacklist = [early_stop, csv_logger,checkpoint]
+        #    history = self.model.fit(x=self.x_i, y=self.temp_y, epochs=numepochs,validation_split=0.15,callbacks=self.callbacklist)
+        #    with open('trainedModels/%s.pickle', 'wb') as f:
+        #        pickle.dump(history.history, f)
 
-        else:
-            for data_prep in self.data_prep:
-                self.x_i = dataPrep(self.x, self.y, **self.data_prep)
+        #else:
+            for data_prep in self.data_preps:
+                self.x_i = dataPrep(self.x, self.y, **data_prep)
                 self.compileModel(data_prep)
-                #early stopping
-                #history
-                #save the last epoch & num of epochs
-                #include validation loss
+                
+                self.name=""
+                for _,value in data_prep.items():
+                    if not value:
+                        self.name+=value
+                    elif value is None:
+                        self.name+='None'
+                    else:
+                        self.name+='False'
+
+                csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(self.name))
+                early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
+                checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % self.name,save_best_only=True)
+                self.callbacklist = [early_stop, csv_logger,checkpoint]
+                history = self.model.fit(x=self.x_i, y=self.temp_y, epochs=numepochs,validation_split=0.15,callbacks=self.callbacklist)
+                with open('trainedModels/%s.pickle', 'wb') as f:
+                    pickle.dump(history.history, f)
 
 
 
@@ -127,8 +160,8 @@ class Trainer:
         #employ early stopping 
     
     #save everything function (private)
-    
-        """ def __save():
+
+            """ def __save():
             #save csv, DO NOT SAVE DATA PREP DIRECTLY, reconstuct from index
             #records data prep index, lowest loss, and number of epochs
             #stored into a csv file at each iteration
