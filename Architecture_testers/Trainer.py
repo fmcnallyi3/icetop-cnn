@@ -4,8 +4,10 @@ from tensorflow import keras
 from keras import layers, models, callbacks
 import pickle
 
+from multiprocessing import Process
+
 class Trainer:
-    
+
     def __init__(self, name = None, model = None , data_prep = None):
         self.model = None 
         self.data_preps = [] #list of all possible data preps based on user choice
@@ -117,7 +119,7 @@ class Trainer:
     #every iteration:
         #specific data prep, model, save function.
     
-    def train(self,numepochs=100):
+    def train(self, i,numepochs=100):
         #if self.data_prep !=None:
         #    self.x_i = dataPrep(self.x, self.y, **self.data_prep)
         #    self.compileModel(self.data_prep)
@@ -131,7 +133,8 @@ class Trainer:
         #        pickle.dump(history.history, f)
 
         #else:
-            for data_prep in self.data_preps:
+            #for data_prep in self.data_preps:
+                data_prep = self.data_preps[i]
                 self.x_i = dataPrep(self.x, self.y, **data_prep)
                 self.compileModel(data_prep)
                 
@@ -143,7 +146,8 @@ class Trainer:
                         self.name+='None'
                     else:
                         self.name+='False'
-
+                print("Training %s..." % self.name)
+                print(str(data_prep))
                 csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(self.name))
                 early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
                 checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % self.name,save_best_only=True)
@@ -161,7 +165,7 @@ class Trainer:
     
     #save everything function (private)
 
-            """ def __save():
+                """ def __save():
             #save csv, DO NOT SAVE DATA PREP DIRECTLY, reconstuct from index
             #records data prep index, lowest loss, and number of epochs
             #stored into a csv file at each iteration
