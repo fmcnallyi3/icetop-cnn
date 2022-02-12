@@ -20,13 +20,13 @@ energy = y["energy"]
 l = len(data_preps)
 
 #for prep in data_preps:
-for i in range(0,len(data_preps),30): #train 30 models at a time
+for i in range(0,len(data_preps),5): #train 15 models at a time
     processes = []
-    for j in range(i,i+30):
+    for j in range(i,i+5):
         #print("Starting process for %s" % str(prep))
-        proc = multiprocessing.Process(target=train,args=(data_preps[i],x,y,))
+        proc = multiprocessing.Process(target=train,args=(data_preps[j],x,y,))
         proc.start()
-        print("Started process %i: %s" % (proc.pid,str(data_preps[i])) )
+        print("Started process %i: %s" % (proc.pid,str(data_preps[j])) )
         processes.append(proc)
         sleep(1)
 #       i += 1

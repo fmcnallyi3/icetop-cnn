@@ -292,18 +292,20 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
             out_t = new_out
         #out_array[...,out_idx] = new_out
 
-    # Normalization
-    if normed:
-        # Find the maximum value for each layer
-        ## NOTE: separate layers for charge/time will be normed separately!
-        maxValuesQ = out_q.max(axis=(0,1,2), keepdims=True)
-        maxValuesT = out_t.max(axis=(0,1,2), keepdims=True)
-        # Avoid instances where no data is in a layer for a given event
-        maxValuesQ[maxValuesQ==0] = 1
-        maxValuesT[maxValuesT==0] = 1
-        # Normalize
-        out_q /= maxValuesQ
-        out_t /= maxValuesT
+        # Normalization
+        if normed:
+            # Find the maximum value for each layer
+            ## NOTE: separate layers for charge/time will be normed separately!
+            if k == 'q':
+                maxValuesQ = out_q.max(axis=(0,1,2), keepdims=True)
+                # Avoid instances where no data is in a layer for a given event
+                maxValuesQ[maxValuesQ==0] = 1
+                out_q /= maxValuesQ
+            if k == 't':
+                maxValuesT = out_t.max(axis=(0,1,2), keepdims=True)
+                maxValuesT[maxValuesT==0] = 1
+                # Normalize
+                out_t /= maxValuesT
 
     out_array = []
     if qtDict["q"] != False:
@@ -320,7 +322,7 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
             th = np.cos(th)
         if normed and not cosz:
             th /= np.nanmax(th)
-        out_array = [out_array, th]
+        out_array.append(th)
 
     return out_array
 
