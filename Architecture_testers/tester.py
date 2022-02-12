@@ -13,22 +13,23 @@ if not data_preps:
     print("Could not generate data preps.")
     quit()
 
-simPrefix = os.getcwd()+'/simFiles'
+simPrefix = '/home/richardson_p/icetop-cnn'+'/simdata'
 x, y = load_preprocessed(simPrefix, 'train')
 energy = y["energy"]
 
-processes = []
-#i = 0
+l = len(data_preps)
+
 #for prep in data_preps:
-for i in range(0,1):
-    #print("Starting process for %s" % str(prep))
-    proc = multiprocessing.Process(target=train,args=(data_preps[i],x,energy,))
-    proc.start()
-    print("Started process %i: %s" % (proc.pid,str(data_preps[i])) )
-    processes.append(proc)
-    sleep(1)
-    print("Started process %i: %s" % (proc.pid,str(data_preps[i])) )
-#    i += 1
+for i in range(0,len(data_preps),30): #train 30 models at a time
+    processes = []
+    for j in range(i,i+30):
+        #print("Starting process for %s" % str(prep))
+        proc = multiprocessing.Process(target=train,args=(data_preps[i],x,y,))
+        proc.start()
+        print("Started process %i: %s" % (proc.pid,str(data_preps[i])) )
+        processes.append(proc)
+        sleep(1)
+#       i += 1
     
-    #for proc in processes:
-    #    proc.join()
+    for proc in processes:
+        proc.join()

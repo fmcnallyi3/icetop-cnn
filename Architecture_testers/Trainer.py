@@ -4,6 +4,7 @@ from tensorflow import keras
 from keras import layers, models, callbacks
 import pickle
 import os
+import sys
 from multiprocessing import Process
 
 def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = None):
@@ -33,7 +34,7 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
             for norm in default_options["normed"]:
                 for rec in default_options["reco"]:
                     for cos in default_options["cosz"]:
-                        if ( (rec!='None' and cosz!=True) or ((charge is None) and (time is None) and (rec is None)) ): #impossible cases go here
+                        if ( (rec!=None and cosz!=True) ): #impossible cases go here
                             data_preps.append({"q": charge, "t": time, 
                                                                     "normed": norm, "reco": rec,"cosz": cos })
     return data_preps
@@ -152,9 +153,13 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
 #every iteration:
     #specific data prep, model, save function.
 
-def train(data_prep, x, y, numepochs=100):
+def train(data_prep, x, y, numepochs=50):
+    os.nice(10)
     x_i = dataPrep(x, y, **data_prep)
 
+    for key in y:
+        if key == "energy":
+            energy = y[key]
     for key in data_prep:
         if key == "reco":
             if data_prep[key] != None:
@@ -162,20 +167,22 @@ def train(data_prep, x, y, numepochs=100):
                 nancut=(x_i[l]==x_i[l])
                 for i in range(0,l):
                     x_i[i]=x_i[i][nancut]
-                y = y[nancut]
+                energy = energy[nancut]
 
     name=""
     for _,value in data_prep.items():
         name+=str(value)
     model = compileModel(name, **data_prep)
+    sys.stdout = open('trainedModels/%s.out' % name,'w')
     print("Training %s..." % str(data_prep))
     csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(name))
     early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
     checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
     callbacklist = [early_stop, csv_logger,checkpoint]
-    history = model.fit(x=x_i, y=y, epochs=numepochs,validation_split=0.15,callbacks=callbacklist)
-    with open('trainedModels/%s.pickle', 'wb') as f:
+    history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist)
+    with open('trainedModels/%s.pickle' % name, 'wb') as f:
         pickle.dump(history.history, f)
+    sys.stdout.close()
 
 
 
