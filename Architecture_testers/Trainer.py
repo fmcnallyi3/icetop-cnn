@@ -166,8 +166,12 @@ def train(data_prep, x, y, numepochs=50):
                 l = len(x_i) - 1
                 nancut=(x_i[l]==x_i[l])
                 for i in range(0,l):
-                    x_i[i]=x_i[i][nancut]
-                energy = energy[nancut]
+                    print()
+                    print(l)
+                    print(np.array(x_i[i]).shape)
+                    print()
+                    x_i[i]=np.array(x_i[i])[nancut]
+                energy = np.array(energy)[nancut]
 
     name=""
     for _,value in data_prep.items():
