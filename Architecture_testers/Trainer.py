@@ -155,9 +155,16 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
     #specific data prep, model, save function.
 
 def train(data_prep, x, y, numepochs=50):
+    name=""
+    for _,value in data_prep.items():
+        name+=str(value)
+
+    sys.stdout = open('trainedModels/%s.out' % name,'w')
+
     os.nice(10)
     config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
+
     x_i = dataPrep(x, y, **data_prep)
 
     for key in y:
@@ -169,18 +176,11 @@ def train(data_prep, x, y, numepochs=50):
                 l = len(x_i) - 1
                 nancut=(x_i[l]==x_i[l])
                 for i in range(0,l):
-                    print()
-                    print(l)
-                    print(np.array(x_i[i]).shape)
-                    print()
                     x_i[i]=np.array(x_i[i])[nancut]
                 energy = np.array(energy)[nancut]
 
-    name=""
-    for _,value in data_prep.items():
-        name+=str(value)
     model = compileModel(name, **data_prep)
-    sys.stdout = open('trainedModels/%s.out' % name,'w')
+
     print("Training %s..." % str(data_prep))
     csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(name))
     early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
@@ -189,6 +189,7 @@ def train(data_prep, x, y, numepochs=50):
     history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist,verbose=2)
     with open('trainedModels/%s.pickle' % name, 'wb') as f:
         pickle.dump(history.history, f)
+
     sys.stdout.close()
 
 
