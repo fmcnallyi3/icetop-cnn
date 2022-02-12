@@ -18,18 +18,17 @@ x, y = load_preprocessed(simPrefix, 'train')
 energy = y["energy"]
 
 l = len(data_preps)
-
-#for prep in data_preps:
-for i in range(0,len(data_preps),5): #train 15 models at a time
+num = 1 #train num models at a time
+for i in range(0,len(data_preps),num):
     processes = []
-    for j in range(i,i+5):
-        #print("Starting process for %s" % str(prep))
-        proc = multiprocessing.Process(target=train,args=(data_preps[j],x,y,))
-        proc.start()
-        print("Started process %i: %s" % (proc.pid,str(data_preps[j])) )
-        processes.append(proc)
-        sleep(1)
-#       i += 1
+    for j in range(i,i+num):
+        if j < len(data_preps):#checks for overflow
+            #print("Starting process for %s" % str(prep))
+            proc = multiprocessing.Process(target=train,args=(data_preps[j],x,y,))
+            proc.start()
+            print("Started process %i: %s" % (proc.pid,str(data_preps[j])) )
+            processes.append(proc)
+            sleep(1)
     
     for proc in processes:
         proc.join()

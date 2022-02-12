@@ -1,5 +1,6 @@
 from data_tools import load_preprocessed, dataPrep
 import numpy as np
+import tensorflow as tf
 from tensorflow import keras
 from keras import layers, models, callbacks
 import pickle
@@ -155,6 +156,8 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
 
 def train(data_prep, x, y, numepochs=50):
     os.nice(10)
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
     x_i = dataPrep(x, y, **data_prep)
 
     for key in y:
@@ -183,7 +186,7 @@ def train(data_prep, x, y, numepochs=50):
     early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
     checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
     callbacklist = [early_stop, csv_logger,checkpoint]
-    history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist)
+    history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist,verbose=2)
     with open('trainedModels/%s.pickle' % name, 'wb') as f:
         pickle.dump(history.history, f)
     sys.stdout.close()
