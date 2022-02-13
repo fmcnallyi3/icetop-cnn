@@ -30,14 +30,26 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
 
     data_preps = []
 
+    #for charge in default_options["q"]:
+    #    for time in default_options["t"]:
+    #        for norm in default_options["normed"]:
+    #            for rec in default_options["reco"]:
+    #                for cos in default_options["cosz"]:
+    #                    if ( (rec!=None and cosz!=True) ): #impossible cases go here
+    #                        data_preps.append({"q": charge, "t": time, 
+    #                                                                "normed": norm, "reco": rec,"cosz": cos })
+    
     for charge in default_options["q"]:
-        for time in default_options["t"]:
-            for norm in default_options["normed"]:
-                for rec in default_options["reco"]:
-                    for cos in default_options["cosz"]:
-                        if ( (rec!=None and cosz!=True) ): #impossible cases go here
-                            data_preps.append({"q": charge, "t": time, 
-                                                                    "normed": norm, "reco": rec,"cosz": cos })
+        data_preps.append({"q": charge, "t": None, "normed": True, "reco": "plane","cosz":True})
+    for time in default_options["t"]:
+        data_preps.append({"q": None, "t": time, "normed": True, "reco": "plane","cosz":True})
+    for norm in default_options["normed"]:
+        data_preps.append({"q": None, "t": None, "normed": norm, "reco": "plane","cosz":True})
+    for rec in default_options["reco"]:
+        data_preps.append({"q": None, "t": None, "normed": True, "reco": rec,"cosz":True})
+    for cos in default_options["cosz"]:
+        data_preps.append({"q": None, "t": None, "normed": True, "reco": "plane","cosz":cos})
+
     return data_preps
 
 
@@ -154,16 +166,16 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
 #every iteration:
     #specific data prep, model, save function.
 
-def train(data_prep, x, y, numepochs=50):
+def train(data_prep, x, y, numepochs=200):
     name=""
     for _,value in data_prep.items():
         name+=str(value)
 
     sys.stdout = open('trainedModels/%s.out' % name,'w')
 
-    os.nice(10)
-    config = tf.compat.v1.ConfigProto()
-    config.gpu_options.allow_growth = True
+    #os.nice(10)
+    #config = tf.compat.v1.ConfigProto()
+    #config.gpu_options.allow_growth = True
 
     x_i = dataPrep(x, y, **data_prep)
 
@@ -173,8 +185,8 @@ def train(data_prep, x, y, numepochs=50):
     for key in data_prep:
         if key == "reco":
             if data_prep[key] != None:
-                l = len(x_i) - 1
-                nancut=(x_i[l]==x_i[l])
+                l = len(x_i)
+                nancut=(x_i[l-1]==x_i[l-1])
                 for i in range(0,l):
                     x_i[i]=np.array(x_i[i])[nancut]
                 energy = np.array(energy)[nancut]
@@ -182,8 +194,8 @@ def train(data_prep, x, y, numepochs=50):
     model = compileModel(name, **data_prep)
 
     print("Training %s..." % str(data_prep))
-    csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(name))
-    early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
+    csv_logger = callbacks.CSVLogger('trainedModels/{}.csv'.format(name))
+    early_stop = callbacks.EarlyStopping(patience=20, restore_best_weights=True) # default -> val_loss
     checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
     callbacklist = [early_stop, csv_logger,checkpoint]
     history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist,verbose=2)

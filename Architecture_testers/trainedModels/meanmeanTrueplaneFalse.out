@@ -1,8 +1,0 @@
-(549773, 10, 10)
-(540381, 10, 10)
-(549773, 10, 10)
-(540381, 10, 10)
-(540381,)
-Training {'q': 'mean', 't': 'mean', 'normed': True, 'reco': 'plane', 'cosz': False}...
-Epoch 1/50
-14354/14354 - 49s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan

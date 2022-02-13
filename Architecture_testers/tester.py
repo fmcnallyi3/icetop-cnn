@@ -13,6 +13,9 @@ if not data_preps:
     print("Could not generate data preps.")
     quit()
 
+for prep in data_preps:
+    print("Planning to train a model for %s" % str(prep))
+
 simPrefix = '/home/richardson_p/icetop-cnn'+'/simdata'
 x, y = load_preprocessed(simPrefix, 'train')
 energy = y["energy"]
