@@ -53,7 +53,7 @@ def qualityCut(x, y, qmax=6, edgeCut=True, reco='plane', zmax=40,
         r = '{}_dir'.format(reco)
         if reco == None:
             r = 'plane_dir'
-        zenith, _ = np.transpose(y[r])
+        zenith, _ = np.transpose(y[r]).astype('float')
         zenith = np.pi - zenith
         cut *= zenith <= zmax * np.pi/180
         out['Events after zenith cut'] = cut.sum()
@@ -214,19 +214,20 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
  - Can normalize charge, time, or both
 """
 def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
+             #recocut=False):
 
     qtDict = {'q':q, 't':t}
-    new_dim = 4
-    for k, mergeType in qtDict.items():
-        # False = remove the layer
-        if mergeType == False:
-            new_dim -= 2
-        # None indicates do nothing to the layers, everything else merges
-        elif mergeType != None:
-            new_dim -= 1
+    #new_dim = 4
+    #for k, mergeType in qtDict.items():
+    #    # False = remove the layer
+    #    if mergeType == False:
+    #        new_dim -= 2
+    #    # None indicates do nothing to the layers, everything else merges
+    #    elif mergeType != None:
+    #        new_dim -= 1
 
-    out_shape = (x.shape[0], x.shape[1], x.shape[2], new_dim)
-    out_array = np.zeros(out_shape)
+    #out_shape = (x.shape[0], x.shape[1], x.shape[2], new_dim)
+    #out_array = np.zeros(out_shape)
 
     ## Suggestions for alternate methods of merging layers
     ## - use charge associated with earliest arrival time 
@@ -242,13 +243,13 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
             out_idx = 0
             a1, a2 = x[...,:2].transpose(3,0,1,2)
             if mergeType == None:
-                out_array[...,:2] = x[...,:2]
+                out_q = x[...,:2]
                 continue
         if k == 't':
             out_idx = -1
             a1, a2 = x[...,-2:].transpose(3,0,1,2)
             if mergeType == None:
-                out_array[...,-2:] = x[...,-2:]
+                out_t = x[...,-2:]
                 continue
 
         # Need to convert zeros for mean/min/max functions
@@ -285,27 +286,43 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
             a2[a2==ignoreValues[mergeType]] = 0
             new_out[new_out == ignoreValues[mergeType]] = 0
 
-        out_array[...,out_idx] = new_out
+        if k == 'q':
+            out_q = new_out
+        if k == 't':
+            out_t = new_out
+        #out_array[...,out_idx] = new_out
 
-    # Normalization
-    if normed:
-        # Find the maximum value for each layer
-        ## NOTE: separate layers for charge/time will be normed separately!
-        maxValues = out_array.max(axis=(0,1,2), keepdims=True)
-        # Avoid instances where no data is in a layer for a given event
-        maxValues[maxValues==0] = 1
-        # Normalize
-        out_array /= maxValues
+        # Normalization
+        if normed:
+            # Find the maximum value for each layer
+            ## NOTE: separate layers for charge/time will be normed separately!
+            if k == 'q':
+                maxValuesQ = out_q.max(axis=(0,1,2), keepdims=True)
+                # Avoid instances where no data is in a layer for a given event
+                maxValuesQ[maxValuesQ==0] = 1
+                out_q /= maxValuesQ
+            if k == 't':
+                maxValuesT = out_t.max(axis=(0,1,2), keepdims=True)
+                maxValuesT[maxValuesT==0] = 1
+                # Normalize
+                out_t /= maxValuesT
 
+    out_array = []
+    if qtDict["q"] != False:
+        out_array.append(out_q)
+    if qtDict["t"] != False:
+        out_array.append(out_t)
+
+    # Keep NaN's in with reconstruction so we can tell which events to ignore
     if reco != None:
         th, _ = y['{}_dir'.format(reco)].transpose()
-        thetaCut = ~np.isnan(th)
-        out_array = out_array[thetaCut]
-        th = np.pi - th[thetaCut]
-        th /= th.max()
+        th = th.astype('float')
+        th = np.pi - th
         if cosz:
             th = np.cos(th)
-        out_array = [out_array, th]
+        if normed and not cosz:
+            th /= np.nanmax(th)
+        out_array.append(th)
 
     return out_array
 
