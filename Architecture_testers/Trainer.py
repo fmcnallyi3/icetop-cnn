@@ -199,6 +199,7 @@ def train(data_prep, x, y, numepochs=200):
     checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
     callbacklist = [early_stop, csv_logger,checkpoint]
     history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist,verbose=2)
+    np.save('trainedModels/%s.npy' % name,data_prep)
     with open('trainedModels/%s.pickle' % name, 'wb') as f:
         pickle.dump(history.history, f)
 
