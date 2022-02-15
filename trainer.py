@@ -47,9 +47,9 @@ if (prep['reco']!=None):#if zenith is used
 
 print("Beginning to train for %s epochs..." % str(numepochs))
 
-csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(key))
+csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(name))
 early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
-checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % key,save_best_only=True)
+checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
 callbacklist = [early_stop, csv_logger,checkpoint]
 
 history = model.fit(
