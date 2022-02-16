@@ -18,22 +18,26 @@ from keras import callbacks
 #from tensorflow.keras.callbacks import ModelCheckpoint
 
 from data_tools import load_preprocessed, dataPrep, nameModel
+from hex_filter import hex_filter
 
-
-if len(sys.argv) != 3:
+accargs = [3,4]
+if (len(sys.argv) not in accargs):
     print('Did not specify model to train and/or number of epochs.')
     quit()
 
 numepochs = int(sys.argv[2])
 name = str(sys.argv[1])
+verbosity = 'auto'
+if len(sys.argv) == 4:
+    verbosity = int(sys.argv[3])
 
 print("Loading model '%s'..." % name)
-model = models.load_model("untrainedModel/"+name+'.h5')
-prep = np.load(name+'.npy',allow_pickle=True).item()
+model = models.load_model("untrainedModels/"+name+'.h5',custom_objects={"hex_filter":hex_filter})
+prep = np.load("untrainedModels/"+name+'.npy',allow_pickle=True).item()
 #model.summary()
 
 print("Loading simulation data...")
-simPrefix = os.getcwd()+'\\simdata'
+simPrefix = os.getcwd()+'/simdata'
 x, y = load_preprocessed(simPrefix, 'train')
 x_i = dataPrep(x, y, **prep)
 
@@ -52,9 +56,13 @@ early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # d
 checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
 callbacklist = [early_stop, csv_logger,checkpoint]
 
-history = model.fit(
-    x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist)
-
 np.save('trainedModels/%s.npy' % name,prep)
+history = model.fit(
+    x=x_i, y=energy,
+    epochs=numepochs,
+    validation_split=0.15,
+    callbacks=callbacklist,
+    verbose=verbosity)
+
 with open('trainedModels/%s.pickle', 'wb') as f:
     pickle.dump(history.history, f)

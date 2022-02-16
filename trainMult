@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for i in $*; do
+  python3 trainer.py $i 200 2
+done
