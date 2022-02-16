@@ -9,11 +9,16 @@ from keras import callbacks
 from keras import backend
 import functools
 
-hex_filter = tf.constant( np.array([
-    [ 1 , 1 , 0 ],
+hex_filter = np.array([
+    [ 0 , 1 , 1 ],
     [ 1 , 1 , 1 ],
-    [ 0 , 1 , 1 ]
-]).reshape([3,3,1,1]) , dtype=tf.float32 )
+    [ 1 , 1 , 0 ]
+], dtype='float32').reshape([3,3,1,1])
+
+def hex_init(shape, dtype=None):
+    init=tf.convert_to_tensor(hex_filter,dtype=dtype)
+    init=np.repeat(np.repeat(hex_filter, shape[2], axis=2),shape[3],axis=3)
+    return init
 
 #def hex_filter(shape, dtype=None):
 #    zeros=np.zeros
@@ -65,36 +70,37 @@ hex_filter = tf.constant( np.array([
 #        if self.use_bias:
 #            result = result + self.bias
 #        return result
-    
-#class MaskedConv2D(layers.Conv2D):
-#    def convolution_op(self, inputs, kernel):
-#        mask=np.array([
-#            [0,1,1],
-#            [1,1,1],
-#            [1,1,0]])
-#        mask = tf.reshape(mask,mask.shape+(1,1))
-#        print(kernel)
-#        print(tf.math.multiply(kernel,mask))
-#        return tf.nn.conv2d(
-#            inputs,
-#            tf.math.multiply(kernel,mask),
-#            padding="SAME",
-#            strides=[1,1]
-#        )
 
-class MaskedConv2D(tf.keras.layers.Layer):
-    def __init__(self, *args, **kwargs):
-        super(MaskedConv2D, self).__init__()
-        self.conv2d = tf.keras.layers.Conv2D(*args, **kwargs)
-        
-    def build(self, input_shape):
-        self.conv2d.build(input_shape[0])
-        self._convolution_op = self.conv2d._convolution_op
-        
-    def masked_convolution_op(self, filters, kernel, mask):
-        return self._convolution_op(filters, tf.math.multiply(kernel, tf.reshape(mask, mask.shape + [1,1] )))
-        
-    def call(self, inputs):
-        x = inputs
-        self.conv2d._convolution_op = functools.partial(self.masked_convolution_op, mask=hex_filter)
-        return self.conv2d.call(x)
+class MaskedConv2D(layers.Conv2D):
+    def convolution_op(self, inputs, kernel):
+        #mask=np.array([
+        #    [0,1,1],
+        #    [1,1,1],
+        #    [1,1,0]],dtype='float32')
+        #mask = tf.reshape(mask,mask.shape+(1,1))
+        #print(kernel)
+        #print(tf.math.multiply(kernel,mask))
+        return tf.nn.conv2d(
+            inputs,
+            tf.math.multiply(kernel,hex_filter),
+            padding="SAME",
+            strides=list(self.strides),
+            name=self.__class__.__name__,
+        )
+
+#class MaskedConv2D(tf.keras.layers.Layer):
+#    def __init__(self, *args, **kwargs):
+#        super(MaskedConv2D, self).__init__()
+#        self.conv2d = tf.keras.layers.Conv2D(*args, **kwargs)
+#        
+#    def build(self, input_shape):
+#        self.conv2d.build(input_shape[0])
+#        self._convolution_op = self.conv2d._convolution_op
+#        
+#    def masked_convolution_op(self, filters, kernel, mask):
+#        return self._convolution_op(filters, tf.math.multiply(kernel, tf.reshape(mask, mask.shape + [1,1] )))
+#        
+#    def call(self, inputs):
+#        x = inputs
+#        self.conv2d._convolution_op = functools.partial(self.masked_convolution_op, mask=hex_filter)
+#        return self.conv2d.call(x)
