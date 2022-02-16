@@ -64,5 +64,5 @@ history = model.fit(
     callbacks=callbacklist,
     verbose=verbosity)
 
-with open('trainedModels/%s.pickle', 'wb') as f:
+with open('trainedModels/%s.pickle' % name, 'wb') as f:
     pickle.dump(history.history, f)
