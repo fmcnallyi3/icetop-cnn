@@ -56,5 +56,5 @@ history = model.fit(
     x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist)
 
 np.save('trainedModels/%s.npy' % name,prep)
-with open('trainedModels/%s.pickle', 'wb') as f:
+with open('trainedModels/%s.pickle' % name, 'wb') as f:
     pickle.dump(history.history, f)
