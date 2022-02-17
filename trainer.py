@@ -18,7 +18,7 @@ from keras import callbacks
 #from tensorflow.keras.callbacks import ModelCheckpoint
 
 from data_tools import load_preprocessed, dataPrep, nameModel
-from hex_filter import hex_filter
+from hex_filter import hex_filter, hex_init, MaskedConv2D
 
 accargs = [3,4]
 if (len(sys.argv) not in accargs):
@@ -32,7 +32,7 @@ if len(sys.argv) == 4:
     verbosity = int(sys.argv[3])
 
 print("Loading model '%s'..." % name)
-model = models.load_model("untrainedModels/"+name+'.h5',custom_objects={"hex_filter":hex_filter})
+model = models.load_model("untrainedModels/"+name+'.h5',custom_objects={"hex_filter":hex_filter,"hex_init":hex_init,"MaskedConv2D":MaskedConv2D})
 prep = np.load("untrainedModels/"+name+'.npy',allow_pickle=True).item()
 #model.summary()
 
