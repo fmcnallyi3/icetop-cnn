@@ -6,7 +6,13 @@ from keras import layers, models, callbacks
 import pickle
 import os
 import sys
+from csv import writer
 from multiprocessing import Process
+
+#naming convention for results
+it=0
+while(os.path.isfile('DataResults/results%.csv' %it)):
+    it+=1
 
 def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = None):
     #parameters specific combos
@@ -203,6 +209,19 @@ def train(data_prep, x, y, numepochs=200):
     with open('trainedModels/%s.pickle' % name, 'wb') as f:
         pickle.dump(history.history, f)
 
+    #compile info to keep here
+    num_epoch=len(history.history(['loss']))
+    best_training_loss=history.history(['loss'][-1])
+    best_val_loss=history.history(['val_loss'][-1])
+    data_prep_index=name
+    new_row=[num_epoch, best_training_loss, best_val_loss, data_prep_index]
+
+    #save info after every trained model here
+    with open('DataResults/results%.csv' %it, 'a') as f_object:
+        csv_writer=writer(f_object)
+        csv_writer.writerow(new_row)
+        f_object.close()
+
     sys.stdout.close()
 
 
@@ -214,59 +233,55 @@ def train(data_prep, x, y, numepochs=200):
 
 #save everything function (private)
 
-    """ def __save():
+    #def __save():
+
+    #save: trained model, validation loss, training loss, numEpochs, 
 #save csv, DO NOT SAVE DATA PREP DIRECTLY, reconstuct from index
 #records data prep index, lowest loss, and number of epochs
 #stored into a csv file at each iteration
 
 #create row for saved information
-best_loss=history.history(['loss'][-1])
-num_epoch=len(history.history(['loss']))
-#data_prep_index=data_preps...
-new_row=[best_loss, num_epoch]
+
 
 #make sure to append to file
 #save the dataprep index as its own column so the info isn't lost?
-with open('DataResults/results%.csv' %it, 'a') as f_object:
-    csv_writer=writer(f_object)
-    csv_writer.writerow(new_row)
-    f_object.close()
+
     
     
 #save model
 
-def fileName():
+#def fileName():
     #call this at the start of training set to determine where to save the file
     #naming convention
-    key='nameHere'
-    it=1 #should this be universal?
-    while(os.path.isfile('DataResults/results%.csv' %it)):
-            it+1
-    key+=it
+    #key='nameHere'
+    #it=1 #should this be universal?
+    #while(os.path.isfile('DataResults/results%.csv' %it)):
+           # it+1
+    #key+=it
         
         
 
 #reconstruct data_prep from index(private)
-    def __fetch_dataprep():
+   # def __fetch_dataprep():
             #retrieves the index from the given ...
 #######################################################################
 
 #analysis methods
 
 #get_lowest_loss 
-        def get_lowest_loss(r=None):
+        ##def get_lowest_loss(r=None):
             #retrieves the information from a file
             #converts information to a dataframe
             #retrieves the lowest or sorts then returns a range of the lowest loss
             #returns another dataframe
-            if r=None:
-                return min(history.history(['loss']))
+            #if r=None:
+            #    return min(history.history(['loss']))
                 #get the lowest l
-            elif r>0:
-                return np.partition(history.history['loss'],r)
+            #elif r>0:
+            #    return np.partition(history.history['loss'],r)
                 #get a list of length r of the lowest loss values
-            else:
-                return 'please enter a valid number'
+            #else:
+              #  return 'please enter a valid number'
                 #ask the use to enter a valid number 
                 
 #get_num_epochs
@@ -275,4 +290,4 @@ def fileName():
 
 #plot specific 
 
-    """
+
