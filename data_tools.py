@@ -302,6 +302,8 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
                 maxValuesQ[maxValuesQ==0] = 1
                 out_q /= maxValuesQ
             if k == 't':
+                minValuesT = out_t.min(axis=(0,1,2), keepdims=True)
+                out_t -= minValuesT
                 maxValuesT = out_t.max(axis=(0,1,2), keepdims=True)
                 maxValuesT[maxValuesT==0] = 1
                 # Normalize
