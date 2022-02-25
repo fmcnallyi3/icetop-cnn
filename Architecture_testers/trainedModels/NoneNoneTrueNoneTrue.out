@@ -1,65 +1,55 @@
 Training {'q': None, 't': None, 'normed': True, 'reco': None, 'cosz': True}...
 Epoch 1/200
-14604/14604 - 52s - loss: 155.1992 - mae: 0.5753 - mse: 155.1992 - val_loss: 0.0479 - val_mae: 0.1692 - val_mse: 0.0479
+14604/14604 - 51s - loss: 162.6942 - mae: 0.6317 - mse: 162.6942 - val_loss: 0.0415 - val_mae: 0.1568 - val_mse: 0.0415
 Epoch 2/200
-14604/14604 - 45s - loss: 0.0509 - mae: 0.1742 - mse: 0.0509 - val_loss: 0.0534 - val_mae: 0.1814 - val_mse: 0.0534
+14604/14604 - 47s - loss: 0.0513 - mae: 0.1754 - mse: 0.0513 - val_loss: 0.0341 - val_mae: 0.1375 - val_mse: 0.0341
 Epoch 3/200
-14604/14604 - 45s - loss: 0.0424 - mae: 0.1574 - mse: 0.0424 - val_loss: 0.0453 - val_mae: 0.1684 - val_mse: 0.0453
+14604/14604 - 47s - loss: 0.0432 - mae: 0.1590 - mse: 0.0432 - val_loss: 0.0355 - val_mae: 0.1440 - val_mse: 0.0355
 Epoch 4/200
-14604/14604 - 45s - loss: 0.0392 - mae: 0.1503 - mse: 0.0392 - val_loss: 0.0345 - val_mae: 0.1407 - val_mse: 0.0345
+14604/14604 - 47s - loss: 0.0391 - mae: 0.1499 - mse: 0.0391 - val_loss: 0.0320 - val_mae: 0.1362 - val_mse: 0.0320
 Epoch 5/200
-14604/14604 - 46s - loss: 0.0365 - mae: 0.1436 - mse: 0.0365 - val_loss: 0.0373 - val_mae: 0.1456 - val_mse: 0.0373
+14604/14604 - 47s - loss: 0.0364 - mae: 0.1433 - mse: 0.0364 - val_loss: 0.0311 - val_mae: 0.1304 - val_mse: 0.0311
 Epoch 6/200
-14604/14604 - 46s - loss: 0.0348 - mae: 0.1394 - mse: 0.0348 - val_loss: 0.0310 - val_mae: 0.1322 - val_mse: 0.0310
+14604/14604 - 47s - loss: 0.0350 - mae: 0.1398 - mse: 0.0350 - val_loss: 0.0358 - val_mae: 0.1439 - val_mse: 0.0358
 Epoch 7/200
-14604/14604 - 46s - loss: 0.0339 - mae: 0.1374 - mse: 0.0339 - val_loss: 0.0303 - val_mae: 0.1316 - val_mse: 0.0303
+14604/14604 - 47s - loss: 0.0341 - mae: 0.1375 - mse: 0.0341 - val_loss: 0.0291 - val_mae: 0.1268 - val_mse: 0.0291
 Epoch 8/200
-14604/14604 - 45s - loss: 0.0333 - mae: 0.1359 - mse: 0.0333 - val_loss: 0.0297 - val_mae: 0.1272 - val_mse: 0.0297
+14604/14604 - 47s - loss: 0.0335 - mae: 0.1363 - mse: 0.0335 - val_loss: 0.0304 - val_mae: 0.1291 - val_mse: 0.0304
 Epoch 9/200
-14604/14604 - 46s - loss: 0.0329 - mae: 0.1350 - mse: 0.0329 - val_loss: 0.0311 - val_mae: 0.1300 - val_mse: 0.0311
+14604/14604 - 47s - loss: 0.0332 - mae: 0.1357 - mse: 0.0332 - val_loss: 0.0326 - val_mae: 0.1331 - val_mse: 0.0326
 Epoch 10/200
-14604/14604 - 46s - loss: 0.0325 - mae: 0.1342 - mse: 0.0325 - val_loss: 0.0333 - val_mae: 0.1355 - val_mse: 0.0333
+14604/14604 - 47s - loss: 0.0328 - mae: 0.1347 - mse: 0.0328 - val_loss: 0.0341 - val_mae: 0.1404 - val_mse: 0.0341
 Epoch 11/200
-14604/14604 - 45s - loss: 0.0321 - mae: 0.1333 - mse: 0.0321 - val_loss: 0.0330 - val_mae: 0.1364 - val_mse: 0.0330
+14604/14604 - 47s - loss: 0.0325 - mae: 0.1340 - mse: 0.0325 - val_loss: 0.0308 - val_mae: 0.1286 - val_mse: 0.0308
 Epoch 12/200
-14604/14604 - 45s - loss: 0.0319 - mae: 0.1330 - mse: 0.0319 - val_loss: 0.0286 - val_mae: 0.1246 - val_mse: 0.0286
+14604/14604 - 47s - loss: 0.0322 - mae: 0.1334 - mse: 0.0322 - val_loss: 0.0311 - val_mae: 0.1317 - val_mse: 0.0311
 Epoch 13/200
-14604/14604 - 45s - loss: 0.0316 - mae: 0.1324 - mse: 0.0316 - val_loss: 0.0289 - val_mae: 0.1248 - val_mse: 0.0289
+14604/14604 - 47s - loss: 0.0320 - mae: 0.1329 - mse: 0.0320 - val_loss: 0.0311 - val_mae: 0.1277 - val_mse: 0.0311
 Epoch 14/200
-14604/14604 - 46s - loss: 0.0315 - mae: 0.1321 - mse: 0.0315 - val_loss: 0.0301 - val_mae: 0.1290 - val_mse: 0.0301
+14604/14604 - 47s - loss: 0.0318 - mae: 0.1325 - mse: 0.0318 - val_loss: 0.0331 - val_mae: 0.1351 - val_mse: 0.0331
 Epoch 15/200
-14604/14604 - 45s - loss: 0.0312 - mae: 0.1314 - mse: 0.0312 - val_loss: 0.0296 - val_mae: 0.1259 - val_mse: 0.0296
+14604/14604 - 47s - loss: 0.0316 - mae: 0.1322 - mse: 0.0316 - val_loss: 0.0307 - val_mae: 0.1315 - val_mse: 0.0307
 Epoch 16/200
-14604/14604 - 45s - loss: 0.0311 - mae: 0.1312 - mse: 0.0311 - val_loss: 0.0290 - val_mae: 0.1240 - val_mse: 0.0290
+14604/14604 - 48s - loss: 0.0314 - mae: 0.1318 - mse: 0.0314 - val_loss: 0.0311 - val_mae: 0.1293 - val_mse: 0.0311
 Epoch 17/200
-14604/14604 - 45s - loss: 0.0309 - mae: 0.1309 - mse: 0.0309 - val_loss: 0.0311 - val_mae: 0.1308 - val_mse: 0.0311
+14604/14604 - 47s - loss: 0.0313 - mae: 0.1314 - mse: 0.0313 - val_loss: 0.0360 - val_mae: 0.1438 - val_mse: 0.0360
 Epoch 18/200
-14604/14604 - 46s - loss: 0.0307 - mae: 0.1305 - mse: 0.0307 - val_loss: 0.0298 - val_mae: 0.1265 - val_mse: 0.0298
+14604/14604 - 47s - loss: 0.0310 - mae: 0.1310 - mse: 0.0310 - val_loss: 0.0312 - val_mae: 0.1297 - val_mse: 0.0312
 Epoch 19/200
-14604/14604 - 45s - loss: 0.0306 - mae: 0.1303 - mse: 0.0306 - val_loss: 0.0311 - val_mae: 0.1293 - val_mse: 0.0311
+14604/14604 - 47s - loss: 0.0310 - mae: 0.1309 - mse: 0.0310 - val_loss: 0.0298 - val_mae: 0.1257 - val_mse: 0.0298
 Epoch 20/200
-14604/14604 - 45s - loss: 0.0305 - mae: 0.1302 - mse: 0.0305 - val_loss: 0.0306 - val_mae: 0.1283 - val_mse: 0.0306
+14604/14604 - 47s - loss: 0.0307 - mae: 0.1304 - mse: 0.0307 - val_loss: 0.0296 - val_mae: 0.1265 - val_mse: 0.0296
 Epoch 21/200
-14604/14604 - 45s - loss: 0.0303 - mae: 0.1298 - mse: 0.0303 - val_loss: 0.0289 - val_mae: 0.1247 - val_mse: 0.0289
+14604/14604 - 47s - loss: 0.0307 - mae: 0.1303 - mse: 0.0307 - val_loss: 0.0308 - val_mae: 0.1286 - val_mse: 0.0308
 Epoch 22/200
-14604/14604 - 46s - loss: 0.0301 - mae: 0.1293 - mse: 0.0301 - val_loss: 0.0302 - val_mae: 0.1273 - val_mse: 0.0302
+14604/14604 - 47s - loss: 0.0306 - mae: 0.1300 - mse: 0.0306 - val_loss: 0.0325 - val_mae: 0.1319 - val_mse: 0.0325
 Epoch 23/200
-14604/14604 - 45s - loss: 0.0301 - mae: 0.1294 - mse: 0.0301 - val_loss: 0.0308 - val_mae: 0.1297 - val_mse: 0.0308
+14604/14604 - 47s - loss: 0.0305 - mae: 0.1299 - mse: 0.0305 - val_loss: 0.0306 - val_mae: 0.1312 - val_mse: 0.0306
 Epoch 24/200
-14604/14604 - 46s - loss: 0.0300 - mae: 0.1291 - mse: 0.0300 - val_loss: 0.0300 - val_mae: 0.1276 - val_mse: 0.0300
+14604/14604 - 47s - loss: 0.0303 - mae: 0.1296 - mse: 0.0303 - val_loss: 0.0308 - val_mae: 0.1278 - val_mse: 0.0308
 Epoch 25/200
-14604/14604 - 45s - loss: 0.0299 - mae: 0.1290 - mse: 0.0299 - val_loss: 0.0333 - val_mae: 0.1386 - val_mse: 0.0333
+14604/14604 - 47s - loss: 0.0302 - mae: 0.1294 - mse: 0.0302 - val_loss: 0.0307 - val_mae: 0.1276 - val_mse: 0.0307
 Epoch 26/200
-14604/14604 - 45s - loss: 0.0298 - mae: 0.1288 - mse: 0.0298 - val_loss: 0.0348 - val_mae: 0.1392 - val_mse: 0.0348
+14604/14604 - 47s - loss: 0.0301 - mae: 0.1291 - mse: 0.0301 - val_loss: 0.0347 - val_mae: 0.1353 - val_mse: 0.0347
 Epoch 27/200
-14604/14604 - 45s - loss: 0.0296 - mae: 0.1282 - mse: 0.0296 - val_loss: 0.0381 - val_mae: 0.1470 - val_mse: 0.0381
-Epoch 28/200
-14604/14604 - 45s - loss: 0.0296 - mae: 0.1284 - mse: 0.0296 - val_loss: 0.0301 - val_mae: 0.1274 - val_mse: 0.0301
-Epoch 29/200
-14604/14604 - 45s - loss: 0.0294 - mae: 0.1280 - mse: 0.0294 - val_loss: 0.0300 - val_mae: 0.1274 - val_mse: 0.0300
-Epoch 30/200
-14604/14604 - 45s - loss: 0.0294 - mae: 0.1278 - mse: 0.0294 - val_loss: 0.0307 - val_mae: 0.1294 - val_mse: 0.0307
-Epoch 31/200
-14604/14604 - 46s - loss: 0.0293 - mae: 0.1276 - mse: 0.0293 - val_loss: 0.0290 - val_mae: 0.1248 - val_mse: 0.0290
-Epoch 32/200
-14604/14604 - 45s - loss: 0.0292 - mae: 0.1275 - mse: 0.0292 - val_loss: 0.0300 - val_mae: 0.1259 - val_mse: 0.0300
+14604/14604 - 47s - loss: 0.0300 - mae: 0.1290 - mse: 0.0300 - val_loss: 0.0294 - val_mae: 0.1257 - val_mse: 0.0294

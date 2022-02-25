@@ -8,6 +8,7 @@ import os
 import sys
 from csv import writer
 from multiprocessing import Process
+from itertools import product
 
 #naming convention for results
 it=0
@@ -36,15 +37,15 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
 
     data_preps = []
 
-    #for charge in default_options["q"]:
-    #    for time in default_options["t"]:
-    #        for norm in default_options["normed"]:
-    #            for rec in default_options["reco"]:
-    #                for cos in default_options["cosz"]:
-    #                    if ( (rec!=None and cosz!=True) ): #impossible cases go here
-    #                        data_preps.append({"q": charge, "t": time, 
-    #                                                                "normed": norm, "reco": rec,"cosz": cos })
-    
+    """for charge in default_options["q"]:
+        for time in default_options["t"]:
+            for norm in default_options["normed"]:
+                for rec in default_options["reco"]:
+                    for cos in default_options["cosz"]:
+                        if ( (rec!=None and cosz!=True) ): #impossible cases go here
+                            data_preps.append({"q": charge, "t": time, 
+                                                                    "normed": norm, "reco": rec,"cosz": cosz })
+    """
     for charge in default_options["q"]:
         data_preps.append({"q": charge, "t": None, "normed": True, "reco": "plane","cosz":True})
     for time in default_options["t"]:
@@ -56,6 +57,7 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
     for cos in default_options["cosz"]:
         data_preps.append({"q": None, "t": None, "normed": True, "reco": "plane","cosz":cos})
 
+    #data_preps = product()
     return data_preps
 
 
@@ -209,19 +211,27 @@ def train(data_prep, x, y, numepochs=200):
     with open('trainedModels/%s.pickle' % name, 'wb') as f:
         pickle.dump(history.history, f)
 
-    #compile info to keep here
-    num_epoch=len(history.history['loss'])
-    best_training_loss=np.min(history.history['loss'])
-    best_val_loss=np.min(history.history['val_loss'])
-    data_prep_index=name
-    new_row=[num_epoch, best_training_loss, best_val_loss, data_prep_index]
+    ##compile info to keep here
+    #num_epoch=len(history.history['loss'])
+    #best_training_loss=np.min(history.history['loss'])
+    #best_val_loss=np.min(history.history['val_loss'])
+    #data_prep_index=name
+    #new_row=[num_epoch, best_training_loss, best_val_loss, data_prep_index]
 
     #save info after every trained model here
-    with open('DataResults/results%.csv' %it, 'a') as f_object:
-        csv_writer=writer(f_object)
-        csv_writer.writerow(new_row)
-        f_object.close()
-
+    #with open('DataResults/results%.csv' %it, 'a') as f_object:
+    #    csv_writer=writer(f_object)
+    #    csv_writer.writerow(new_row)
+    #    f_object.close()
+    f = open("results.txt", "a")
+    f.write("{}\tepochs:{}\tloss:{},{}\n".format(
+        name,
+        numepochs,
+        np.min(history.history['loss']),
+        np.min(history.history['val_loss'])
+    ))
+    f.close()
+    
     sys.stdout.close()
 
 

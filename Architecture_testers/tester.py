@@ -8,7 +8,7 @@ import multiprocessing
 from time import sleep
 from Trainer import generate_data_prep,train
 
-data_preps = generate_data_prep(q="mean", t=False, normed=False, reco="plane", cosz=True)
+data_preps = generate_data_prep()
 if not data_preps:
     print("Could not generate data preps.")
     quit()

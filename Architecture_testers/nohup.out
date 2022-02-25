@@ -1,4 +1,13 @@
 Planning to train a model for {'q': 'mean', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+Planning to train a model for {'q': None, 't': False, 'normed': True, 'reco': 'plane', 'cosz': True}
+Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+Planning to train a model for {'q': None, 't': None, 'normed': False, 'reco': 'plane', 'cosz': True}
+Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': None, 'cosz': True}
+Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'laputop', 'cosz': True}
+Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'small', 'cosz': True}
+Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+Planning to train a model for {'q': 'mean', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
 Planning to train a model for {'q': 'sum', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
 Planning to train a model for {'q': 'product', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
 Planning to train a model for {'q': 'min', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
@@ -20,158 +29,158 @@ Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'sm
 Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': False}
 Planning to train a model for {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
 Percentage of events with a NaN: 2.68
-/home/richardson_p/icetop-cnn/Architecture_testers/data_tools.py:270: RuntimeWarning: Mean of empty slice
+/home/mays_k/icetop-cnn/Architecture_testers/data_tools.py:270: RuntimeWarning: Mean of empty slice
   new_out = np.nanmean([a1,a2], axis=0)
-2022-02-12 16:37:08.846999: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 19:27:32.390269: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 16:37:09.631999: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 16:37:09.632357: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 16:37:11.164407: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 16:37:12.867031: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 727702: {'q': 'mean', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 17:11:51.423498: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 19:27:33.214847: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 19:27:33.215274: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 19:27:34.728476: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 19:27:36.554699: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1074598: {'q': 'mean', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-24 20:00:49.977949: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 17:11:52.211736: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 17:11:52.212087: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 17:11:53.717149: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 17:11:55.423719: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 729667: {'q': 'sum', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 17:50:15.508956: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 20:00:50.753720: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 20:00:50.754092: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 20:00:52.219122: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 20:00:53.910564: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1077787: {'q': 'sum', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-24 20:29:03.856502: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 17:50:16.277641: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 17:50:16.277994: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 17:50:17.861752: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 17:50:19.571033: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 731528: {'q': 'product', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 18:30:53.966241: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 20:29:04.621415: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 20:29:04.621794: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 20:29:06.132325: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 20:29:07.839744: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1079252: {'q': 'product', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-24 21:16:10.857804: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 18:30:54.751226: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 18:30:54.751572: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 18:30:56.318529: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 18:30:58.016324: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 733717: {'q': 'min', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 19:07:19.128100: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 21:16:11.628225: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 21:16:11.628617: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 21:16:13.177379: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 21:16:14.873312: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1081707: {'q': 'min', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-24 22:07:42.186954: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 19:07:19.906139: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 19:07:19.906495: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 19:07:21.475813: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 19:07:23.174788: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 735470: {'q': 'max', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 19:33:53.102456: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 22:07:42.960079: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 22:07:42.960498: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 22:07:44.434428: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 22:07:46.128940: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1084421: {'q': 'max', 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-24 22:44:40.596885: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 19:33:53.872782: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 19:33:53.873131: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 19:33:55.673029: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 19:33:57.386549: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 737010: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-/home/richardson_p/icetop-cnn/Architecture_testers/data_tools.py:270: RuntimeWarning: Mean of empty slice
+2022-02-24 22:44:41.359388: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 22:44:41.359788: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 22:44:43.254065: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 22:44:44.944972: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1086328: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+/home/mays_k/icetop-cnn/Architecture_testers/data_tools.py:270: RuntimeWarning: Mean of empty slice
   new_out = np.nanmean([a1,a2], axis=0)
-2022-02-12 19:58:32.672680: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 23:19:18.303012: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 19:58:33.454626: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 19:58:33.454984: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 19:58:34.960861: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 19:58:36.665988: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 738303: {'q': None, 't': 'mean', 'normed': True, 'reco': 'plane', 'cosz': True}
-/home/richardson_p/icetop-cnn/Architecture_testers/data_tools.py:16: RuntimeWarning: overflow encountered in power
+2022-02-24 23:19:19.080957: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 23:19:19.081341: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 23:19:20.557487: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 23:19:22.250986: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1088106: {'q': None, 't': 'mean', 'normed': True, 'reco': 'plane', 'cosz': True}
+/home/mays_k/icetop-cnn/Architecture_testers/data_tools.py:16: RuntimeWarning: overflow encountered in power
   return np.sign(m) * (10**np.abs(m) - 1)
-/home/richardson_p/icetop-cnn/Architecture_testers/data_tools.py:308: RuntimeWarning: invalid value encountered in true_divide
+/home/mays_k/icetop-cnn/Architecture_testers/data_tools.py:308: RuntimeWarning: invalid value encountered in true_divide
   out_t /= maxValuesT
-2022-02-12 20:21:52.815697: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 23:50:01.119517: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 20:21:53.607374: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 20:21:53.607753: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 20:21:55.116145: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 20:21:56.863426: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 739557: {'q': None, 't': 'sum', 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 20:37:19.360165: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-24 23:50:01.899615: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-24 23:50:01.900007: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-24 23:50:03.379546: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-24 23:50:05.065647: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1089667: {'q': None, 't': 'sum', 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 00:05:34.084646: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 20:37:20.140009: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 20:37:20.140358: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 20:37:21.657781: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 20:37:23.369407: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 740471: {'q': None, 't': 'product', 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 20:59:13.643657: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 00:05:34.844101: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 00:05:34.844490: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 00:05:36.324148: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 00:05:38.015703: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1090506: {'q': None, 't': 'product', 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 00:27:20.606705: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 20:59:14.422689: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 20:59:14.423041: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 20:59:15.925234: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 20:59:17.633680: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 741663: {'q': None, 't': 'min', 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 21:32:53.231796: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 00:27:21.388862: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 00:27:21.389244: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 00:27:22.864636: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 00:27:24.551952: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1091588: {'q': None, 't': 'min', 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 01:02:03.408863: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 21:32:54.014703: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 21:32:54.015071: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 21:32:55.517365: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 21:32:57.234137: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 743446: {'q': None, 't': 'max', 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 22:02:00.724216: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 01:02:04.176554: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 01:02:04.176940: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 01:02:05.655080: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 01:02:07.358281: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1093361: {'q': None, 't': 'max', 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 01:24:05.438624: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 22:02:01.503652: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 22:02:01.504019: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 22:02:03.303241: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 22:02:05.018713: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 744908: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 22:28:24.458860: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 01:24:06.201080: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 01:24:06.201458: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 01:24:07.955974: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 01:24:09.654381: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1094536: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 01:52:46.594710: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 22:28:25.218981: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 22:28:25.219330: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 22:28:26.395441: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 22:28:27.971566: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 746316: {'q': None, 't': False, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 22:55:31.633852: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 01:52:47.357647: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 01:52:47.358041: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 01:52:48.504781: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 01:52:50.059451: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1095952: {'q': None, 't': False, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 02:12:33.316008: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 22:55:32.410970: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 22:55:32.411322: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 22:55:34.204189: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 22:55:35.919572: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 747959: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-12 23:25:26.315460: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 02:12:34.080007: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 02:12:34.080380: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 02:12:35.834640: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 02:12:37.522028: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1097216: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 02:41:49.848798: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 23:25:27.092948: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 23:25:27.093314: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 23:25:28.888190: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 23:25:30.601730: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 749563: {'q': None, 't': None, 'normed': False, 'reco': 'plane', 'cosz': True}
-2022-02-12 23:50:53.073892: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 02:41:50.612923: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 02:41:50.613312: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 02:41:52.371253: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 02:41:54.064928: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1098700: {'q': None, 't': None, 'normed': False, 'reco': 'plane', 'cosz': True}
+2022-02-25 03:11:42.465474: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-12 23:50:53.858753: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-12 23:50:53.859112: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-12 23:50:56.431891: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-12 23:50:58.122415: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 750863: {'q': None, 't': None, 'normed': True, 'reco': None, 'cosz': True}
-2022-02-13 00:19:48.686815: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 03:11:43.249575: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 03:11:43.249959: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 03:11:45.669177: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 03:11:47.371984: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1100219: {'q': None, 't': None, 'normed': True, 'reco': None, 'cosz': True}
+2022-02-25 03:32:57.341902: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-13 00:19:49.458592: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-13 00:19:49.458942: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-13 00:19:51.249868: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-13 00:19:52.966335: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 752313: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
-2022-02-13 00:46:43.013770: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 03:32:58.105843: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 03:32:58.106233: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 03:32:59.864596: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 03:33:01.558854: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1101342: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 04:13:01.484360: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-13 00:46:43.799038: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-13 00:46:43.799378: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-13 00:46:45.477412: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-13 00:46:47.170013: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 753715: {'q': None, 't': None, 'normed': True, 'reco': 'laputop', 'cosz': True}
-2022-02-13 01:13:06.562034: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 04:13:02.249219: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 04:13:02.249598: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 04:13:03.891368: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 04:13:05.587228: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1103363: {'q': None, 't': None, 'normed': True, 'reco': 'laputop', 'cosz': True}
+2022-02-25 04:35:43.318200: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-13 01:13:07.336467: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-13 01:13:07.336825: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-13 01:13:09.126277: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-13 01:13:10.842181: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 755242: {'q': None, 't': None, 'normed': True, 'reco': 'small', 'cosz': True}
-2022-02-13 01:39:22.111120: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 04:35:44.083193: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 04:35:44.083559: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 04:35:45.838436: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 04:35:47.528557: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1104766: {'q': None, 't': None, 'normed': True, 'reco': 'small', 'cosz': True}
+2022-02-25 05:09:47.277380: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-13 01:39:22.883212: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-13 01:39:22.883561: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-13 01:39:24.675805: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-13 01:39:26.393597: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 756600: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': False}
-2022-02-13 02:15:28.957606: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+2022-02-25 05:09:48.048872: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 05:09:48.049252: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 05:09:49.952504: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 05:09:51.645328: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1106593: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': False}
+2022-02-25 05:43:09.086611: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2022-02-13 02:15:29.731677: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
-2022-02-13 02:15:29.732030: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
-2022-02-13 02:15:31.524472: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-2022-02-13 02:15:33.243386: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
-Started process 758476: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
+2022-02-25 05:43:09.864416: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-02-25 05:43:09.864793: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-02-25 05:43:11.622316: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-02-25 05:43:13.313979: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Started process 1108267: {'q': None, 't': None, 'normed': True, 'reco': 'plane', 'cosz': True}
