@@ -8,7 +8,7 @@ import multiprocessing
 from time import sleep
 from Trainer import generate_data_prep,train
 
-data_preps = generate_data_prep()
+data_preps = generate_data_prep(q="mean", t=False, normed=False, reco="plane", cosz=True)
 if not data_preps:
     print("Could not generate data preps.")
     quit()
@@ -16,7 +16,7 @@ if not data_preps:
 for prep in data_preps:
     print("Planning to train a model for %s" % str(prep))
 
-simPrefix = '/home/richardson_p/icetop-cnn'+'/simdata'
+simPrefix = '/home/mays_k/icetop-cnn/simdata'
 x, y = load_preprocessed(simPrefix, 'train')
 energy = y["energy"]
 

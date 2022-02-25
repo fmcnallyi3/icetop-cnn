@@ -23,15 +23,15 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
                         'cosz' : [False, True]}
 
     if q!=None:
-        default_options["q"]=q
+        default_options["q"]=[q]
     if t!=None:
-        default_options["t"]=t
+        default_options["t"]=[t]
     if normed!=None:
-        default_options["normed"]=normed
+        default_options["normed"]=[normed]
     if reco!=None:
-        default_options["reco"]=reco
+        default_options["reco"]=[reco]
     if cosz!=None:
-        default_options["cosz"]=cosz
+        default_options["cosz"]=[cosz]
 
 
     data_preps = []
@@ -210,9 +210,9 @@ def train(data_prep, x, y, numepochs=200):
         pickle.dump(history.history, f)
 
     #compile info to keep here
-    num_epoch=len(history.history(['loss']))
-    best_training_loss=history.history(['loss'][-1])
-    best_val_loss=history.history(['val_loss'][-1])
+    num_epoch=len(history.history['loss'])
+    best_training_loss=np.min(history.history['loss'])
+    best_val_loss=np.min(history.history['val_loss'])
     data_prep_index=name
     new_row=[num_epoch, best_training_loss, best_val_loss, data_prep_index]
 

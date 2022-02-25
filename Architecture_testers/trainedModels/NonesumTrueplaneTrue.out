@@ -4,9 +4,9 @@ Epoch 1/200
 Epoch 2/200
 14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 3/200
-14354/14354 - 50s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 4/200
-14354/14354 - 50s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 5/200
 14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 6/200
@@ -14,13 +14,13 @@ Epoch 6/200
 Epoch 7/200
 14354/14354 - 44s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 8/200
-14354/14354 - 46s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 9/200
-14354/14354 - 46s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 10/200
-14354/14354 - 46s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 44s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 11/200
-14354/14354 - 47s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 12/200
 14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 13/200
@@ -28,14 +28,14 @@ Epoch 13/200
 Epoch 14/200
 14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 15/200
-14354/14354 - 46s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 16/200
-14354/14354 - 44s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 17/200
 14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 18/200
 14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 19/200
-14354/14354 - 48s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 44s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
 Epoch 20/200
-14354/14354 - 46s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
+14354/14354 - 45s - loss: nan - mae: nan - mse: nan - val_loss: nan - val_mae: nan - val_mse: nan
