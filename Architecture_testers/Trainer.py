@@ -47,15 +47,15 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
                                                                     "normed": norm, "reco": rec,"cosz": cosz })
     """
     for charge in default_options["q"]:
-        data_preps.append({"q": charge, "t": None, "normed": True, "reco": "plane","cosz":True})
+        data_preps.append({"q": charge, "t": False, "normed": True, "reco": "plane","cosz":False})
     for time in default_options["t"]:
-        data_preps.append({"q": None, "t": time, "normed": True, "reco": "plane","cosz":True})
+        data_preps.append({"q": None, "t": time, "normed": True, "reco": "plane","cosz":False})
     for norm in default_options["normed"]:
-        data_preps.append({"q": None, "t": None, "normed": norm, "reco": "plane","cosz":True})
+        data_preps.append({"q": None, "t": False, "normed": norm, "reco": "plane","cosz":False})
     for rec in default_options["reco"]:
-        data_preps.append({"q": None, "t": None, "normed": True, "reco": rec,"cosz":True})
+        data_preps.append({"q": None, "t": False, "normed": True, "reco": rec,"cosz":False})
     for cos in default_options["cosz"]:
-        data_preps.append({"q": None, "t": None, "normed": True, "reco": "plane","cosz":cos})
+        data_preps.append({"q": None, "t": False, "normed": True, "reco": "plane","cosz":cos})
 
     #data_preps = product()
     return data_preps
@@ -203,7 +203,7 @@ def train(data_prep, x, y, numepochs=200):
 
     print("Training %s..." % str(data_prep))
     csv_logger = callbacks.CSVLogger('trainedModels/{}.csv'.format(name))
-    early_stop = callbacks.EarlyStopping(patience=20, restore_best_weights=True) # default -> val_loss
+    early_stop = callbacks.EarlyStopping(patience=30, restore_best_weights=True) # default -> val_loss
     checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
     callbacklist = [early_stop, csv_logger,checkpoint]
     history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist,verbose=2)
@@ -226,7 +226,7 @@ def train(data_prep, x, y, numepochs=200):
     f = open("results.txt", "a")
     f.write("{}\tepochs:{}\tloss:{},{}\n".format(
         name,
-        numepochs,
+        len(history.history['loss']),
         np.min(history.history['loss']),
         np.min(history.history['val_loss'])
     ))
