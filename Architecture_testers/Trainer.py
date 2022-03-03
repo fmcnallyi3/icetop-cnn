@@ -24,27 +24,43 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
                         'cosz' : [False, True]}
 
     if q!=None:
-        default_options["q"]=[q]
+        if q=="None":
+            default_options["q"]=[None]
+        else:
+            default_options["q"]=[q]
     if t!=None:
-        default_options["t"]=[t]
+        if t=="None":
+            default_options["t"]=[None]
+        else:
+            default_options["t"]=[t]
     if normed!=None:
         default_options["normed"]=[normed]
     if reco!=None:
-        default_options["reco"]=[reco]
+        if reco=="None":
+            default_options["reco"]=[None]
+        else:
+            default_options["reco"]=[reco]
     if cosz!=None:
-        default_options["cosz"]=[cosz]
-
+        if cosz==True:
+            default_options["cosz"]=[True]
+            if None in default_options["reco"]:
+                default_options["reco"].remove(None)
+        else:
+            default_options["cosz"]=[False]
 
     data_preps = []
-
-    """for charge in default_options["q"]:
+#if cosz==True, reco !=None excluse cosz==True and reco==None
+    for charge in default_options["q"]:
         for time in default_options["t"]:
             for norm in default_options["normed"]:
                 for rec in default_options["reco"]:
                     for cos in default_options["cosz"]:
-                        if ( (rec!=None and cosz!=True) ): #impossible cases go here
-                            data_preps.append({"q": charge, "t": time, 
+                        #if ( (rec!=None and cosz!=True) ): #impossible cases go here
+                        data_preps.append({"q": charge, "t": time, 
                                                                     "normed": norm, "reco": rec,"cosz": cosz })
+                        #else:
+                            #print('cant print this compbo')
+    
     """
     for charge in default_options["q"]:
         data_preps.append({"q": charge, "t": False, "normed": True, "reco": "plane","cosz":False})
@@ -55,7 +71,12 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
     for rec in default_options["reco"]:
         data_preps.append({"q": None, "t": False, "normed": True, "reco": rec,"cosz":False})
     for cos in default_options["cosz"]:
+<<<<<<< Updated upstream
         data_preps.append({"q": None, "t": False, "normed": True, "reco": "plane","cosz":cos})
+=======
+        data_preps.append({"q": None, "t": None, "normed": True, "reco": "plane","cosz":cos})
+    """
+>>>>>>> Stashed changes
 
     #data_preps = product()
     return data_preps
@@ -175,11 +196,12 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
     #specific data prep, model, save function.
 
 def train(data_prep, x, y, numepochs=200):
+    specs="q=None,t=False,reco=plane,cosz=False"
     name=""
     for _,value in data_prep.items():
         name+=str(value)
 
-    sys.stdout = open('trainedModels/%s.out' % name,'w')
+    sys.stdout = open('trainedModels/%s/%s.out' %(specs, name),'w')
 
     #os.nice(10)
     #config = tf.compat.v1.ConfigProto()
@@ -212,21 +234,27 @@ def train(data_prep, x, y, numepochs=200):
         pickle.dump(history.history, f)
 
     ##compile info to keep here
-    #num_epoch=len(history.history['loss'])
-    #best_training_loss=np.min(history.history['loss'])
-    #best_val_loss=np.min(history.history['val_loss'])
-    #data_prep_index=name
-    #new_row=[num_epoch, best_training_loss, best_val_loss, data_prep_index]
+    num_epoch=len(history.history['loss'])
+    best_training_loss=np.min(history.history['loss'])
+    best_val_loss=np.min(history.history['val_loss'])
+    data_prep_index=name
+    new_row=[data_prep_index,num_epoch, best_val_loss,best_training_loss]
 
     #save info after every trained model here
-    #with open('DataResults/results%.csv' %it, 'a') as f_object:
-    #    csv_writer=writer(f_object)
-    #    csv_writer.writerow(new_row)
-    #    f_object.close()
-    f = open("results.txt", "a")
+    with open('trainedModels/%s/results.csv' %(specs), 'a') as f_object:
+        csv_writer=writer(f_object)
+        csv_writer.writerow(new_row)
+        f_object.close()
+    f_object.close()
+
+    f = open("trainedModels/%s/results.txt" %(specs), "a")
     f.write("{}\tepochs:{}\tloss:{},{}\n".format(
         name,
+<<<<<<< Updated upstream
         len(history.history['loss']),
+=======
+        numepochs,#len(history.history['loss']) to keep track numEpochs it stopped at
+>>>>>>> Stashed changes
         np.min(history.history['loss']),
         np.min(history.history['val_loss'])
     ))
