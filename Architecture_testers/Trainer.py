@@ -165,7 +165,7 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
 
 
 def train(data_prep, x, y, numepochs=200):
-    specs="q=None,t=False,reco=plane,cosz=False"
+    specs="NoneFalse0planeFalse"
     name=""
     for _,value in data_prep.items():
         name+=str(value)

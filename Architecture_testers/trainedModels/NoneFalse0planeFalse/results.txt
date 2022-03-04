@@ -1,0 +1,1 @@
+NoneFalseTrueplaneFalse	epochs:37	loss:0.021213555708527565,0.020644735544919968

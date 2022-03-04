@@ -1,0 +1,9 @@
+Training {'q': None, 't': False, 'normed': False, 'reco': 'plane', 'cosz': False}...
+Epoch 1/200
+14354/14354 - 40s - loss: 0.0869 - mae: 0.1837 - mse: 0.0869 - val_loss: 0.0264 - val_mae: 0.1221 - val_mse: 0.0264
+Epoch 2/200
+14354/14354 - 37s - loss: 0.0317 - mae: 0.1337 - mse: 0.0317 - val_loss: 0.0269 - val_mae: 0.1220 - val_mse: 0.0269
+Epoch 3/200
+14354/14354 - 37s - loss: 0.0283 - mae: 0.1254 - mse: 0.0283 - val_loss: 0.0305 - val_mae: 0.1298 - val_mse: 0.0305
+Epoch 4/200
+14354/14354 - 37s - loss: 0.0269 - mae: 0.1217 - mse: 0.0269 - val_loss: 0.0239 - val_mae: 0.1119 - val_mse: 0.0239
