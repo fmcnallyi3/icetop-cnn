@@ -44,16 +44,20 @@ if (prep['reco']!=None):#if zenith is used
     for key in y.keys():
         y[key] = y[key][nancut]
     energy=y['energy']
+    comp = y['comp']
 
+comp[comp == 1] = 0
+comp[comp == 56] = 1
+    
 print("Beginning to train for %s epochs..." % str(numepochs))
 
 csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(name))
-early_stop = callbacks.EarlyStopping(patience=10, restore_best_weights=True) # default -> val_loss
+early_stop = callbacks.EarlyStopping(patience=30, restore_best_weights=True) # default -> val_loss
 checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
 callbacklist = [early_stop, csv_logger,checkpoint]
 
 history = model.fit(
-    x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist)
+    x=x_i, y=comp, epochs=numepochs,validation_split=0.15,callbacks=callbacklist)
 
 np.save('trainedModels/%s.npy' % name,prep)
 with open('trainedModels/%s.pickle' % name, 'wb') as f:
