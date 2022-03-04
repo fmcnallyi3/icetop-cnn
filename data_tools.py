@@ -1,12 +1,8 @@
-#!/usr/bin/env python
-
 from glob import glob
 import numpy as np
 from collections import defaultdict
 import sys
 import ast
-
-
 # Modified logarithm convenient for dealing with zeros and maintaining sign
 def modLog(n):
     return np.sign(n) * np.log10(np.abs(n) + 1)
@@ -150,13 +146,13 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
     if mode not in ['assessment', 'train', None]:
         print('Invalid mode choice')
         raise
-
+        
     xfiles = sorted(glob('%s/x_*.npy' % filePath))
     yfiles = sorted(glob('%s/y_*.npy' % filePath))
 
     compDict = {'p':'12360','h':'12630','o':'12631','f':'12362'}
     simList = [compDict[c] for c in comp]
-
+        
     xfiles = [f for f in xfiles if any([sim in f for sim in simList])]
     yfiles = [f for f in yfiles if any([sim in f for sim in simList])]
     #xfiles = [f for f in xfiles if '12630' not in f and '12631' not in f]
@@ -224,7 +220,7 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         # None indicates do nothing to the layers, everything else merges
         elif mergeType != None:
             new_dim -= 1
-
+    
     out_shape = (x.shape[0], x.shape[1], x.shape[2], new_dim)
     out_array = np.zeros(out_shape)
 
@@ -299,16 +295,26 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
 
     if reco != None:
         th, _ = y['{}_dir'.format(reco)].transpose()
-        thetaCut = ~np.isnan(th)
-        out_array = out_array[thetaCut]
-        th = np.pi - th[thetaCut]
-        th /= th.max()
+    # thetaCut = np.logical_and(~np.isnan(th),th>np.pi/2.0)
+    # out_array = out_array[thetaCut]
+    #  th = np.pi - th[thetaCut]
+        th = th.astype('float') 
+        th = np.pi - th 
+    #th /= th.max()
         if cosz:
             th = np.cos(th)
-        out_array = [out_array, th]
+    #out_array = [out_array, th]
+        if normed and not cosz: 
+            th /=np.nanmax(th) 
+        nanCut = ~np.isnan(th) 
+        th = th[nanCut] 
+        out_array = out_array [nanCut] 
+        y_i = y 
+        for keys in y_i.keys():
+            y_i[keys] = y_i[keys][nanCut] 
+        out_array = [out_array, th, y_i]
 
     return out_array
-
 
 def load_mc(filePath):
 
@@ -336,7 +342,6 @@ def nameModel(prep, prefix=''):
         outstr = '{}_{}.{}'.format(outstr, key, value)
     return outstr
 
-
 def name2prep(name):
     prep = {}
     args = [a.split('.') for a in name.split('_') if len(a.split('.'))==2]
@@ -345,12 +350,3 @@ def name2prep(name):
         except ValueError:
             prep[key] = value
     return prep
-
-
-
-
-
-
-
-
-
