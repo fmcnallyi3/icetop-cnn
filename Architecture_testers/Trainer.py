@@ -10,10 +10,6 @@ from csv import writer
 from multiprocessing import Process
 from itertools import product
 
-#naming convention for results
-it=0
-while(os.path.isfile('DataResults/results%.csv' %it)):
-    it+=1
 
 def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = None):
     #parameters specific combos
@@ -49,17 +45,15 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
             default_options["cosz"]=[False]
 
     data_preps = []
-#if cosz==True, reco !=None excluse cosz==True and reco==None
+
     for charge in default_options["q"]:
         for time in default_options["t"]:
             for norm in default_options["normed"]:
                 for rec in default_options["reco"]:
                     for cos in default_options["cosz"]:
-                        #if ( (rec!=None and cosz!=True) ): #impossible cases go here
                         data_preps.append({"q": charge, "t": time, 
                                                                     "normed": norm, "reco": rec,"cosz": cosz })
-                        #else:
-                            #print('cant print this compbo')
+                        
     
     """
     for charge in default_options["q"]:
@@ -71,35 +65,14 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
     for rec in default_options["reco"]:
         data_preps.append({"q": None, "t": False, "normed": True, "reco": rec,"cosz":False})
     for cos in default_options["cosz"]:
-<<<<<<< Updated upstream
         data_preps.append({"q": None, "t": False, "normed": True, "reco": "plane","cosz":cos})
-=======
-        data_preps.append({"q": None, "t": None, "normed": True, "reco": "plane","cosz":cos})
     """
->>>>>>> Stashed changes
 
-    #data_preps = product()
     return data_preps
 
 
 def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
-    
-    ##4 layers | t=none & q = none
-    #if data_prep["t"] == None & data_prep["q"] == None:
-    #    dimensions=4
-    ##3 layers | t!=none & t!= false & q = none
-    #elif data_prep["t"] == False:
-    #    if data_prep["q"] == None:
-    #        dimensions=2
-    #    else:
-    #        dimensions=1
-    #else:
-    #    dimensions=3
-    ##3 layers | t=none & q != none
-    ##2 layers | t=false & q = none
-    ##1 layer | t=false & q != none
-
-    
+        
     if t is None:
         tdim = 2
     elif not t:
@@ -190,10 +163,6 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
     model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae','mse'])
     return model
 
-#outside training loop:
-    #load data, name., data_prep combos, 
-#every iteration:
-    #specific data prep, model, save function.
 
 def train(data_prep, x, y, numepochs=200):
     specs="q=None,t=False,reco=plane,cosz=False"
@@ -250,82 +219,12 @@ def train(data_prep, x, y, numepochs=200):
     f = open("trainedModels/%s/results.txt" %(specs), "a")
     f.write("{}\tepochs:{}\tloss:{},{}\n".format(
         name,
-<<<<<<< Updated upstream
         len(history.history['loss']),
-=======
-        numepochs,#len(history.history['loss']) to keep track numEpochs it stopped at
->>>>>>> Stashed changes
         np.min(history.history['loss']),
         np.min(history.history['val_loss'])
     ))
     f.close()
     
     sys.stdout.close()
-
-
-
-#name file, make a method for it later or just input one for now
-
-#train (public)
-    #employ early stopping 
-
-#save everything function (private)
-
-    #def __save():
-
-    #save: trained model, validation loss, training loss, numEpochs, 
-#save csv, DO NOT SAVE DATA PREP DIRECTLY, reconstuct from index
-#records data prep index, lowest loss, and number of epochs
-#stored into a csv file at each iteration
-
-#create row for saved information
-
-
-#make sure to append to file
-#save the dataprep index as its own column so the info isn't lost?
-
-    
-    
-#save model
-
-#def fileName():
-    #call this at the start of training set to determine where to save the file
-    #naming convention
-    #key='nameHere'
-    #it=1 #should this be universal?
-    #while(os.path.isfile('DataResults/results%.csv' %it)):
-           # it+1
-    #key+=it
-        
-        
-
-#reconstruct data_prep from index(private)
-   # def __fetch_dataprep():
-            #retrieves the index from the given ...
-#######################################################################
-
-#analysis methods
-
-#get_lowest_loss 
-        ##def get_lowest_loss(r=None):
-            #retrieves the information from a file
-            #converts information to a dataframe
-            #retrieves the lowest or sorts then returns a range of the lowest loss
-            #returns another dataframe
-            #if r=None:
-            #    return min(history.history(['loss']))
-                #get the lowest l
-            #elif r>0:
-            #    return np.partition(history.history['loss'],r)
-                #get a list of length r of the lowest loss values
-            #else:
-              #  return 'please enter a valid number'
-                #ask the use to enter a valid number 
-                
-#get_num_epochs
-
-#get_lowest_loss (with respect to number of epochs) (i.e loss vs epoch)
-
-#plot specific 
 
 
