@@ -10,7 +10,7 @@ from Trainer import generate_data_prep,train
 
 #put None in quotation marks for it to use None a
 #update specs under folder location in train method!
-data_preps = generate_data_prep(q="None",t=False,reco='plane',cosz=False)
+data_preps = generate_data_prep(t="None", normed=False, reco="plane", cosz=False)
 if not data_preps:
     print("Could not generate data preps.")
     quit()

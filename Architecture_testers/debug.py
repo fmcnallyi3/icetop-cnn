@@ -65,7 +65,7 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
     #data_preps = product()
     return data_preps
 
-temp = generate_data_prep(q="None", t="None", normed=True, reco=None, cosz=False) #cosz=True breaks the code
+temp = generate_data_prep(t="None", normed=True, reco=None, cosz=False) #cosz=True breaks the code
 print(temp)
 
 def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):

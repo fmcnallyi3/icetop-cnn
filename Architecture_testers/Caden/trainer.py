@@ -33,7 +33,7 @@ prep = np.load("untrainedModels/"+name+'.npy',allow_pickle=True).item()
 #model.summary()
 
 print("Loading simulation data...")
-simPrefix = os.getcwd()+'/simdata'
+simPrefix = "/home/mays_k/icetop-cnn/simdata"
 x, y = load_preprocessed(simPrefix, 'train')
 x_i = dataPrep(x, y, **prep)
 

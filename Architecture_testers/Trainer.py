@@ -165,7 +165,7 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
 
 
 def train(data_prep, x, y, numepochs=200):
-    specs="NoneFalse0planeFalse"
+    specs="0NoneFalseplaneFalse"
     name=""
     for _,value in data_prep.items():
         name+=str(value)
@@ -216,14 +216,14 @@ def train(data_prep, x, y, numepochs=200):
         f_object.close()
     f_object.close()
 
-    f = open("trainedModels/%s/results.txt" %(specs), "a")
+    """f = open("trainedModels/%s/results.txt" %(specs), "a")
     f.write("{}\tepochs:{}\tloss:{},{}\n".format(
         name,
         len(history.history['loss']),
         np.min(history.history['loss']),
         np.min(history.history['val_loss'])
     ))
-    f.close()
+    f.close()"""
     
     sys.stdout.close()
 
