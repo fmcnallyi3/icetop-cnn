@@ -49,19 +49,19 @@ if (prep['reco']!=None):#if zenith is used
 comp[comp == 1] = 0
 comp[comp == 56] = 1
 
-#shuffler = np.random.permutation(len(comp))
-#comp = comp[shuffler]
-#for i in x_i:
-#    i = i[shuffler,...]
+shuffler = np.random.permutation(len(comp))
+comp = comp[shuffler]
+for i in x_i:
+    i = i[shuffler,...]
 
 #trainCut = (np.random.uniform(size=len(comp)) < 0.85)
 #testCut = np.logical_not(trainCut)
 
 print("Beginning to train for %s epochs..." % str(numepochs))
 
-csv_logger = callbacks.CSVLogger('trainedModels/{}'.format(name))
+csv_logger = callbacks.CSVLogger('trainedModels/{}shuffled.csv'.format(name))
 early_stop = callbacks.EarlyStopping(patience=30, restore_best_weights=True) # default -> val_loss
-checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
+checkpoint = callbacks.ModelCheckpoint('trainedModels/%sshuffled.h5' % name,save_best_only=True)
 callbacklist = [early_stop, csv_logger,checkpoint]
 
 history = model.fit(
@@ -70,6 +70,6 @@ history = model.fit(
 #history = model.fit(
 #    x=[x_i[0][trainCut],x_i[1][trainCut]], y=comp[trainCut], epochs=numepochs,validation_data=([x_i[0][testCut],x_i[1][testCut]],comp[testCut]),callbacks=callbacklist)
 
-np.save('trainedModels/%s.npy' % name,prep)
-with open('trainedModels/%s.pickle' % name, 'wb') as f:
+np.save('trainedModels/%sshuffled.npy' % name,prep)
+with open('trainedModels/%sshuffled.pickle' % name, 'wb') as f:
     pickle.dump(history.history, f)
