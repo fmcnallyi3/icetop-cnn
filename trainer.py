@@ -43,8 +43,8 @@ if (prep['reco']!=None):#if zenith is used
     x_i[1]=x_i[1][nancut]
     for key in y.keys():
         y[key] = y[key][nancut]
-    energy=y['energy']
-    comp = y['comp']
+energy=y['energy']
+comp = y['comp']
 
 comp[comp == 1] = 0
 comp[comp == 56] = 1
