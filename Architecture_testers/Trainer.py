@@ -165,7 +165,7 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
 
 
 def train(data_prep, x, y, numepochs=200):
-    specs="0NoneFalseplaneFalse"
+    specs="000plane0"
     name=""
     for _,value in data_prep.items():
         name+=str(value)
@@ -194,7 +194,7 @@ def train(data_prep, x, y, numepochs=200):
 
     print("Training %s..." % str(data_prep))
     csv_logger = callbacks.CSVLogger('trainedModels/{}.csv'.format(name))
-    early_stop = callbacks.EarlyStopping(patience=30, restore_best_weights=True) # default -> val_loss
+    early_stop = callbacks.EarlyStopping(patience=20, restore_best_weights=True) # default -> val_loss
     checkpoint = callbacks.ModelCheckpoint('trainedModels/%s.h5' % name,save_best_only=True)
     callbacklist = [early_stop, csv_logger,checkpoint]
     history = model.fit(x=x_i, y=energy, epochs=numepochs,validation_split=0.15,callbacks=callbacklist,verbose=2)
@@ -203,11 +203,15 @@ def train(data_prep, x, y, numepochs=200):
         pickle.dump(history.history, f)
 
     ##compile info to keep here
+    q = data_prep['q']
+    t = data_prep['t']
+    normed = data_prep['normed']
+    reco = data_prep['reco']
+    cosz = data_prep['cosz']
     num_epoch=len(history.history['loss'])
     best_training_loss=np.min(history.history['loss'])
     best_val_loss=np.min(history.history['val_loss'])
-    data_prep_index=name
-    new_row=[data_prep_index,num_epoch, best_val_loss,best_training_loss]
+    new_row=[q,t,normed,reco,cosz,num_epoch, best_training_loss,best_val_loss]
 
     #save info after every trained model here
     with open('trainedModels/%s/results.csv' %(specs), 'a') as f_object:

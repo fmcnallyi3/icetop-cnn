@@ -64,9 +64,12 @@ def generate_data_prep(q = None, t = None,  normed = None, reco = None, cosz = N
 
     #data_preps = product()
     return data_preps
+#we want to include cosz, it has to be normed, 
+temp = generate_data_prep(t= False, normed=False, reco="plane", cosz=False) #cosz=True breaks the code
+for data in temp:
+    print(data['q'])
 
-temp = generate_data_prep(t="None", normed=True, reco=None, cosz=False) #cosz=True breaks the code
-print(temp)
+
 
 def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
     
@@ -179,4 +182,4 @@ def compileModel(name, q=None, t=None, normed=False, reco=None, cosz=False):
 num=0
 while(os.path.isdir('/Home/mays_k/icetop-cnn/Architecture_testers/trainedModels%i' %num)):
     num+=1
-print(num)
+#print(num)
