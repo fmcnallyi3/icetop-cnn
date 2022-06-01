@@ -1,12 +1,8 @@
-#!/usr/bin/env python
-
 from glob import glob
 import numpy as np
 from collections import defaultdict
 import sys
 import ast
-
-
 # Modified logarithm convenient for dealing with zeros and maintaining sign
 def modLog(n):
     return np.sign(n) * np.log10(np.abs(n) + 1)
@@ -147,16 +143,19 @@ def dict2mat(d):
 
 def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
 
+    # Make sure user selects a valid mode
     if mode not in ['assessment', 'train', None]:
         print('Invalid mode choice')
         raise
-
+    
+    # Load valid x and y files
     xfiles = sorted(glob('%s/x_*.npy' % filePath))
     yfiles = sorted(glob('%s/y_*.npy' % filePath))
 
+    # Load only proton and iron files
     compDict = {'p':'12360','h':'12630','o':'12631','f':'12362'}
     simList = [compDict[c] for c in comp]
-
+        
     xfiles = [f for f in xfiles if any([sim in f for sim in simList])]
     yfiles = [f for f in yfiles if any([sim in f for sim in simList])]
     #xfiles = [f for f in xfiles if '12630' not in f and '12631' not in f]
@@ -180,13 +179,24 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
     for key in y.keys():
         y[key] = np.asarray(y[key])
 
+    recos = ['plane_dir']#, 'laputop_dir', 'small_dir']
     # Remove events with NaN's (reconsider later?)
     if nanCut:
-        tempValue = x.sum(axis=(1,2,3))
+        tempValue = x.sum(axis=(1,2,3)) # sum all data in each event
         nan = (tempValue == tempValue)
         x = x[nan]
         for key in y.keys():
             y[key] = y[key][nan]
+
+        for reco in recos:
+            th, _ = y[reco].transpose()
+            th = th.astype('float') 
+            nantemp = ~np.isnan(th) 
+            th = th[nantemp] 
+            x = x[nantemp]
+            for key in y.keys():
+                y[key] = y[key][nantemp]
+
         loss = (len(nan)-len(x)) / len(nan) * 100
         print("Percentage of events with a NaN: %.02f" % loss)
     else:
@@ -200,7 +210,6 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
 
     # Create the same randomized array each time
     np.random.seed(1148)
-    cut_idxs = []
 
     cut = (np.random.uniform(size=x.shape[0]) > 0.1).astype(bool)
     if mode == 'assessment':
@@ -214,6 +223,7 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
  - Can normalize charge, time, or both
 """
 def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
+             #recocut=False):
 
     qtDict = {'q':q, 't':t}
     new_dim = 4
@@ -297,19 +307,19 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
         # Normalize
         out_array /= maxValues
 
+    # Keep NaN's in with reconstruction so we can tell which events to ignore
     if reco != None:
         th, _ = y['{}_dir'.format(reco)].transpose()
-        thetaCut = ~np.isnan(th)
-        out_array = out_array[thetaCut]
-        th = np.pi - th[thetaCut]
-        th /= th.max()
+        th = th.astype('float')
+        th = np.pi - th
         if cosz:
             th = np.cos(th)
+        if normed and not cosz:
+            th /= np.nanmax(th)
         out_array = [out_array, th]
 
     return out_array
-
-
+    
 def load_mc(filePath):
 
     mcfiles = sorted(glob('%s/sim_*_mc.npy' % filePath))
@@ -336,7 +346,6 @@ def nameModel(prep, prefix=''):
         outstr = '{}_{}.{}'.format(outstr, key, value)
     return outstr
 
-
 def name2prep(name):
     prep = {}
     args = [a.split('.') for a in name.split('_') if len(a.split('.'))==2]
@@ -345,12 +354,3 @@ def name2prep(name):
         except ValueError:
             prep[key] = value
     return prep
-
-
-
-
-
-
-
-
-
