@@ -1,0 +1,10 @@
+This is a summary of the research results.
+
+Zenith Input
+Addition of zenith as a concatenated layer provides information about the angle at which the shower strikes the tanks, thus resulting in a more accurate energy resolution. It improved the model a lot.
+
+Pooling Layer
+
+Talos Hyperparamter Tuning
+
+Prep Dictionary Combinations
