@@ -22,7 +22,7 @@ from data_tools import load_preprocessed, dataPrep, filterReco
 
 
 # File directory to folder that holds simulation data 
-simPrefix = '/defaultDir/simFiles/'
+simPrefix = '/home/mays_k/simdata'
 
 # Sim data to reconstruct (dir produces theta & phi, make sure to transpose)
 sim = 'energy'
@@ -31,7 +31,7 @@ sim = 'energy'
 numepochs = 3
 
 # Name for model
-name = 'test_filter'
+name = 'baseline'
 
 # Baseline data prep
 prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False}
@@ -114,13 +114,15 @@ early_stop = EarlyStopping(monitor="val_loss", min_delta=0, patience=10, verbose
 callbacks = [early_stop, csv_logger]
 
 # Training
-history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks)
+print("Now training a model...")
+history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks, verbose=0)
 
 
 # In[37]:
 
 
 # Save the model results as a .npy and .h5 file
+print("Saving info to models folder")
 model.save('models/%s.h5' % name)
 np.save('models/%s.npy' % name, prep)
 
