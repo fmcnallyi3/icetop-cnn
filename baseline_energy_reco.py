@@ -28,10 +28,10 @@ simPrefix = '/home/mays_k/simdata'
 sim = 'energy'
 
 # Set the number of epochs the model should run for 
-numepochs = 3
+numepochs = 100
 
 # Name for model
-name = 'baseline'
+name = 'rotations'
 
 # Baseline data prep
 prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False}
@@ -91,7 +91,11 @@ model.summary()
 # Load simulation data from files for training
 x, y = load_preprocessed(simPrefix, 'train')
 
-
+# Rotate each event randomly by 0, 90, 180,or 270 degrees
+for int in range(549773):
+    rots = np.random.randint(0,high=4)
+    x[int]=np.rot90(x[int],rots)
+    
 # In[26]:
 
 
