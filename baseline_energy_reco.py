@@ -31,7 +31,7 @@ sim = 'energy'
 numepochs = 100
 
 # Name for model
-name = 'rotations'
+name = 'baseline'
 
 # Baseline data prep
 prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False}
@@ -92,7 +92,7 @@ model.summary()
 x, y = load_preprocessed(simPrefix, 'train')
 
 # Rotate each event randomly by 0, 90, 180,or 270 degrees
-for int in range(549773):
+'''for int in range(549773):
     rots = np.random.randint(0,high=4)
     x[int]=np.rot90(x[int],rots)
     
