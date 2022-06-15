@@ -93,7 +93,7 @@ def load_data(fileList, infill=False):
     domKeys = ['charge','time'] # Keys tied to DOMs
 
     # Concatenate all information tied to events
-    for i, f in enumerate(fileList):
+    for f in enumerate(fileList):
         if sys.version_info.major == 3:
             d_i = np.load(f, allow_pickle=True)
         else:

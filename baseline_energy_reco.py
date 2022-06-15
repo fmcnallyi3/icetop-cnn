@@ -3,26 +3,30 @@
 
 # # Energy Reconstruction Using CNN - Zenith Input
 
-# In[20]:
+# In[1]:
 
 
 import numpy as np
-import os
+import os, stat
 import time
+import scipy
+import matplotlib.pyplot as plt
+import seaborn_image as isns
 from csv import writer
 from tensorflow import keras 
 from keras import layers, models
 from keras.callbacks import CSVLogger, EarlyStopping
 from data_tools import load_preprocessed, dataPrep, filterReco
+import data_tools
 
 
 # ## Model Design
 
-# In[21]:
+# In[2]:
 
 
 # File directory to folder that holds simulation data 
-simPrefix = '/home/mays_k/simdata'
+simPrefix = '/Users/kmays/simFiles'
 
 # Sim data to reconstruct (dir produces theta & phi, make sure to transpose)
 sim = 'energy'
@@ -31,13 +35,13 @@ sim = 'energy'
 numepochs = 100
 
 # Name for model
-name = 'baseline'
+name = 'rotations'
 
 # Baseline data prep
 prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False}
 
 
-# In[22]:
+# In[4]:
 
 
 # Add identifying number to name
@@ -49,7 +53,7 @@ name += str(i)
 print(name)
 
 
-# In[23]:
+# In[5]:
 
 
 # Create model using functional API for multiple inputs
@@ -79,31 +83,59 @@ model = models.Model(inputs=[charge_input, zenith_input], outputs=output, name=n
 model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae','mse'])
 
 
-# In[24]:
+# In[6]:
 
 
 model.summary()
 
 
-# In[25]:
+# In[3]:
 
 
 # Load simulation data from files for training
 x, y = load_preprocessed(simPrefix, 'train')
 
+
+# In[4]:
+
+
 # Rotate each event randomly by 0, 90, 180,or 270 degrees
-'''for int in range(549773):
-    rots = np.random.randint(0,high=4)
-    x[int]=np.rot90(x[int],rots)
-    
+
+x_r=np.empty((2199092, 10, 10, 4))
+ind=0
+for num in range(549773):
+    for rots in range(4):
+        rot=np.rot90(x[num], rots)
+        x_r[ind]=rot
+        ind+=1
+
+print(x.shape)
+print(x_r.shape)
+
+
+# In[67]:
+
+
+# Create dictionary y_r to reflect the increased events in x_r
+
+y_r={'comp':np.empty(2199092), 'energy':np.empty(2199092), 'dir':np.empty(2199092), 'plane_dir':np.empty(2199092), 'laputop_dir':np.empty(2199092), 'small_dir':np.empty(2199092)}
+
+for key in y_r:
+    i=0
+    for num in range(549773):
+        for n in range(4):
+            y_r['energy'][i]=y['energy'][num]
+            i+=1
+
+
 # In[26]:
 
 
 # Prepare event data
-x_i = dataPrep(x, y, **prep)
+x_i = dataPrep(x_r, y_r, **prep)
 
 # Filter NaNs from reconstruction data
-filterReco(prep, y, x_i)
+filterReco(prep, y_r, x_i)
 
 
 # In[27]:
@@ -118,15 +150,13 @@ early_stop = EarlyStopping(monitor="val_loss", min_delta=0, patience=10, verbose
 callbacks = [early_stop, csv_logger]
 
 # Training
-print("Now training a model...")
-history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks, verbose=0)
+history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y_r[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks)
 
 
 # In[37]:
 
 
 # Save the model results as a .npy and .h5 file
-print("Saving info to models folder")
 model.save('models/%s.h5' % name)
 np.save('models/%s.npy' % name, prep)
 
