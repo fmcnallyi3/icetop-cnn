@@ -7,17 +7,13 @@
 
 
 import numpy as np
-import os, stat
+import os
 import time
-import scipy
-import matplotlib.pyplot as plt
-import seaborn_image as isns
 from csv import writer
 from tensorflow import keras 
 from keras import layers, models
 from keras.callbacks import CSVLogger, EarlyStopping
 from data_tools import load_preprocessed, dataPrep, filterReco
-import data_tools
 
 
 # ## Model Design
@@ -26,7 +22,7 @@ import data_tools
 
 
 # File directory to folder that holds simulation data 
-simPrefix = '/Users/kmays/simFiles'
+simPrefix = '/home/mays_k/simdata'
 
 # Sim data to reconstruct (dir produces theta & phi, make sure to transpose)
 sim = 'energy'
@@ -118,13 +114,12 @@ print(x_r.shape)
 
 # Create dictionary y_r to reflect the increased events in x_r
 
-y_r={'comp':np.empty(2199092), 'energy':np.empty(2199092), 'dir':np.empty(2199092), 'plane_dir':np.empty(2199092), 'laputop_dir':np.empty(2199092), 'small_dir':np.empty(2199092)}
-
+y_r={'comp':np.empty(2199092), 'energy':np.empty(2199092), 'dir':np.empty((2199092,2)), 'plane_dir':np.empty((2199092,2)), 'laputop_dir':np.empty((2199092,2)), 'small_dir':np.empty((2199092,2))}
 for key in y_r:
     i=0
     for num in range(549773):
         for n in range(4):
-            y_r['energy'][i]=y['energy'][num]
+            y_r[key][i]=y[key][num]
             i+=1
 
 
@@ -150,7 +145,8 @@ early_stop = EarlyStopping(monitor="val_loss", min_delta=0, patience=10, verbose
 callbacks = [early_stop, csv_logger]
 
 # Training
-history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y_r[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks)
+print("Now training a model...")
+history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y_r[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks, verbose=0)
 
 
 # In[37]:
