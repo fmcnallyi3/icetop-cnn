@@ -214,8 +214,8 @@ def dict2mat(d):
                     data[i][y_i][x_i][2] += time
                 if dom[2:] in tank2s:
                     data[i][y_i][x_i][3] += time
-
-    return data
+    
+    return np.asarray(data).reshape(-1,10,10,4)
 
 
 def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):

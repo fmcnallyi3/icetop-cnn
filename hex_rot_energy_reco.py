@@ -32,7 +32,7 @@ sim = 'energy'
 numepochs = 100
 
 # Name for model
-name = 'rotations'
+name = 'hexrotations'
 
 # Baseline data prep
 prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False}
@@ -97,7 +97,7 @@ model.summary()
 
 
 # Load the data
-file_list=sorted(glob.glob('/Users/kmays/sim/*.npy'))
+file_list=sorted(glob.glob('/home/mays_k/sim/*.npy'))
 hexDict=data_tools.load_data(file_list)
 
 # Create x & y
@@ -106,18 +106,28 @@ y={'energy':[], 'comp':[], 'dir':[], 'plane_dir':[], 'laputop_dir':[], 'small_di
 for key in y:
     y[key]=hexDict[key]
 y['comp']=np.empty(len(y['comp']))
-
+for key in y.keys():
+        y[key] = np.asarray(y[key])
 print(x.shape)
+
+print('taking care of NaNs')
+tempValue = x.sum(axis=(1,2,3)) # sum all data in each event
+nan = (tempValue == tempValue)
+x = x[nan]
+for key in y.keys():
+    y[key] = y[key][nan]
+loss = (len(nan)-len(x)) / len(nan) * 100
+print("Percentage of events with a NaN: %.02f" % loss)
 
 
 # In[26]:
 
 
 # Prepare event data
-x_i = dataPrep(x_r, y_r, **prep)
+x_i = dataPrep(x, y, **prep)
 
 # Filter NaNs from reconstruction data
-filterReco(prep, y_r, x_i)
+filterReco(prep, y, x_i)
 
 
 # In[27]:
@@ -133,7 +143,7 @@ callbacks = [early_stop, csv_logger]
 
 # Training
 print("Now training a model...")
-history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y_r[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks, verbose=0)
+history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks, verbose=0)
 
 
 # In[37]:
