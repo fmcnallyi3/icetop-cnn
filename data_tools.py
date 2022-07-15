@@ -288,7 +288,7 @@ def load_preprocessed(filePath, mode, nanCut=True, comp=['p','f']):
  - Can combine charge or time layers to one value per station
  - Can normalize charge, time, or both
 """
-def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
+def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False, rot=None):
              #recocut=False):
 
     qtDict = {'q':q, 't':t}
@@ -367,12 +367,64 @@ def dataPrep(x, y, q=None, t=None, normed=False, reco=None, cosz=False):
     if normed:
         # Find the maximum value for each layer
         ## NOTE: separate layers for charge/time will be normed separately!
-        maxValues = out_array.max(axis=(0,1,2), keepdims=True)
+        #maxValues = out_array.max(axis=(0,1,2), keepdims=True)
         # Avoid instances where no data is in a layer for a given event
-        maxValues[maxValues==0] = 1
+        #maxValues[maxValues==0] = 1
         # Normalize
-        out_array /= maxValues
+        #out_array /= maxValues
+
+        if q != False: 
+            maxValuesQ1 = out_array[...,0].max(axis=(0,1,2), keepdims=True)
+            maxValuesQ2 = out_array[...,1].max(axis=(0,1,2), keepdims=True)
+        #choose the highest maximum from one of the two layers       
+            if maxValuesQ2 > maxValuesQ1:
+                maxValue1 = maxValuesQ2 
+            else: 
+                maxValue1 = maxValuesQ1
+        #Avoid instances where no data is in a layer for a given event        
+            maxValue1[maxValue1==0] = 1  
+        # Normalize
+            out_array[...,:2]/=maxValue1    
+        
+        
+        if t != False:
+        #shift timeto eliminate gap 
+            timelayer1 = np.array(out_array[...,2])
+            timelayer2 = np.array(out_array[...,3])
+            bothtimelayers = np.array(out_array[...,-2:])
+            
+            minval1 = np.min(timelayer1[np.nonzero(timelayer1)])
+            minval2 = np.min(timelayer2[np.nonzero(timelayer2)])
+
+            if minval1 > minval2:
+                minval = minval1
+            else: 
+                minval = minval2
     
+            bothtimelayers[bothtimelayers==0] = minval 
+            shiftedtime = bothtimelayers - minval
+            out_array[...,-2:] = shiftedtime 
+
+            #take the shifted time and normalize     
+            maxValuesT1 = out_array[...,2].max(axis=(0,1,2), keepdims=True) 
+            maxValuesT2 = out_array[...,3].max(axis=(0,1,2), keepdims=True)
+
+            #choose the highest maximum from one of the two layers 
+            if maxValuesT1 > maxValuesT2:
+                maxValue2 = maxValuesT1
+            else: 
+                maxValue2 = maxValuesT2
+            #Avoid instances where no data is in a layer for a given event
+            maxValue2[maxValue2==0] = 1
+            # Normalize
+            out_array[...,-2:]/= maxValue2
+    
+    # Randomly rotate each event by 0,90,180, or 270 degrees
+    if rot!=None:
+        for int in range(out_array.shape[0]):
+            rots=np.random.randint(0,high=4)
+            out_array[int]=np.rot90(out_array[int], rots)  
+        
     # Keep NaN's in with reconstruction so we can tell which events to ignore
     if reco != None:
         th, _ = y['{}_dir'.format(reco)].transpose()
