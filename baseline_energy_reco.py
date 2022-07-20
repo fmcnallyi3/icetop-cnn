@@ -13,7 +13,7 @@ from csv import writer
 from tensorflow import keras 
 from keras import layers, models
 from keras.callbacks import CSVLogger, EarlyStopping
-from data_tools import load_preprocessed, dataPrep, filterReco
+from data_tools_kennedyNewnorm import load_preprocessed, dataPrep, filterReco
 
 
 # ## Model Design
@@ -31,10 +31,10 @@ sim = 'energy'
 numepochs = 100
 
 # Name for model
-name = 'rotations'
+name = 'normedTimerotations'
 
 # Baseline data prep
-prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':True}
+prep = {'q':None, 't':None, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':True, 't_shift':True}
 
 
 # In[4]:
@@ -55,7 +55,7 @@ print(name)
 # Create model using functional API for multiple inputs
 
 # Input layer 
-charge_input = keras.Input(shape=(10,10,2,), name='charge')
+charge_input = keras.Input(shape=(10,10,4,), name='charge')
 
 # Starts off with three convolutional layers, each one has half the neurons of the previous one 
 conv1_layer = layers.Conv2D(64, kernel_size=3, padding='same', activation='relu')(charge_input)
