@@ -34,7 +34,7 @@ numepochs = 100
 name = 'rotations'
 
 # Baseline data prep
-prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False}
+prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':True}
 
 
 # In[4]:
@@ -92,45 +92,14 @@ model.summary()
 x, y = load_preprocessed(simPrefix, 'train')
 
 
-# In[4]:
-
-
-# Rotate each event randomly by 0, 90, 180,or 270 degrees
-
-x_r=np.empty((2199092, 10, 10, 4))
-ind=0
-for num in range(549773):
-    for rots in range(4):
-        rot=np.rot90(x[num], rots)
-        x_r[ind]=rot
-        ind+=1
-
-print(x.shape)
-print(x_r.shape)
-
-
-# In[67]:
-
-
-# Create dictionary y_r to reflect the increased events in x_r
-
-y_r={'comp':np.empty(2199092), 'energy':np.empty(2199092), 'dir':np.empty((2199092,2)), 'plane_dir':np.empty((2199092,2)), 'laputop_dir':np.empty((2199092,2)), 'small_dir':np.empty((2199092,2))}
-for key in y_r:
-    i=0
-    for num in range(549773):
-        for n in range(4):
-            y_r[key][i]=y[key][num]
-            i+=1
-
-
 # In[26]:
 
 
 # Prepare event data
-x_i = dataPrep(x_r, y_r, **prep)
+x_i = dataPrep(x, y, **prep)
 
 # Filter NaNs from reconstruction data
-filterReco(prep, y_r, x_i)
+filterReco(prep, y, x_i)
 
 
 # In[27]:
@@ -146,7 +115,7 @@ callbacks = [early_stop, csv_logger]
 
 # Training
 print("Now training a model...")
-history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y_r[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks, verbose=0)
+history = model.fit({"charge":x_i[0], "zenith":x_i[1].reshape(-1,1)}, y=y[sim], epochs=numepochs, validation_split=0.15, callbacks=callbacks, verbose=0)
 
 
 # In[37]:
