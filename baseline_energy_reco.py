@@ -34,7 +34,7 @@ numepochs = 100
 name = 'rotations'
 
 # Baseline data prep
-prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':True}
+prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':'x'}
 
 
 # In[4]:
@@ -97,6 +97,7 @@ x, y = load_preprocessed(simPrefix, 'train')
 
 # Prepare event data
 x_i = dataPrep(x, y, **prep)
+print(x_i[0].shape, len(y['energy']))
 
 # Filter NaNs from reconstruction data
 filterReco(prep, y, x_i)
