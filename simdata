@@ -3,10 +3,11 @@
 To use these files, you will have to download and use the x and y files that I have available in cobalt.
 The command to download these files to your active directory on your local machine (Use from terminal or cmd or whatever floats your OS):
 
-scp [the first letter of your first name][your last name]@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/* .
+         scp [the first letter of your first name][your last name]@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/* .
 
-Example if Dr. McNally wanted the files: >> scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/* .
+Example if Dr. McNally wanted the files:   scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/* .
 
 This might take a while; I hope you have nice internet! If not, this is not the only way you can get these files, but it is proabably the easiest. Just let me know.
+Enjpy!
 
 
