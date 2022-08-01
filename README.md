@@ -12,7 +12,7 @@ The machine learning team led by Dr. McNally conducted this research to create a
 
 ### Data Tools
 - This python script is used to load & manipulate the data
-- Calls to load_preprocessed, dataPrep, and filterReco are made within the trainging notebook
+- Calls to load_preprocessed, data_prep, and get_reco_nan_filter are made within the training notebook
 - It also contains a variety of methods to allow functionality for quality cuts, naming convention, converting a dictionary to a multi-dimensional array, ect
 
 ### Model Training Jupyter Notebook 
