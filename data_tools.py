@@ -284,7 +284,7 @@ def data_prep(x, y, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=
 
     if t != False:
         # Prepare all nonzero time values and sort them in ascending order
-        nonzero_time_values = np.sort(x[...,idx:][np.nonzero(x[...,idx:])])
+        nonzero_time_values = np.sort(out_array[...,idx:][np.nonzero(out_array[...,idx:])])
         # Time Clip
         if 0 <= t_clip <= 100:
             # Find index of time value that corresponds to the % of data
