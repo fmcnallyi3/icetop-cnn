@@ -31,10 +31,10 @@ sim = 'energy'
 numepochs = 100
 
 # Name for model
-name = 'normedTimeRotations'
+name = 'rotations'
 
 # Baseline data prep
-prep = {'q':None, 't':None, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':'x'}
+prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':'x'}
 
 
 # In[4]:
@@ -55,7 +55,7 @@ print(name)
 # Create model using functional API for multiple inputs
 
 # Input layer 
-charge_input = keras.Input(shape=(10,10,4,), name='charge')
+charge_input = keras.Input(shape=(10,10,2,), name='charge')
 
 # Starts off with three convolutional layers, each one has half the neurons of the previous one 
 conv1_layer = layers.Conv2D(64, kernel_size=3, padding='same', activation='relu')(charge_input)

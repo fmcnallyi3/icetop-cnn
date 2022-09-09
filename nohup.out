@@ -1,0 +1,169 @@
+2022-09-08 22:43:01.386645: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-09-08 22:43:02.177661: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-09-08 22:43:02.178036: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+rotations2
+Model: "rotations2"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+charge (InputLayer)             [(None, 10, 10, 2)]  0                                            
+__________________________________________________________________________________________________
+conv2d (Conv2D)                 (None, 10, 10, 64)   1216        charge[0][0]                     
+__________________________________________________________________________________________________
+conv2d_1 (Conv2D)               (None, 10, 10, 32)   18464       conv2d[0][0]                     
+__________________________________________________________________________________________________
+conv2d_2 (Conv2D)               (None, 10, 10, 16)   4624        conv2d_1[0][0]                   
+__________________________________________________________________________________________________
+flatten (Flatten)               (None, 1600)         0           conv2d_2[0][0]                   
+__________________________________________________________________________________________________
+zenith (InputLayer)             [(None, 1)]          0                                            
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 1601)         0           flatten[0][0]                    
+                                                                 zenith[0][0]                     
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 256)          410112      concatenate[0][0]                
+__________________________________________________________________________________________________
+dense_1 (Dense)                 (None, 256)          65792       dense[0][0]                      
+__________________________________________________________________________________________________
+dense_2 (Dense)                 (None, 256)          65792       dense_1[0][0]                    
+__________________________________________________________________________________________________
+dense_3 (Dense)                 (None, 1)            257         dense_2[0][0]                    
+==================================================================================================
+Total params: 566,257
+Trainable params: 566,257
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Percentage of events with a NaN: 2.68
+Traceback (most recent call last):
+  File "/home/mays_k/icetop-cnn/baseline_energy_reco.py", line 99, in <module>
+    x_i = dataPrep(x, y, **prep)
+  File "/home/mays_k/icetop-cnn/data_tools_kennedyNewnorm.py", line 491, in dataPrep
+    new_coords=(rots[i[:2]][0],rots[i[:2]][1],i[-1])
+KeyError: (4, 9)
+2022-09-08 22:55:18.882464: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-09-08 22:55:19.658678: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-09-08 22:55:19.659040: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+rotations2
+Model: "rotations2"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+charge (InputLayer)             [(None, 10, 10, 2)]  0                                            
+__________________________________________________________________________________________________
+conv2d (Conv2D)                 (None, 10, 10, 64)   1216        charge[0][0]                     
+__________________________________________________________________________________________________
+conv2d_1 (Conv2D)               (None, 10, 10, 32)   18464       conv2d[0][0]                     
+__________________________________________________________________________________________________
+conv2d_2 (Conv2D)               (None, 10, 10, 16)   4624        conv2d_1[0][0]                   
+__________________________________________________________________________________________________
+flatten (Flatten)               (None, 1600)         0           conv2d_2[0][0]                   
+__________________________________________________________________________________________________
+zenith (InputLayer)             [(None, 1)]          0                                            
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 1601)         0           flatten[0][0]                    
+                                                                 zenith[0][0]                     
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 256)          410112      concatenate[0][0]                
+__________________________________________________________________________________________________
+dense_1 (Dense)                 (None, 256)          65792       dense[0][0]                      
+__________________________________________________________________________________________________
+dense_2 (Dense)                 (None, 256)          65792       dense_1[0][0]                    
+__________________________________________________________________________________________________
+dense_3 (Dense)                 (None, 1)            257         dense_2[0][0]                    
+==================================================================================================
+Total params: 566,257
+Trainable params: 566,257
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Percentage of events with a NaN: 2.68
+Traceback (most recent call last):
+  File "/home/mays_k/icetop-cnn/baseline_energy_reco.py", line 99, in <module>
+    x_i = dataPrep(x, y, **prep)
+  File "/home/mays_k/icetop-cnn/data_tools_kennedyNewnorm.py", line 491, in dataPrep
+    new_coords=(rots[i[:2]][0],rots[i[:2]][1],i[-1])
+KeyError: (4, 9)
+2022-09-08 23:15:56.411380: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-09-08 23:15:57.185469: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-09-08 23:15:57.185835: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+rotations2
+Model: "rotations2"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+charge (InputLayer)             [(None, 10, 10, 2)]  0                                            
+__________________________________________________________________________________________________
+conv2d (Conv2D)                 (None, 10, 10, 64)   1216        charge[0][0]                     
+__________________________________________________________________________________________________
+conv2d_1 (Conv2D)               (None, 10, 10, 32)   18464       conv2d[0][0]                     
+__________________________________________________________________________________________________
+conv2d_2 (Conv2D)               (None, 10, 10, 16)   4624        conv2d_1[0][0]                   
+__________________________________________________________________________________________________
+flatten (Flatten)               (None, 1600)         0           conv2d_2[0][0]                   
+__________________________________________________________________________________________________
+zenith (InputLayer)             [(None, 1)]          0                                            
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 1601)         0           flatten[0][0]                    
+                                                                 zenith[0][0]                     
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 256)          410112      concatenate[0][0]                
+__________________________________________________________________________________________________
+dense_1 (Dense)                 (None, 256)          65792       dense[0][0]                      
+__________________________________________________________________________________________________
+dense_2 (Dense)                 (None, 256)          65792       dense_1[0][0]                    
+__________________________________________________________________________________________________
+dense_3 (Dense)                 (None, 1)            257         dense_2[0][0]                    
+==================================================================================================
+Total params: 566,257
+Trainable params: 566,257
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Percentage of events with a NaN: 2.68
+Traceback (most recent call last):
+  File "/home/mays_k/icetop-cnn/baseline_energy_reco.py", line 103, in <module>
+    filterReco(prep, y, x_i)
+  File "/home/mays_k/icetop-cnn/data_tools_kennedyNewnorm.py", line 534, in filterReco
+    x_i[0] = x_i[0][nanCut]
+IndexError: boolean index did not match indexed array along dimension 0; dimension is 3298638 but corresponding boolean dimension is 2199092
+2022-09-08 23:40:09.856087: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-09-08 23:40:10.638149: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-09-08 23:40:10.638533: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-09-08 23:56:27.680936: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-09-08 23:56:29.305329: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+rotations2
+Model: "rotations2"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+charge (InputLayer)             [(None, 10, 10, 2)]  0                                            
+__________________________________________________________________________________________________
+conv2d (Conv2D)                 (None, 10, 10, 64)   1216        charge[0][0]                     
+__________________________________________________________________________________________________
+conv2d_1 (Conv2D)               (None, 10, 10, 32)   18464       conv2d[0][0]                     
+__________________________________________________________________________________________________
+conv2d_2 (Conv2D)               (None, 10, 10, 16)   4624        conv2d_1[0][0]                   
+__________________________________________________________________________________________________
+flatten (Flatten)               (None, 1600)         0           conv2d_2[0][0]                   
+__________________________________________________________________________________________________
+zenith (InputLayer)             [(None, 1)]          0                                            
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 1601)         0           flatten[0][0]                    
+                                                                 zenith[0][0]                     
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 256)          410112      concatenate[0][0]                
+__________________________________________________________________________________________________
+dense_1 (Dense)                 (None, 256)          65792       dense[0][0]                      
+__________________________________________________________________________________________________
+dense_2 (Dense)                 (None, 256)          65792       dense_1[0][0]                    
+__________________________________________________________________________________________________
+dense_3 (Dense)                 (None, 1)            257         dense_2[0][0]                    
+==================================================================================================
+Total params: 566,257
+Trainable params: 566,257
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Percentage of events with a NaN: 2.68
+Now training a model...
