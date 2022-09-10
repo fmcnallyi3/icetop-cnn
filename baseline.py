@@ -113,7 +113,7 @@ def create_model(model_name, model_prefix, model_type, has_time, has_reco, x_i):
     name += str(i)
 
     # Charge and Time (if included) input layers
-    data_input = Input(shape=(10,10,x_i[0].shape[-1]), name='data')
+    data_input = Input(shape=x_i[0].shape[-3:], name='data')
 
     # Zenith input layer
     if has_reco:
