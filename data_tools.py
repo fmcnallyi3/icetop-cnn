@@ -32,15 +32,14 @@ def edge_idxs():
 
 
 # Get cut to display on plots
-def get_cut(cut_str, y, p, recoE, key):
+def get_cut(cut_str, y, reco, recoE, data_cut):
 
     # No Cut
     if cut_str == 'No Cut':
-        return np.array([True for _ in recoE[key]]), (y['energy'][get_reco_nan_filter(p[key]['reco'], y)], y['energy'][get_reco_nan_filter(p[key]['reco'], y) * y['passed_STA5']])[p[key]['sta5']]
-
+        return np.array([True for _ in recoE]), y['energy'][get_data_cut(reco, y, data_cut)]
     # Quality Cut
     if cut_str == 'Quality Cut':
-        return (y['quality_cut'][get_reco_nan_filter(p[key]['reco'], y)], y['quality_cut'][get_reco_nan_filter(p[key]['reco'], y) * y['passed_STA5']])[p[key]['sta5']], y['energy'][y['quality_cut']]
+        return y['quality_cut'][get_data_cut(reco, y, data_cut)], y['energy'][y['quality_cut'] * get_data_cut(reco, y, data_cut)]
 
     raise Exception('Bad cut!')
 
@@ -133,12 +132,7 @@ def dict_to_mat(d):
     return data
 
 
-def load_preprocessed(file_path, mode, comp=['p','f']):
-
-    # Make sure user selects a valid mode
-    if mode not in ['assessment', 'train', None]:
-        print('Invalid mode choice')
-        raise
+def load_preprocessed(file_path, comp=['p','f']):
     
     # Load valid x and y files
     x_files = sorted(glob('%s/x_*.npy' % file_path))
@@ -166,43 +160,34 @@ def load_preprocessed(file_path, mode, comp=['p','f']):
             y[key] += [r for r in y_i[key]]
 
     x = np.asarray(x).reshape(-1,10,10,8)
+
     for key in y.keys():
         y[key] = np.asarray(y[key])
 
-    # Goal: Isolate a set of events to be used for assessment.
-    # No model should ever be trained on these events.
-    # Temporary approach, just isolate 10% of total sample
-    if mode == None:
-        return x, y
-
-    # Create the same randomized array each time
-    np.random.seed(1148)
-
-    cut = (np.random.uniform(size=x.shape[0]) > 0.1).astype(bool)
-    if mode == 'assessment':
-        cut = np.logical_not(cut)
-
-    return x[cut], {key:y[key][cut] for key in y.keys()}
+    return x, y
 
 
 """ Catch-all function designed to prepare data in a variety of common ways. 
  - Can combine charge or time layers to one value per station
  - Can normalize charge, time, or both
 """
-def data_prep(x, y, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=0, normed=False, reco=None, cosz=False):
+def data_prep(x_raw, y, mode, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=0, normed=False, reco=None, cosz=False):
+
+    if q == False:
+        raise Exception('Why train the model without charge? It is not worth it, promise.')
+    if t == False and reco == None:
+        raise Exception('Why train the model on charge alone? It is not worth it, promise.')
+
+    # Make sure user selects a valid mode
+    if mode not in ['assessment', 'train', None]:
+        print('Invalid mode choice')
+        raise
 
     if clc:
-        q1h, q1s, q2h, q2s, t1h, t1s, t2h, t2s = x.transpose(3,0,1,2)
+        q1h, q1s, q2h, q2s, t1h, t1s, t2h, t2s = x_raw.transpose(3,0,1,2)
         x = np.array([q1h+q1s, q2h+q2s, t1h+t1s, t2h+t2s]).transpose(1,2,3,0)
     else:
-        x = x[...,::2]
-
-    if sta5:
-        passed_STA5 = y['passed_STA5']
-        x = x[passed_STA5]
-
-        for key in y.keys():
-            y[key] = y[key][passed_STA5]
+        x = x_raw[...,::2]
 
     qt_dict = {'q':q, 't':t}
     new_dim = 4
@@ -234,7 +219,7 @@ def data_prep(x, y, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=
             a1, a2 = x[...,:2].transpose(3,0,1,2)
             out_idx = 0
             
-        if k == 't':
+        elif k == 't':
             if merge_type == None:
                 out_array[...,-2:] = x[...,-2:]
                 continue
@@ -258,23 +243,28 @@ def data_prep(x, y, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=
         if merge_type == 'mean':
             with catch_warnings():
                 filterwarnings('ignore', category=RuntimeWarning, message='Mean of empty slice')
-                new_out = np.nanmean([a1,a2], axis=0)
-            a1[a1!=a1] = 0
-            a2[a2!=a2] = 0
+                if k == 'q':
+                    new_out = mod_log(np.nanmean([r_log(a1), r_log(a2)], axis=0))
+                elif k == 't':
+                    new_out = np.nanmean([a1,a2], axis=0)
             new_out[new_out != new_out] = 0
-        if merge_type == 'sum':
-            new_out = mod_log(r_log(a1) + r_log(a2))
-        if merge_type == 'product':
-            new_out = a1 + a2   # sum of logs = product
-        if merge_type == 'min':
+        elif merge_type == 'sum':
+            if k == 'q':
+                new_out = mod_log(r_log(a1) + r_log(a2))
+            elif k == 't':
+                new_out = a1 + a2
+        elif merge_type == 'product':
+            if k == 'q':
+                new_out = a1 + a2   # sum of logs = product
+            elif k == 't':
+                new_out = a1 * a2
+        elif merge_type == 'min':
             new_out = np.min([a1,a2], axis=0)
-        if merge_type == 'max':
+        elif merge_type == 'max':
             new_out = np.max([a1,a2], axis=0)
 
         # Convert zeros back
         if merge_type in ['min','max']:
-            a1[a1==ignore_values[merge_type]] = 0
-            a2[a2==ignore_values[merge_type]] = 0
             new_out[new_out == ignore_values[merge_type]] = 0
 
         out_array[...,out_idx] = new_out
@@ -286,7 +276,7 @@ def data_prep(x, y, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=
         # Prepare all nonzero time values and sort them in ascending order
         nonzero_time_values = np.sort(out_array[...,idx:][np.nonzero(out_array[...,idx:])])
         # Time Clip
-        if 0 <= t_clip <= 100:
+        if 0 < t_clip <= 100:
             # Find index of time value that corresponds to the % of data
             clip_idx = int((len(nonzero_time_values) - 1) * (1 - t_clip*.01))
             # Clip all time values that are greater than the time value corresponding to the % of data
@@ -296,23 +286,32 @@ def data_prep(x, y, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=
             # Subtract nonzero mimimum from all nonzero values across all time layers
             out_array[...,idx:][np.nonzero(out_array[...,idx:])] -= nonzero_time_values[0]
         
+
     # Normalization
     if normed:
-        if q != False:
-            # Find the maximum value across all charge layers
-            q_max_value = out_array[...,:idx].max(keepdims=True)
-            # Normalize
-            out_array[...,:idx] /= q_max_value
+        # Normalize charge
+        out_array[...,:idx] /= out_array[...,:idx].max(keepdims=True)
         if t != False:
-            # Find the maximum value across all time layers
-            t_max_value = out_array[...,idx:].max(keepdims=True)
-            # Normalize
-            out_array[...,idx:] /= t_max_value
+            # Normalize time
+            out_array[...,idx:] /= out_array[...,idx:].max(keepdims=True)
+
+
+    # Goal: Isolate a set of events to be used for assessment.
+    # No model should ever be trained on these events.
+    # Temporary approach, just isolate 10% of total sample
+
+    # Create the same randomized array each time
+    np.random.seed(1148)
+
+    cut = (np.random.uniform(size=out_array.shape[0]) > 0.1).astype(bool)
+    if mode == 'assessment':
+        cut = np.logical_not(cut)
+    if sta5:
+        cut *= y['passed_STA5']
 
     # Keep NaN's in with reconstruction so we can tell which events to ignore
     if reco != None:
-        th = y['{}_dir'.format(reco)].transpose()[0]
-        th = th.astype('float')
+        th = y['{}_dir'.format(reco)].transpose()[0].astype('float')
         th = np.pi - th
         if cosz:
             th = np.cos(th)
@@ -320,12 +319,12 @@ def data_prep(x, y, clc=True, sta5=False, q=None, t=None, t_shift=False, t_clip=
             th /= np.nanmax(th)
         out_array = [out_array, th]
     
-    return out_array, idx
+    return out_array, idx, cut
 
 
-""" Filter NaNs from reconstruction """
-def get_reco_nan_filter(reco, y):
-    return [True for _ in y['energy']] if reco == None else ~np.isnan(y['{}_dir'.format(reco)].transpose()[0].astype('float'))
+""" Filter NaNs from reconstruction, if any """
+def get_data_cut(reco, y, cut):
+    return cut if reco == None else ~np.isnan(y['{}_dir'.format(reco)].transpose()[0].astype('float')) * cut
 
 
 def load_mc(file_path):
