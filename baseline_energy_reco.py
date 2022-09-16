@@ -75,8 +75,9 @@ dense3_layer = layers.Dense(256, activation="relu")(dense2_layer)
 # This last dense layer is the output of the model
 output = layers.Dense(1)(dense3_layer)
 
+opt = keras.optimizers.Adam(learning_rate=0.0001)
 model = models.Model(inputs=[charge_input, zenith_input], outputs=output, name=name)
-model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae','mse'])
+model.compile(loss='mean_squared_error', optimizer=opt, metrics=['mae','mse'])
 
 
 # In[6]:
