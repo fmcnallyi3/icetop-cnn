@@ -31,7 +31,7 @@ sim = 'energy'
 numepochs = 100
 
 # Name for model
-name = 'rotations'
+name = 'lrRotations'
 
 # Baseline data prep
 prep = {'q':None, 't':False, 'normed':True, 'reco':'plane', 'cosz':False, 'rot':'x'}

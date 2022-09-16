@@ -167,3 +167,45 @@ Non-trainable params: 0
 __________________________________________________________________________________________________
 Percentage of events with a NaN: 2.68
 Now training a model...
+2022-09-15 20:02:44.673222: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-09-15 20:02:46.194229: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-09-15 20:02:46.195846: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+lrRotations0
+Model: "lrRotations0"
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+charge (InputLayer)             [(None, 10, 10, 2)]  0                                            
+__________________________________________________________________________________________________
+conv2d (Conv2D)                 (None, 10, 10, 64)   1216        charge[0][0]                     
+__________________________________________________________________________________________________
+conv2d_1 (Conv2D)               (None, 10, 10, 32)   18464       conv2d[0][0]                     
+__________________________________________________________________________________________________
+conv2d_2 (Conv2D)               (None, 10, 10, 16)   4624        conv2d_1[0][0]                   
+__________________________________________________________________________________________________
+flatten (Flatten)               (None, 1600)         0           conv2d_2[0][0]                   
+__________________________________________________________________________________________________
+zenith (InputLayer)             [(None, 1)]          0                                            
+__________________________________________________________________________________________________
+concatenate (Concatenate)       (None, 1601)         0           flatten[0][0]                    
+                                                                 zenith[0][0]                     
+__________________________________________________________________________________________________
+dense (Dense)                   (None, 256)          410112      concatenate[0][0]                
+__________________________________________________________________________________________________
+dense_1 (Dense)                 (None, 256)          65792       dense[0][0]                      
+__________________________________________________________________________________________________
+dense_2 (Dense)                 (None, 256)          65792       dense_1[0][0]                    
+__________________________________________________________________________________________________
+dense_3 (Dense)                 (None, 1)            257         dense_2[0][0]                    
+==================================================================================================
+Total params: 566,257
+Trainable params: 566,257
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Traceback (most recent call last):
+  File "/home/mays_k/icetop-cnn/baseline_energy_reco.py", line 93, in <module>
+    x, y = load_preprocessed(simPrefix, 'train')
+  File "/home/mays_k/icetop-cnn/data_tools_kennedyNewnorm.py", line 268, in load_preprocessed
+    y_i = np.load(yfiles[i], allow_pickle=True, encoding='latin1')
+IndexError: list index out of range
