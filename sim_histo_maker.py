@@ -76,7 +76,7 @@ def load_data(x_files, bins):
 
 def get_clip_index(hist_clc, clip_percent):
 
-    num_pulses, counter = sum(hist_clc), 0
+    num_pulses, counter = np.sum(hist_clc, dtype='int64'), 0
     
     # Quits on first loop for clip_percent < 0
     for i, curr_bin in enumerate(reversed(hist_clc)):
@@ -98,6 +98,8 @@ def clip_histo(hist, clip_idx):
 def create_histograms(base_hists_hlc, base_hists_slc, bins):
 
     names = ['charge_temp', 'time_temp']
+    if args.is_cumulative:
+        names = [f'cumul_{name}' for name in names]
     clip_percents = [args.q_clip_percent, args.t_clip_percent]
     LC_types = ['HLC', 'SLC', 'CLC']
     val_types = ['Charge', 'Time']
@@ -111,6 +113,9 @@ def create_histograms(base_hists_hlc, base_hists_slc, bins):
         clip_idx = get_clip_index(hists[2], clip_percents[i])
         # Clip all histograms
         hists = [clip_histo(hist, clip_idx) for hist in hists]
+        # Make cumulative histograms if prompted
+        if args.is_cumulative:
+            hists = [np.cumsum(hist[::-1])[::-1] for hist in hists]
 
         # Iterate through different histogram types
         for j, LC_type in enumerate(LC_types):
@@ -161,23 +166,26 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Makes clipped histograms of charge and time')
     parser.add_argument('-c', '--comp', dest='comp', type=str,
-        default='phof',
-        help='Composition(s) to make histograms from')
+            default='phof',
+            help='Composition(s) to make histograms from')
+    parser.add_argument('--cumulative', dest='is_cumulative',
+            default=False, action='store_true',
+            help='Option to create a reversed cumulative histogram')
     parser.add_argument('-d', '--data', dest='is_data_comparison',
-        default=False, action='store_true',
-        help='Option for unzooming histograms to fit view for real data')
+            default=False, action='store_true',
+            help='Option for unzooming histograms to fit view for real data')
     parser.add_argument('-l', '--linear', dest='is_linear',
-        default=False, action='store_true',
-        help='Option for creating histogram with linear axes/bins')
+            default=False, action='store_true',
+            help='Option for creating histogram with linear axes/bins')
     parser.add_argument('-o', '--out', dest='out_dir', type=str,
-        default=f'{os.getcwd()}/histograms/sim',
-        help='Output file path')
+            default=f'{os.getcwd()}/histograms/sim',
+            help='Output file path')
     parser.add_argument('-q', '--charge', dest='q_clip_percent', type=float,
-        default=0.0,
-        help='Percentage of pulses to clip in charge, range [0,1]')
+            default=0.0,
+            help='Percentage of pulses to clip in charge, range [0,1]')
     parser.add_argument('-t', '--time', dest='t_clip_percent', type=float,
-        default=0.0,
-        help='Percentage of pulses to clip in time, range [0,1]')
+            default=0.0,
+            help='Percentage of pulses to clip in time, range [0,1]')
     args = parser.parse_args()
 
     main()
