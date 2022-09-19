@@ -4,7 +4,6 @@ import argparse
 import os
 from glob import glob
 
-
 ##############################################################################################
 
 # ETHAN DORR'S SIMULATION DATA HISTOGRAM MAKER
@@ -76,7 +75,7 @@ def load_data(x_files, bins):
 
 def get_clip_index(hist_clc, clip_percent):
 
-    num_pulses, counter = np.sum(hist_clc, dtype='int64'), 0
+    num_pulses, counter = sum(hist_clc), 0
     
     # Quits on first loop for clip_percent < 0
     for i, curr_bin in enumerate(reversed(hist_clc)):
@@ -111,6 +110,7 @@ def create_histograms(base_hists_hlc, base_hists_slc, bins):
         hists = [HLC_hist, SLC_hist, HLC_hist + SLC_hist]
         # Find the right bin index to clip into based on the CLC histogram
         clip_idx = get_clip_index(hists[2], clip_percents[i])
+        print(f'{val_types[i]} Clip Range: {bins[i][clip_idx]:.2f} - {bins[i][clip_idx+1]:.2f} {units[i]}')
         # Clip all histograms
         hists = [clip_histo(hist, clip_idx) for hist in hists]
         # Make cumulative histograms if prompted
@@ -164,7 +164,7 @@ def main():
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
-        description='Makes clipped histograms of charge and time')
+            description='Makes clipped histograms of charge and time')
     parser.add_argument('-c', '--comp', dest='comp', type=str,
             default='phof',
             help='Composition(s) to make histograms from')
