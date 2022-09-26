@@ -165,10 +165,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
             description='Makes clipped histograms of charge and time')
-    parser.add_argument('-c', '--comp', dest='comp', type=str,
+    parser.add_argument('--comp', dest='comp', type=str,
             default='phof',
             help='Composition(s) to make histograms from')
-    parser.add_argument('--cumulative', dest='is_cumulative',
+    parser.add_argument('-c', '--cumulative', dest='is_cumulative',
             default=False, action='store_true',
             help='Option to create a reversed cumulative histogram')
     parser.add_argument('-d', '--data', dest='is_data_comparison',
