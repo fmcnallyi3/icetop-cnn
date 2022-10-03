@@ -103,7 +103,7 @@ fig, axs = plt.subplots(figsize=(13*ncols, 8), ncols=ncols)
 for i, cut_name in enumerate(cut_names):
     ax = axs[i]
     for j, key in enumerate(key_list):
-        cut, energy = get_cut(cut_name, y, p, recoE, key, data_cut)
+        cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
         ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args)
     ax.set_title('Energy Resolution (%s)' % cut_name, **label_params)
     ax.set_xlabel(r'$\log_{10}(E_{\mathrm{reco}}/\mathrm{GeV}) - \log_{10}(E_{\mathrm{true}}/\mathrm{GeV})$', **label_params)
@@ -121,7 +121,7 @@ fig, axs = plt.subplots(figsize=(13*ncols, 8), ncols=ncols)
 for i, cut_name in enumerate(cut_names):
     ax = axs[i]
     for j, key in enumerate(key_list):
-        cut, energy = get_cut(cut_name, y, p, recoE, key, data_cut)
+        cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
         ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args)
     ax.set_title('Energy Resolution (%s)' % cut_name, **label_params)
     ax.set_xlabel(r'$\log_{10}(E_{\mathrm{reco}}/\mathrm{GeV}) - \log_{10}(E_{\mathrm{true}}/\mathrm{GeV})$', **label_params)
@@ -135,7 +135,7 @@ plt.savefig(f'assessment/zoomed_unlogged_energy_resolution.png', format='png')
 
 for key in key_list:
     for i, cut_name in enumerate(cut_names):
-        cut, energy = get_cut(cut_name, y, p, recoE, key, data_cut)
+        cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
         median, err_min, err_max = np.percentile(recoE[key][cut] - energy, (50,16,84))
         print('Energy resolution for %s (%s): %.03f +%.03f %.03f' % (key, cut_name, median, err_max, err_min))
     print()
@@ -152,7 +152,7 @@ for i, key in enumerate(key_list):
     for j, cut_name in enumerate(cut_names):
         
         ax = axs[i, j] if len(key_list) > 1 else axs[j]
-        cut, energy = get_cut(cut_name, y, p, recoE, key, data_cut)
+        cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
         
         h, xedges, yedges = np.histogram2d(recoE[key][cut], energy, bins=(ebins, ebins), normed=False, weights=None)
         # Normalize
@@ -207,7 +207,7 @@ for i, cut_name in enumerate(cut_names):
         theta = np.pi - theta.astype('float')  # Define 0 degrees as overhead
 
         array_info = np.zeros(shape=(len(coszvalues), 3))
-        cut, energy = get_cut(cut_name, y, p, recoE, key, data_cut)
+        cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
         binned_zenith = np.digitize(np.cos(theta)[cut], coszbins) - 1
         for j in range(len(coszvalues)):
             coszcut = (binned_zenith == j)
