@@ -330,7 +330,7 @@ def data_prep(x_raw, y, mode, clc=True, sta5=False, q=None, t=None, t_shift=Fals
         out_array=temp_array
         # Update y, too
         temp_y={'comp':np.empty(nevents*6), 'energy':np.empty(nevents*6), 'dir':np.empty((nevents*6,2)), 'plane_dir':np.empty((nevents*6,2)), 'laputop_dir':np.empty((nevents*6,2)), 'small_dir':np.empty((nevents*6,2))}
-        for key in y:
+        for key in temp_y:
             nind=0
             for ind in range(nevents):
                 for num in range(6):

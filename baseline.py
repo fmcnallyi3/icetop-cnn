@@ -20,7 +20,7 @@ def main():
 
     # Edit these parameters
     # Too many to list, look in data_prep in data_tools for a better idea of what each does
-    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, rot=True}
+    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':True}
 
     # Set the number of models to train under this CNN
     num_models_to_train = 1
@@ -41,24 +41,24 @@ def main():
 
     # Optimizer to user for training
     # Default lr is .001
-    optimizer = Adam(learning_rate=0.0001)
+    optimizer = Adam(learning_rate=0.001)
 
     # Other loss metrics to analyze while training
     # Only for user to monitor - have no effect on model training
     metrics = ['mae','mse']
 
     # File directory to folder that holds models
-    model_prefix = os.getcwd()+'/models'
+    model_prefix = 'models'
 
     # File directory to folder that holds simulation data 
-    sim_prefix = os.getcwd()+'/simdata'
+    sim_prefix = '/home/mays_k/simdata'
 
     # Booleans for easier to read conditionals - no need to change this
     has_reco, has_time = prep['reco'] != None, prep['t'] != False
 
 
     # Load simulation data from files for training
-    x, y = load_preprocessed(sim_prefix, comp=['p','h','o','f'])
+    x, y = load_preprocessed(sim_prefix, comp=['p','f'])#h,o
 
     # Prepare simulation data
     x_i, idx, pre_cut = data_prep(x, y, 'train', **prep)
@@ -72,6 +72,7 @@ def main():
     else:
         x_i = x_i[data_cut] # q/t
 
+    #randomize then slice data...later
 
     for num_model in range(num_models_to_train):
 
@@ -86,8 +87,7 @@ def main():
         early_stop = EarlyStopping(monitor='val_loss', patience=25, mode='min', restore_best_weights=True)
         csv_logger = CSVLogger('%s/%s' % (model_prefix, name))
 
-        history = model.fit(fit_inputs, y=y['energy'][data_cut], epochs=num_epochs, validation_split=0.15, callbacks=[early_stop, csv_logger, reduce_lr])
-
+        history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_split=0.15, callbacks=[early_stop, csv_logger, reduce_lr])
 
         model.save('%s/%s.h5' % (model_prefix, name))
         np.save('%s/%s.npy' % (model_prefix, name), prep)
