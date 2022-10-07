@@ -7,10 +7,10 @@ import os
 
 
 # Edit this file path to the models folder containing .h5 and .npy files for each model.
-model_prefix = os.getcwd()+'/models'
+model_prefix = 'models'
 
 # Edit this file path to the folder containing the simulation data.
-sim_prefix = os.getcwd()+'/simdata'
+sim_prefix = '/home/mays_k/simdata'
 
 # Option to change font size for all labels within this notebook
 label_params = {'fontsize':16}
@@ -42,7 +42,7 @@ for key, description in zip(key_list, descriptions):
 
 
 # Load data, x in eight layers (q1h, q1s, q2h, q2s, t1h, t1s, t2h, t2s) and y as a dictionary with event-level parameters
-x, y = load_preprocessed(sim_prefix, comp=['p','h','o','f'])
+x, y = load_preprocessed(sim_prefix, comp=['p','f'])#h,o
 
 
 models = {}
@@ -104,7 +104,7 @@ for i, cut_name in enumerate(cut_names):
     ax = axs[i]
     for j, key in enumerate(key_list):
         cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
-        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args)
+        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args, stacked=True, density=True)
     ax.set_title('Energy Resolution (%s)' % cut_name, **label_params)
     ax.set_xlabel(r'$\log_{10}(E_{\mathrm{reco}}/\mathrm{GeV}) - \log_{10}(E_{\mathrm{true}}/\mathrm{GeV})$', **label_params)
     ax.set_ylabel('Counts', **label_params)
@@ -122,7 +122,7 @@ for i, cut_name in enumerate(cut_names):
     ax = axs[i]
     for j, key in enumerate(key_list):
         cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
-        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args)
+        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args, stacked=True, density=True)
     ax.set_title('Energy Resolution (%s)' % cut_name, **label_params)
     ax.set_xlabel(r'$\log_{10}(E_{\mathrm{reco}}/\mathrm{GeV}) - \log_{10}(E_{\mathrm{true}}/\mathrm{GeV})$', **label_params)
     ax.set_ylabel('Counts', **label_params)
