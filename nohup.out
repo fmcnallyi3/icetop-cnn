@@ -1,50 +1,23 @@
-No handles with labels found to put in legend.
-No handles with labels found to put in legend.
-No handles with labels found to put in legend.
-No handles with labels found to put in legend.
+2022-10-07 02:05:16.667255: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-10-07 02:05:17.575534: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5
+2022-10-07 02:05:17.575909: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-10-07 02:05:38.007637: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-10-07 02:05:39.089800: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
 Available models: ['baseline0', 'rotations0']
 
 Models without parameter files: []
-Traceback (most recent call last):
-  File "/home/mays_k/icetop-cnn/assessment.py", line 148, in <module>
-    fig, axs = plt.subplots(figsize=(13*ncols, 10*nrows), ncols=ncols, nrows=nrows, 
-  File "/usr/lib/python3.9/site-packages/matplotlib/_api/deprecation.py", line 471, in wrapper
-    return func(*args, **kwargs)
-  File "/usr/lib/python3.9/site-packages/matplotlib/pyplot.py", line 1440, in subplots
-    axs = fig.subplots(nrows=nrows, ncols=ncols, sharex=sharex, sharey=sharey,
-  File "/usr/lib/python3.9/site-packages/matplotlib/_api/deprecation.py", line 471, in wrapper
-    return func(*args, **kwargs)
-  File "/usr/lib/python3.9/site-packages/matplotlib/figure.py", line 910, in subplots
-    gs = self.add_gridspec(nrows, ncols, figure=self, **gridspec_kw)
-  File "/usr/lib/python3.9/site-packages/matplotlib/figure.py", line 1408, in add_gridspec
-    gs = GridSpec(nrows=nrows, ncols=ncols, figure=self, **kwargs)
-  File "/usr/lib/python3.9/site-packages/matplotlib/gridspec.py", line 397, in __init__
-    super().__init__(nrows, ncols,
-  File "/usr/lib/python3.9/site-packages/matplotlib/gridspec.py", line 49, in __init__
-    raise ValueError(
-ValueError: Number of rows must be a positive integer, not 0
-No handles with labels found to put in legend.
-No handles with labels found to put in legend.
-No handles with labels found to put in legend.
-No handles with labels found to put in legend.
-Available models: ['baseline0', 'rotations0']
+baseline0 : {'clc': True, 'sta5': False, 'q': None, 't': None, 't_shift': True, 't_clip': 0, 'normed': True, 'reco': None, 'cosz': False, 'rot': False}
+rotations0 : {'clc': True, 'sta5': False, 'q': None, 't': None, 't_shift': True, 't_clip': 0, 'normed': True, 'reco': None, 'cosz': False, 'rot': True}
+Working on baseline0...
+{'clc': True, 'sta5': False, 'q': None, 't': None, 't_shift': True, 't_clip': 0, 'normed': True, 'reco': None, 'cosz': False, 'rot': False}
 
-Models without parameter files: []
+Working on rotations0...
+{'clc': True, 'sta5': False, 'q': None, 't': None, 't_shift': True, 't_clip': 0, 'normed': True, 'reco': None, 'cosz': False, 'rot': True}
+
 Traceback (most recent call last):
-  File "/home/mays_k/icetop-cnn/assessment.py", line 148, in <module>
-    fig, axs = plt.subplots(figsize=(13*ncols, 10*nrows), ncols=ncols, nrows=nrows, 
-  File "/usr/lib/python3.9/site-packages/matplotlib/_api/deprecation.py", line 471, in wrapper
-    return func(*args, **kwargs)
-  File "/usr/lib/python3.9/site-packages/matplotlib/pyplot.py", line 1440, in subplots
-    axs = fig.subplots(nrows=nrows, ncols=ncols, sharex=sharex, sharey=sharey,
-  File "/usr/lib/python3.9/site-packages/matplotlib/_api/deprecation.py", line 471, in wrapper
-    return func(*args, **kwargs)
-  File "/usr/lib/python3.9/site-packages/matplotlib/figure.py", line 910, in subplots
-    gs = self.add_gridspec(nrows, ncols, figure=self, **gridspec_kw)
-  File "/usr/lib/python3.9/site-packages/matplotlib/figure.py", line 1408, in add_gridspec
-    gs = GridSpec(nrows=nrows, ncols=ncols, figure=self, **kwargs)
-  File "/usr/lib/python3.9/site-packages/matplotlib/gridspec.py", line 397, in __init__
-    super().__init__(nrows, ncols,
-  File "/usr/lib/python3.9/site-packages/matplotlib/gridspec.py", line 49, in __init__
-    raise ValueError(
-ValueError: Number of rows must be a positive integer, not 0
+  File "/home/mays_k/icetop-cnn/assessment.py", line 107, in <module>
+    cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
+  File "/home/mays_k/icetop-cnn/data_tools.py", line 39, in get_cut
+    return np.array([True for _ in recoE]), y['energy'][get_data_cut(reco, y, data_cut)]
+IndexError: boolean index did not match indexed array along dimension 0; dimension is 3733758 but corresponding boolean dimension is 622293

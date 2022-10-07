@@ -4,7 +4,14 @@ from keras.models import load_model
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import tensorflow as tf
 
+# Set GPU to train on
+os.environ['CUDA_DEVICE_ORDER']='PCI_BUS_ID'
+os.environ['CUDA_VISIBLE_DEVICES']='0'
+# Set dynamic memory allocation
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 # Edit this file path to the models folder containing .h5 and .npy files for each model.
 model_prefix = 'models'
@@ -29,8 +36,8 @@ print('\nModels without parameter files:', sorted(set(model_list).difference(par
 
 
 # Keys you want to study
-key_list = []
-descriptions = []
+key_list = ['baseline0','rotations0']
+descriptions = ['baseline', 'rotations']
 
 # Automatic intake of parameters from parameter files
 labels, p = {}, {}
@@ -40,6 +47,8 @@ for key, description in zip(key_list, descriptions):
     p[key] = d.item()
     print(key, ':', p[key])
 
+p[key]['rot']=False
+print('rot: ',p[key]['rot'])
 
 # Load data, x in eight layers (q1h, q1s, q2h, q2s, t1h, t1s, t2h, t2s) and y as a dictionary with event-level parameters
 x, y = load_preprocessed(sim_prefix, comp=['p','f'])#h,o
@@ -78,9 +87,9 @@ for key in key_list:
 
     # Models should only output energy
     if p[key]['reco'] != None:
-        recoE[key] = models[key].predict([x_i[0], x_i[1]]).flatten()
+        recoE[key] = models[key].predict([x_i[0], x_i[1]], batch_size=192).flatten()
     else:
-        recoE[key] = models[key].predict(x_i).flatten()
+        recoE[key] = models[key].predict(x_i, batch_size=192).flatten()
 
     print()
 
@@ -104,7 +113,7 @@ for i, cut_name in enumerate(cut_names):
     ax = axs[i]
     for j, key in enumerate(key_list):
         cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
-        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args, stacked=True, density=True)
+        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args, stacked=True)
     ax.set_title('Energy Resolution (%s)' % cut_name, **label_params)
     ax.set_xlabel(r'$\log_{10}(E_{\mathrm{reco}}/\mathrm{GeV}) - \log_{10}(E_{\mathrm{true}}/\mathrm{GeV})$', **label_params)
     ax.set_ylabel('Counts', **label_params)
@@ -122,7 +131,7 @@ for i, cut_name in enumerate(cut_names):
     ax = axs[i]
     for j, key in enumerate(key_list):
         cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
-        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args, stacked=True, density=True)
+        ax.hist((recoE[key][cut] - energy), label=labels[key], **hist_args, stacked=True)
     ax.set_title('Energy Resolution (%s)' % cut_name, **label_params)
     ax.set_xlabel(r'$\log_{10}(E_{\mathrm{reco}}/\mathrm{GeV}) - \log_{10}(E_{\mathrm{true}}/\mathrm{GeV})$', **label_params)
     ax.set_ylabel('Counts', **label_params)
