@@ -20,13 +20,13 @@ def main():
 
     # Edit these parameters
     # Too many to list, look in data_prep in data_tools for a better idea of what each does
-    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':False}
+    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':True}
 
     # Set the number of models to train under this CNN
     num_models_to_train = 1
 
     # Name for model(s)
-    model_name = 'baseline'
+    model_name = 'ESRotations'
 
     # Type of model to train
     model_type = 'bauwens'
@@ -84,8 +84,8 @@ def main():
         # Arguments to play with are factor (best between 0.1 - 0.8), patience, and min_lr
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.4, patience=10, mode='min', min_lr=0.0001)
         # Only argument to play with is patience. Recommended to be greater than twice the reduce_lr patience.
-        early_stop = EarlyStopping(monitor='val_loss', patience=25, mode='min', restore_best_weights=True)
-        csv_logger = CSVLogger('%s/%s' % (model_prefix, name))
+        early_stop = EarlyStopping(monitor='val_loss', patience=100, mode='min', restore_best_weights=True)
+        csv_logger = CSVLogger('%s/%s.csv' % (model_prefix, name))
 
         history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_split=0.15, callbacks=[early_stop, csv_logger, reduce_lr])
 
