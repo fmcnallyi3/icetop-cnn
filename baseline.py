@@ -84,7 +84,7 @@ def main():
         # Arguments to play with are factor (best between 0.1 - 0.8), patience, and min_lr
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.4, patience=10, mode='min', min_lr=0.0001)
         # Only argument to play with is patience. Recommended to be greater than twice the reduce_lr patience.
-        early_stop = EarlyStopping(monitor='val_loss', patience=100, mode='min', restore_best_weights=True)
+        early_stop = EarlyStopping(monitor='val_loss', patience=150, mode='min', restore_best_weights=True)
         csv_logger = CSVLogger('%s/%s.csv' % (model_prefix, name))
 
         history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_split=0.15, callbacks=[early_stop, csv_logger, reduce_lr])
@@ -109,7 +109,7 @@ def create_model(model_name, model_prefix, model_type, has_time, has_reco, x_i):
     # Ensures models are not overwritten
     name = model_name
     i = 0
-    while(os.path.exists('%s/%s' % (model_prefix, name+str(i)))): i += 1
+    while(os.path.exists('%s/%s.csv' % (model_prefix, name+str(i)))): i += 1
     name += str(i)
 
     # Charge and Time (if included) input layers

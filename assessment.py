@@ -36,8 +36,8 @@ print('\nModels without parameter files:', sorted(set(model_list).difference(par
 
 
 # Keys you want to study
-key_list = ['baseline0','rotations0']
-descriptions = ['baseline', 'rotations']
+key_list = ['baseline0','rotations0', 'ESRotations0']
+descriptions = ['baseline', 'rotations', 'rotations w/ extra patience']
 
 # Automatic intake of parameters from parameter files
 labels, p = {}, {}
@@ -45,10 +45,9 @@ for key, description in zip(key_list, descriptions):
     labels[key] = description
     d = np.load('%s/%s.npy' % (model_prefix, key), allow_pickle=True)
     p[key] = d.item()
+    p[key]['rot']=False
     print(key, ':', p[key])
 
-p[key]['rot']=False
-print('rot: ',p[key]['rot'])
 
 # Load data, x in eight layers (q1h, q1s, q2h, q2s, t1h, t1s, t2h, t2s) and y as a dictionary with event-level parameters
 x, y = load_preprocessed(sim_prefix, comp=['p','f'])#h,o
