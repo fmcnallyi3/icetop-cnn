@@ -132,13 +132,13 @@ plt.savefig(f'assessment/zoomed_unlogged_energy_resolution.png', format='png')
 
 
 # Summary parameters
-
+with open('assessment/summary_params.txt', 'w') as f:
 for key in key_list:
     for i, cut_name in enumerate(cut_names):
         cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
         median, err_min, err_max = np.percentile(recoE[key][cut] - energy, (50,16,84))
-        print('Energy resolution for %s (%s): %.03f +%.03f %.03f' % (key, cut_name, median, err_max, err_min))
-    print()
+        f.write('Energy resolution for %s (%s): %.03f +%.03f %.03f' % (key, cut_name, median, err_max, err_min))
+    f.write('\n')
 
 
 # Plot two-dimensional visualization
