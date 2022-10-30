@@ -33,7 +33,7 @@ def main():
 
     # Set the number of epochs the model(s) should run for
     # Actual result may differ due to early stopping
-    num_epochs = 400
+    num_epochs = 200
 
     # Loss metric to use for training
     # Suggestion to experiment with 'huber_loss'
