@@ -1,7 +1,7 @@
 from csv import writer
 from data_tools import data_prep, get_data_cut, load_preprocessed
 from keras.callbacks import CSVLogger, EarlyStopping, ReduceLROnPlateau
-from keras.layers import BatchNormalization, Concatenate, Conv2D, Dense, Dropout, Flatten, Input, MaxPooling2D
+from keras.layers import BatchNormalization, Concatenate, Conv2D, Dense, Dropout, Flatten, Input, MaxPooling2D, AveragePooling2D
 from keras.models import Model
 from tensorflow.keras.optimizers import Adam
 import numpy as np
@@ -20,13 +20,13 @@ def main():
 
     # Edit these parameters
     # Too many to list, look in data_prep in data_tools for a better idea of what each does
-    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':False}
+    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':True}
 
     # Set the number of models to train under this CNN
     num_models_to_train = 1
 
     # Name for model(s)
-    model_name = 'ESBaseline'
+    model_name = 'pooling'
 
     # Type of model to train
     model_type = 'bauwens'
@@ -84,7 +84,7 @@ def main():
         # Arguments to play with are factor (best between 0.1 - 0.8), patience, and min_lr
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.4, patience=10, mode='min', min_lr=0.0001)
         # Only argument to play with is patience. Recommended to be greater than twice the reduce_lr patience.
-        early_stop = EarlyStopping(monitor='val_loss', patience=200, mode='min', restore_best_weights=True)
+        early_stop = EarlyStopping(monitor='val_loss', patience=100, mode='min', restore_best_weights=True)
         csv_logger = CSVLogger('%s/%s.csv' % (model_prefix, name))
 
         history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_split=0.15, callbacks=[early_stop, csv_logger, reduce_lr])
@@ -122,9 +122,12 @@ def create_model(model_name, model_prefix, model_type, has_time, has_reco, x_i):
 
     if model_type == 'baseline':
         conv1 = Conv2D(64, kernel_size=3, padding='same', activation='relu', data_format='channels_last')(data_input)
-        conv2 = Conv2D(32, kernel_size=3, padding='same', activation='relu', data_format='channels_last')(conv1)
-        conv3 = Conv2D(16, kernel_size=3, padding='same', activation='relu', data_format='channels_last')(conv2)
-        flat = Flatten()(conv3)
+        pool1 = AveragePooling2D(pool_size=2, strides=2)(conv1)
+        conv2 = Conv2D(32, kernel_size=3, padding='same', activation='relu', data_format='channels_last')(pool1)
+        pool2 = AveragePooling2D(pool_size=2, strides=2)(conv2)
+        conv3 = Conv2D(16, kernel_size=3, padding='same', activation='relu', data_format='channels_last')(pool2)
+        pool3 = AveragePooling2D(pool_size=2, strides=2)(conv3)
+        flat = Flatten()(pool3)
         # Must concatenate Zenith input to Flat layer
         if has_reco:
             flat = Concatenate()([flat, zenith_input])
