@@ -23,7 +23,7 @@ def main():
     prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':True}
 
     # Set the number of models to train under this CNN
-    num_models_to_train = 2
+    num_models_to_train = 1
 
     # Name for model(s)
     model_name = 'ESRotations'
