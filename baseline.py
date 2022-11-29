@@ -21,13 +21,13 @@ def main():
 
     # Edit these parameters
     # Too many to list, look in data_prep in data_tools for a better idea of what each does
-    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':True}
+    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':False}
 
     # Set the number of models to train under this CNN
     num_models_to_train = 1
 
     # Name for model(s)
-    model_name = 'ESRotations'
+    model_name = 'ESBaseline'
 
     # Type of model to train
     model_type = 'bauwens'

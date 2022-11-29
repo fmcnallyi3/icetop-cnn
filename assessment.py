@@ -36,8 +36,8 @@ print('\nModels without parameter files:', sorted(set(model_list).difference(par
 
 
 # Keys you want to study
-key_list = ['rotations0','ESRotations1','ESRotations3','ESRotations4','ESRotations5']
-descriptions = ['rotations','rotations w/ cutoff', 'rotations w/ cutoff2', 'rotations w/ cutoff3', 'rotations w/ cutoff4']
+key_list = ['baseline0','ESBaseline0','ESBaseline1','ESBaseline4']
+descriptions = ['baseline','baseline w/ 150 patience', 'baseline w/ 200 patience', 'baseline w/ cutoff']
 
 # Automatic intake of parameters from parameter files
 labels, p = {}, {}
