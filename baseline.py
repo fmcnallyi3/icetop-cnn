@@ -7,6 +7,7 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 import os
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
 
 # Set GPU to train on
 os.environ['CUDA_DEVICE_ORDER']='PCI_BUS_ID'
@@ -56,12 +57,15 @@ def main():
     # Booleans for easier to read conditionals - no need to change this
     has_reco, has_time = prep['reco'] != None, prep['t'] != False
 
-
     # Load simulation data from files for training
     x, y = load_preprocessed(sim_prefix, comp=['p','f'])#h,o
 
+    # Split into training and validation sets
+    x_train, x_test,y_train, y_test = train_test_split(x,y ,random_state=104, test_size=0.15, shuffle=True)
+    #possibly remove random state
+    
     # Prepare simulation data
-    x_i, idx, pre_cut = data_prep(x, y, 'train', **prep)
+    x_i, idx, pre_cut = data_prep(x_train, y_train, 'train', **prep)
 
     ### Cut data ###
     data_cut = get_data_cut(prep['reco'], y, pre_cut)
@@ -87,7 +91,7 @@ def main():
         early_stop = EarlyStopping(monitor='val_loss', patience=200, mode='min', restore_best_weights=True)
         csv_logger = CSVLogger('%s/%s.csv' % (model_prefix, name))
 
-        history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_split=0.15, callbacks=[early_stop, csv_logger, reduce_lr])
+        history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_data=(x_train,y_train), callbacks=[early_stop, csv_logger, reduce_lr])
 
         model.save('%s/%s.h5' % (model_prefix, name))
         np.save('%s/%s.npy' % (model_prefix, name), prep)
