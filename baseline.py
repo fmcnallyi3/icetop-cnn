@@ -16,7 +16,7 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-def main():
+def main(isolated, name, dir):
     ### Baseline data prep ###
 
     # Edit these parameters
@@ -27,14 +27,14 @@ def main():
     num_models_to_train = 1
 
     # Name for model(s)
-    model_name = 'ESBaseline'
+    model_name = name
 
     # Type of model to train
     model_type = 'bauwens'
 
     # Set the number of epochs the model(s) should run for
     # Actual result may differ due to early stopping
-    num_epochs = 200
+    num_epochs = isolated
 
     # Loss metric to use for training
     # Suggestion to experiment with 'huber_loss'
@@ -49,7 +49,7 @@ def main():
     metrics = ['mae','mse']
 
     # File directory to folder that holds models
-    model_prefix = 'models'
+    model_prefix = dir
 
     # File directory to folder that holds simulation data 
     sim_prefix = '/home/mays_k/simdata'
@@ -88,7 +88,7 @@ def main():
         # Arguments to play with are factor (best between 0.1 - 0.8), patience, and min_lr
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.4, patience=10, mode='min', min_lr=0.0001)
         # Only argument to play with is patience. Recommended to be greater than twice the reduce_lr patience.
-        early_stop = EarlyStopping(monitor='val_loss', patience=200, mode='min', restore_best_weights=True)
+        early_stop = EarlyStopping(monitor='val_loss', patience=isolated, mode='min', restore_best_weights=True)
         csv_logger = CSVLogger('%s/%s.csv' % (model_prefix, name))
 
         history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_data=(x_train,y_train), callbacks=[early_stop, csv_logger, reduce_lr])
@@ -112,9 +112,6 @@ def create_model(model_name, model_prefix, model_type, has_time, has_reco, x_i):
 
     # Ensures models are not overwritten
     name = model_name
-    i = 0
-    while(os.path.exists('%s/%s.csv' % (model_prefix, name+str(i)))): i += 1
-    name += str(i)
 
     # Charge and Time (if included) input layers
     data_input = Input(shape=x_i[0].shape[-3:], name='data')
