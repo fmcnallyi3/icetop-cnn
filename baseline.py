@@ -60,10 +60,17 @@ def main(isolated, name, dir):
     # Load simulation data from files for training
     x, y = load_preprocessed(sim_prefix, comp=['p','f'])#h,o
 
+<<<<<<< HEAD
     # Split into training and validation sets
     x_train, x_test,y_train, y_test = train_test_split(x,y ,random_state=104, test_size=0.15, shuffle=True)
     #possibly remove random state
     
+=======
+    # Split the data into training & validation sets... randomly pick out 15% of events
+    # What kinds of split...check Keras
+
+
+>>>>>>> 0dcee0a (edited the Baseline trainging script)
     # Prepare simulation data
     x_i, idx, pre_cut = data_prep(x_train, y_train, 'train', **prep)
 
