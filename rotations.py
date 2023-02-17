@@ -47,10 +47,32 @@ def rotate_randomly(training_data, has_reco=False):
     return training_data
         
 
-def rotate_full(training_data, training_energy, has_reco=False):
+def rotate_full(out_array, y, has_reco=False):
 
+        nevents=out_array.shape[0]
+        temp_array=np.zeros((nevents*6,10,10,out_array.shape[-1]))
+        nind=0
+        for ind in range(nevents):
+            for rots in [alpha,beta,gamma,delta,epsilon,zeta]:
+                temp=np.zeros((10,10,out_array.shape[-1]))
+                for i,c in np.ndenumerate(out_array[ind]):
+                    if c>0:
+                        new_coords=(rots[i[:2]][0],rots[i[:2]][1],i[-1])
+                        if new_coords[:2] in alpha.values():
+                            temp[new_coords]=c
+                temp_array[nind]=temp
+                nind+=1
+        out_array=temp_array
+        # Update y, too
+        temp_y=[np.empty(nevents*6)]
+        nind=0
+        for ind in range(nevents):
+            for num in range(6):
+                temp_y[nind]=y[ind]
+                nind+=1
+    return out_array, temp_y
 
-    if has_reco:
+    """if has_reco:
         num_events = training_data[0].shape[0]
         rotated_dataset = np.append(training_data[0], np.zeros((num_events*(num_rotations-1),) + training_data[0].shape[-3:]), axis=0)
         for rot_idx, rotation in enumerate(rotations_list[1:]):
@@ -69,4 +91,5 @@ def rotate_full(training_data, training_energy, has_reco=False):
 
     training_energy = np.tile(training_energy, num_rotations)
 
-    return rotated_dataset, training_energy
+    return rotated_dataset, training_energy"""
+    

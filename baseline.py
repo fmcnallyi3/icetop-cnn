@@ -8,6 +8,7 @@ import numpy as np
 import os
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+from rotations import rotate_full
 
 # Set GPU to train on
 os.environ['CUDA_DEVICE_ORDER']='PCI_BUS_ID'
@@ -21,7 +22,7 @@ def main(isolated, name, dir):
 
     # Edit these parameters
     # Too many to list, look in data_prep in data_tools for a better idea of what each does
-    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':False}
+    prep = {'clc':True, 'sta5':False, 'q':None, 't':None, 't_shift':True, 't_clip':0, 'normed':True, 'reco':None, 'cosz':False, 'rot':True}
 
     # Set the number of models to train under this CNN
     num_models_to_train = 1
@@ -60,21 +61,10 @@ def main(isolated, name, dir):
     # Load simulation data from files for training
     x, y = load_preprocessed(sim_prefix, comp=['p','f'])#h,o
 
-<<<<<<< HEAD
-    # Split into training and validation sets
-    x_train, x_test,y_train, y_test = train_test_split(x,y ,random_state=104, test_size=0.15, shuffle=True)
-    #possibly remove random state
-    
-=======
-    # Split the data into training & validation sets... randomly pick out 15% of events
-    # What kinds of split...check Keras
+    # Prep simulation data
+    x_i, idx, pre_cut = data_prep(x, y, 'train', **prep)
 
-
->>>>>>> 0dcee0a (edited the Baseline trainging script)
-    # Prepare simulation data
-    x_i, idx, pre_cut = data_prep(x_train, y_train, 'train', **prep)
-
-    ### Cut data ###
+    ### Cut data ### separates testing from assessment
     data_cut = get_data_cut(prep['reco'], y, pre_cut)
     
     if has_reco:
@@ -83,7 +73,12 @@ def main(isolated, name, dir):
     else:
         x_i = x_i[data_cut] # q/t
 
-    #randomize then slice data...later
+    # Split into training and validation sets
+    x_train, x_test, y_train, y_test = train_test_split(x_i,y['energy'] ,random_state=104, test_size=0.15, shuffle=True)
+    
+    #rotate data here to avoid spill over in events
+    if prep['rot']:
+      rotate_full(x_train, y_train)
 
     for num_model in range(num_models_to_train):
 
@@ -98,7 +93,7 @@ def main(isolated, name, dir):
         early_stop = EarlyStopping(monitor='val_loss', patience=isolated, mode='min', restore_best_weights=True)
         csv_logger = CSVLogger('%s/%s.csv' % (model_prefix, name))
 
-        history = model.fit(fit_inputs, y=y['energy'][data_cut], batch_size=192, verbose=0, epochs=num_epochs, validation_data=(x_train,y_train), callbacks=[early_stop, csv_logger, reduce_lr])
+        history = model.fit(fit_inputs, y=y_train, batch_size=192, verbose=0, epochs=num_epochs, validation_data=(x_test,y_test), callbacks=[early_stop, csv_logger, reduce_lr])
 
         model.save('%s/%s.h5' % (model_prefix, name))
         np.save('%s/%s.npy' % (model_prefix, name), prep)
