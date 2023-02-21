@@ -1,0 +1,50 @@
+2022-11-11 16:29:35.007570: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-11-11 16:29:35.778708: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 9686 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2080 Ti, pci bus id: 0000:05:00.0, compute capability: 7.5
+2022-11-11 16:29:35.779076: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+2022-11-11 16:29:37.422974: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2022-11-11 16:29:39.674196: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8204
+Model: "ESBaseline4"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+data (InputLayer)            [(None, 10, 10, 4)]       0         
+_________________________________________________________________
+conv2d (Conv2D)              (None, 10, 10, 64)        2368      
+_________________________________________________________________
+batch_normalization (BatchNo (None, 10, 10, 64)        256       
+_________________________________________________________________
+conv2d_1 (Conv2D)            (None, 10, 10, 128)       73856     
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 10, 10, 128)       512       
+_________________________________________________________________
+max_pooling2d (MaxPooling2D) (None, 5, 5, 128)         0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 5, 5, 256)         295168    
+_________________________________________________________________
+batch_normalization_2 (Batch (None, 5, 5, 256)         1024      
+_________________________________________________________________
+conv2d_3 (Conv2D)            (None, 5, 5, 512)         1180160   
+_________________________________________________________________
+batch_normalization_3 (Batch (None, 5, 5, 512)         2048      
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 3, 3, 512)         0         
+_________________________________________________________________
+conv2d_4 (Conv2D)            (None, 3, 3, 512)         2359808   
+_________________________________________________________________
+batch_normalization_4 (Batch (None, 3, 3, 512)         2048      
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 2, 2, 512)         0         
+_________________________________________________________________
+flatten (Flatten)            (None, 2048)              0         
+_________________________________________________________________
+dense (Dense)                (None, 1024)              2098176   
+_________________________________________________________________
+batch_normalization_5 (Batch (None, 1024)              4096      
+_________________________________________________________________
+dense_1 (Dense)              (None, 1)                 1025      
+=================================================================
+Total params: 6,020,545
+Trainable params: 6,015,553
+Non-trainable params: 4,992
+_________________________________________________________________
