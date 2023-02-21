@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import tensorflow as tf
+import pandas as pd
 
 # Set GPU to train on
 os.environ['CUDA_DEVICE_ORDER']='PCI_BUS_ID'
-os.environ['CUDA_VISIBLE_DEVICES']='0'
+os.environ['CUDA_VISIBLE_DEVICES']='1'
 # Set dynamic memory allocation
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -36,8 +37,8 @@ print('\nModels without parameter files:', sorted(set(model_list).difference(par
 
 
 # Keys you want to study
-key_list = ['baseline0','ESBaseline0','ESBaseline1','ESBaseline4']
-descriptions = ['baseline','baseline w/ 150 patience', 'baseline w/ 200 patience', 'baseline w/ cutoff']
+key_list = ['rotationsCutoff', 'baseline0']
+descriptions = ['basic rotations', 'baseline again...']
 
 # Automatic intake of parameters from parameter files
 labels, p = {}, {}
@@ -162,7 +163,7 @@ for i, key in enumerate(key_list):
         ax = axs[i, j] if len(key_list) > 1 else axs[j]
         cut, energy = get_cut(cut_name, y, p[key]['reco'], recoE[key], data_cut[key])
         
-        h, xedges, yedges = np.histogram2d(recoE[key][cut], energy, bins=(ebins, ebins), normed=False, weights=None)
+        h, xedges, yedges = np.histogram2d(recoE[key][cut], energy, bins=(ebins, ebins), weights=None)
         # Normalize
         ntot = np.sum(h, axis=0).astype(float)
         ntot[ntot==0] = 1.
@@ -233,3 +234,45 @@ for i, cut_name in enumerate(cut_names):
     ax.set_ylim(-0.5, 0.5)
     ax.legend() 
 plt.savefig(f'assessment/zenith_energy_resolution.png', format='png')
+
+# Plot training & validation loss vs epochs
+keyList = [ 'rotations0', 'ESRotations1', 'ESRotations3', 'ESRotations4','ESRotations5']
+modelPrefix="models"
+
+labels = {'rotations0':'rotations', 'ESRotations1':'rotations w/ cutoff', 'ESRotations3':'rotations w/ cutoff2', 'ESRotations4':'rotations w/ cutoff3','ESRotations5':'rotations w/ cutoff4'}
+
+# Automatic intake of parameters from parameter files
+p = {}
+for key in keyList:
+    d = pd.read_csv('%s/%s.csv' % (modelPrefix, key))
+    p[key] = d
+
+
+#possibly cut them off
+keyList = [ 'rotationsCutoff', 'baseline']
+modelPrefix="models"
+
+labels = {'rotationsCutoff':'rotations', 'baseline':'baseline'}
+
+# Automatic intake of parameters from parameter files
+p = {}
+for key in keyList:
+    d = pd.read_csv('%s/%s.csv' % (modelPrefix, key))
+    p[key] = d
+    
+#p['baseline']['epoch']=p['ESRotations1']['epoch'][5:]
+#p['rotationsCutoff']['epoch']=p['ESRotations3']['epoch'][15:]
+
+fig, ax = plt.subplots(figsize=(10,17),nrows=len(keyList), sharey=True)
+plt.xlabel("Epochs")
+plt.ylabel("Loss Values")
+
+for i in range(len(keyList)):
+    print()
+    model=keyList[i]
+    p[model]['epoch']=p[model]['epoch']
+    ax[i].plot(p[model]['epoch'], p[model]['loss'], label='training loss')
+    ax[i].plot(p[model]['epoch'], p[model]['val_loss'], label='validation loss')
+    ax[i].set_title(model)
+plt.legend()
+plt.savefig(f'assessment/validation_curve.png', format='png')

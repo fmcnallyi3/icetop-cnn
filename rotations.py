@@ -53,7 +53,7 @@ def rotate_full(out_array, y, has_reco=False):
         temp_array=np.zeros((nevents*6,10,10,out_array.shape[-1]))
         nind=0
         for ind in range(nevents):
-            for rots in [alpha,beta,gamma,delta,epsilon,zeta]:
+            for rots in rotations_list:
                 temp=np.zeros((10,10,out_array.shape[-1]))
                 for i,c in np.ndenumerate(out_array[ind]):
                     if c>0:
@@ -64,32 +64,13 @@ def rotate_full(out_array, y, has_reco=False):
                 nind+=1
         out_array=temp_array
         # Update y, too
-        temp_y=[np.empty(nevents*6)]
+        temp_y=np.empty(nevents*6)
         nind=0
         for ind in range(nevents):
             for num in range(6):
                 temp_y[nind]=y[ind]
                 nind+=1
-    return out_array, temp_y
+        return out_array, temp_y
 
-    """if has_reco:
-        num_events = training_data[0].shape[0]
-        rotated_dataset = np.append(training_data[0], np.zeros((num_events*(num_rotations-1),) + training_data[0].shape[-3:]), axis=0)
-        for rot_idx, rotation in enumerate(rotations_list[1:]):
-            for event_idx, event in enumerate(rotated_dataset[:num_events]):
-                rotated_dataset[num_events*(rot_idx+1)+event_idx] = rotate_event(event, rotation)
-        rotated_dataset = np.asarray([rotated_dataset, np.tile(training_data[1], num_rotations)])
-    else:
-        #num_events = training_data.shape[0]
-        #rotated_dataset = np.append(training_data, np.zeros((num_events*(num_rotations-1),) + training_data.shape[-3:]), axis=0)
-        #for rot_idx, rotation in enumerate(rotations_list[1:]):
-        #    for event_idx, event in enumerate(rotated_dataset[:num_events]):
-        #        print(f'Rotation {rot_idx+1}/{num_rotations-1}, Event {event_idx}/{num_events}\r')
-        #        rotated_dataset[num_events*(rot_idx+1)+event_idx] = rotate_event(event, rotation)
-
-        rotated_dataset = np.append(training_data, np.asarray([rotate_event(event, rotation) for rotation in rotations_list[1:] for event in training_data]), axis=0)
-
-    training_energy = np.tile(training_energy, num_rotations)
-
-    return rotated_dataset, training_energy"""
+   
     
