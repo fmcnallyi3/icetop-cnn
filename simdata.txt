@@ -1,29 +1,29 @@
 
 
-To use the updated scripts, you will have to download and use the x and y files that I have available in cobalt.
+To use the updated scripts, you will have to download and use the icetop, infill, and event_parameters files that I have available in Cobalt.
 This might take a while; I hope you have nice internet! If not, this is not the only way you can get these files, but it is proabably the easiest.
 If after reading everything, nothing works, just let me know. :D
 
 
-The command to download all x and y files to your active directory on your local machine (Use from terminal or cmd or whatever floats your OS):
+The command to download all files to your active directory on your local machine (Use from terminal or cmd or whatever floats your OS):
 
                 scp [the first letter of your first name][your last name]@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/*.npy .
 
 *** NOTE *** The last '.' means 'my active directory'. You may replace it with the file path of your choosing, but don't forget to put something for the ouput argument.           
          
-If time is a concern, you do not have to download all the different compositions at once. Just replace the * at the end of the path to the x and y files
-with *?????*, where ????? is the 5-digit string that represents the composition you desire. They are as follows:
+If time is a concern, you do not have to download all the different compositions at once. Just replace the * at the end of the path to the files with *?????*,
+where ????? is the 5-digit string that represents the composition you desire. They are as follows:
 
-                                             proton : 12360;  helium : 12630;  oxygen : 12631;  iron : 12362
+                proton : 12360;  helium : 12630;  oxygen : 12631;  iron : 12362
                                              
 So far, we have been running exclusively on proton and iron files. In fact, it may be wise to only download proton and iron files if you are going
 to be working on your local machine because the memory requirements can get a bit high otherwise.
 
-                Example if Dr. McNally wanted all the files:   scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/*.npy .
+        Example if Dr. McNally wanted all the files:   scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/*.npy .
 
-           Example if Dr. McNally wanted only proton files:  scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/*12360*.npy .
+        Example if Dr. McNally wanted only proton files:  scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/*12360*.npy .
 
-  Example if Dr. McNally wanted proton and iron files in the same command:  scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/*123*.npy .
+        Example if Dr. McNally wanted proton and iron files in the same command:  scp fmcnally@data.icecube.wisc.edu:/data/user/edorr/l3sim/extracted/preprocessed/*123*.npy .
 
 
 Enjoy!
