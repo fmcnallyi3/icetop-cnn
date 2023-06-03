@@ -1,13 +1,13 @@
 # IceTop Cosmic-Ray Energy Reconstruction using a Convolutional Neural Network
 
 ### Overview
-- 'data_utils.py' is a utility file that is used by both the training script and assessment notebook.
-- 'trainer.py' is the training script and is designed not be edited. It is to work with the files 'config.py' and 'model.py'.
 - 'config.py' contains all of the different options for training models. This does not include options related to the model architecture.
-- 'model.py' contains the model architecture using the Keras Functional API. This file is meant to be edited and shared frequently.
-- 'loss_grapher.py' is a script that will graph the loss curves for models from the data in their .csv files. See opening comments in file for usage.
+- 'data_utils.py' is a utility file that is used by both the training script and assessment notebook.
 - 'energy_assessment.ipynb' is an interactive notebook designed to assess any combination of models all at once. Other than the initial constants, make changes at your own risk.
+- 'loss_grapher.py' is a script that will graph the loss curves for models from the data in their .csv files. See opening comments in file for usage.
+- 'model.py' contains the model architecture using the Keras Functional API. This file is meant to be edited and shared frequently.
 - 'simdata.txt' gives detailed instructions for how to download the data provided by IceCube.
+- 'trainer.py' is the training script and is designed not be edited. It is to work with the files 'config.py' and 'model.py'.
 
 ### Notes
 - This project requires NumPy, Keras/TensorFlow, and Matplotlib.
