@@ -73,7 +73,7 @@ if __name__ == "__main__":
             help='Option to include infill array')
     p.add_argument('-o', '--output', dest='output',
             default='both', choices=['array','param','both'],
-            help='Output detector reaction (x), primary info (y), or both')
+            help='Output detector reaction (array), primary info (param), or both')
     p.add_argument('--overwrite', dest='overwrite',
             default=False, action='store_true',
             help='Option to overwrite existing matrix files')
