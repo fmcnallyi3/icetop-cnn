@@ -113,7 +113,7 @@ def data_prep(detector_inputs, infill=False, clc=True, sta5=False, q=None, t=Non
             q1 = np.where(tank1mask, array[..., 0], array[..., 1])
             q2 = np.where(tank2mask, array[..., 2], array[..., 3])
             t1 = np.where(tank1mask, array[..., 4], array[..., 5])
-            t2 = np.where(tank1mask, array[..., 6], array[..., 7])
+            t2 = np.where(tank2mask, array[..., 6], array[..., 7])
 
             # Return new array with merged tank layers
             return np.stack((q1, q2, t1, t2), axis=-1)
