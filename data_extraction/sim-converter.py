@@ -44,7 +44,7 @@ def main(args):
 
         
         comp = {'PPlus':1, 'He4Nucleus':4, 'O16Nucleus':16, 'Fe56Nucleus':56}
-        if args.output in ['y','both']:
+        if args.output in ['param','both']:
             param_data = {
                 # Event info
                 'file_info':       d['file_info'],
