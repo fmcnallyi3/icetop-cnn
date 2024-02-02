@@ -38,7 +38,7 @@ def get_compiled_model(input_shapes):
     outputs = Dense(1, activation='relu')(dense2)
 
     model = Model(inputs=inputs, outputs=outputs, name=cg.MODEL_NAME)             # Create model
-    model.compile(optimizer=Adam(), loss=cg.LOSS_FUNCTION, metrics=cg.METRICS)    # Compile model
+    model.compile(optimizer=Adam(learning_rate=cg.LR), loss=cg.LOSS_FUNCTION, metrics=cg.METRICS)    # Compile model
     #model.summary()
     return model
 
