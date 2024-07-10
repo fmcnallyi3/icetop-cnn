@@ -10,7 +10,7 @@ from glob import glob
 # Should check first before the rest of the code is parsed
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR', '')
 venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
-assert os.getenv('VIRTUAL_ENV') == venv_path, 'ERROR: Virtual environment not activated. Activate manually or with the command "tf"'
+assert os.getenv('VIRTUAL_ENV') == venv_path, 'ERROR: Virtual environment not activated. Activate with the command "icetop-cnn"'
 
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
 ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR')

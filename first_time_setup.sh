@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Create virtual environment
-eval `/cvmfs/icecube.opensciencegrid.org/py3-v4.3.0/setup.sh`;
+eval `/cvmfs/icecube.opensciencegrid.org/py3-v4.3.0/setup.sh`
 python -m virtualenv $PWD/.venv
 source $PWD/.venv/bin/activate
 pip install -r requirements.txt
@@ -35,7 +35,7 @@ cat <<EOF > $KERNEL
 }
 EOF
 
-echo "TensorFlow environment initialized! You are now free to remove this file."
+echo "TensorFlow environment initialized!"
 
 
 

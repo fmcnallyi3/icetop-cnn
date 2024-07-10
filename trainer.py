@@ -9,7 +9,7 @@ import os
 # Should check before importing external libraries
 if not os.getenv('_CONDOR_SLOT'):
     venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv')
-    assert os.getenv('VIRTUAL_ENV') == venv_path, 'ERROR: Virtual environment not activated. Activate manually or with the command "tf"'
+    assert os.getenv('VIRTUAL_ENV') == venv_path, 'ERROR: Virtual environment not activated. Activate with the command "icetop-cnn"'
 
 # Supress debugging information
 # Can remove safely, just makes for cleaner output
