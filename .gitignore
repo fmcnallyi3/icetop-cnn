@@ -1,6 +1,7 @@
 __pycache__/
 
 condor/
+tutorial/.ipynb_checkpoints/
 
 .venv/
 .vscode/
