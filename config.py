@@ -1,7 +1,7 @@
 # Configuration file for the trainer script
 
 VALIDATION_SPLIT = 0.15
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 
 PREP = {
     'infill': False,

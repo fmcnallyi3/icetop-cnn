@@ -22,7 +22,8 @@ import tensorflow as tf
 import config as cg
 from utils import data_prep, get_preprocessed, get_training_assessment_cut
 from model import get_compiled_model
-    
+
+ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')    
 
 def main():
     '''Creates/restores and trains a model based on the settings located in "config"'''
@@ -131,7 +132,7 @@ def create_or_restore_model(input_shapes):
     # The submission script should have already confirmed its existence.
     if args.restore:
         return tf.keras.models.load_model(
-            os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'models', args.model_name, f'{args.model_name}.keras')
+            os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.keras')
         )
     # Otherwise, create and return a new model
     return get_compiled_model(input_shapes, args.model_name, cg.PREP, args.predict)
@@ -141,11 +142,11 @@ def train_model(model, training_dataset, validation_dataset):
     '''Trains the model using the provided training/validation datasets and settings from "config"'''
 
     # Create models folder if it does not already exist
-    if not os.path.exists(os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'models', args.model_name)):
-        os.makedirs(os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'models', args.model_name))
+    if not os.path.exists(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name)):
+        os.makedirs(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name))
 
     # Save model parameters and nuclei
-    with open(os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'models', args.model_name, f'{args.model_name}.json'), 'w') as f:
+    with open(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.json'), 'w') as f:
         json.dump({**cg.PREP, 'training_nuclei':args.comp}, f, indent=4)
 
     # Let 'er rip
@@ -155,7 +156,7 @@ def train_model(model, training_dataset, validation_dataset):
         validation_data=validation_dataset,
         callbacks=[
             tf.keras.callbacks.CSVLogger(
-                os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'models', args.model_name, f'{args.model_name}.csv'),
+                os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.csv'),
                 append=args.restore
             ),
             tf.keras.callbacks.EarlyStopping(
@@ -176,7 +177,7 @@ def train_model(model, training_dataset, validation_dataset):
     )
     tf.keras.models.save_model(
         model,
-        os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'models', args.model_name, f'{args.model_name}.keras'),
+        os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.keras'),
         save_format='keras'
     )
     return model
@@ -201,10 +202,10 @@ def assess_model(model: tf.keras.Model, assess_comp: str = 'phof'):
 
     # Save the reconstruction(s)
     for i, prediction in enumerate(args.predict):
-        if not os.path.exists(os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'reconstructions', prediction)):
-            os.makedirs(os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'reconstructions', prediction))
+        if not os.path.exists(os.path.join(ICETOP_CNN_DATA_DIR, 'reconstructions', prediction)):
+            os.makedirs(os.path.join(ICETOP_CNN_DATA_DIR, 'reconstructions', prediction))
         np.save(
-            os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'reconstructions', prediction, f'{args.model_name}.npy'),
+            os.path.join(ICETOP_CNN_DATA_DIR, 'reconstructions', prediction, f'{args.model_name}.npy'),
             reconstructions if len(args.predict) == 1 else reconstructions[i]
         )
     
@@ -241,6 +242,8 @@ if __name__ == '__main__':
     if args.epochs and args.epochs <= 0:
         p.error('Epochs must be a positive integer')
 
-    args.predict.sort()
+    # Transform to a set to remove duplicates
+    # Sort to maintain a predictable order to process arguments
+    args.predict = sorted(set(args.predict))
 
     main()

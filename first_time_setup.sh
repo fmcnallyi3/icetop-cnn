@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 # Create virtual environment
 eval `/cvmfs/icecube.opensciencegrid.org/py3-v4.3.0/setup.sh`
+unset PYTHONPATH
 python -m virtualenv $PWD/.venv
 source $PWD/.venv/bin/activate
 pip install -r requirements.txt
@@ -16,7 +17,7 @@ KERNEL="$JUPYTER_ICETOP_CNN_KERNEL_DIR/kernel.json"
 cat <<EOF > $START_KERNEL
 #!/bin/sh
 source $PWD/.venv/bin/activate
-exec $PWD/.venv/bin/python -m ipykernel_launcher -f $1 2>/dev/null
+exec $PWD/.venv/bin/python -m ipykernel_launcher -f \$1 2>/dev/null
 EOF
 
 chmod +x $START_KERNEL
@@ -35,7 +36,7 @@ cat <<EOF > $KERNEL
 }
 EOF
 
-echo "TensorFlow environment initialized!"
+echo "TensorFlow environment and JupyterHub kernel initialized!"
 
 
 
