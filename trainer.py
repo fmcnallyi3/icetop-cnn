@@ -49,7 +49,7 @@ def get_training_datasets():
     '''Prepares tensorflow datasets used for training'''
 
     # Load data used for training/testing in its entirety
-    model_inputs, event_parameters = get_datasets(args.comp)
+    model_inputs, event_parameters = get_datasets(args.composition)
 
     # Get training cut
     training_assessment_cut = get_training_assessment_cut(event_parameters, 'training', cg.PREP)
@@ -106,7 +106,8 @@ def get_datasets(composition):
     '''Loads and prepares simulation data from files'''
     
     # Load detector inputs and event parameters
-    detector_data, event_parameters = get_preprocessed(os.path.join(os.sep, 'data', 'user', 'edorr', 'icetop-cnn', 'simdata'), composition=composition, test=args.test)
+    simdata_folder_path = os.path.join(os.sep, 'data', 'user', 'edorr', 'icetop-cnn', 'simdata') # TODO: Change to fmcnally
+    detector_data, event_parameters = get_preprocessed(simdata_folder_path, composition=composition, test=args.test)
     
     # Prepare simulation data
     model_inputs = data_prep(detector_data, cg.PREP)
@@ -147,7 +148,7 @@ def train_model(model, training_dataset, validation_dataset):
 
     # Save model parameters and nuclei
     with open(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.json'), 'w') as f:
-        json.dump({**cg.PREP, 'training_nuclei':args.comp}, f, indent=4)
+        json.dump({**cg.PREP, 'training_nuclei':args.composition}, f, indent=4)
 
     # Let 'er rip
     model.fit(
@@ -219,7 +220,7 @@ if __name__ == '__main__':
         'model_name', type=str, metavar='name',
         help='Name of the model to train')
     p.add_argument(
-        '-c', '--comp', type=str, required=True,
+        '-c', '--composition', type=str, required=True,
         help='Composition of datasets to load and train the model on')
     p.add_argument(
         '-e', '--epochs', type=int, default=cg.NUM_EPOCHS,
@@ -239,6 +240,13 @@ if __name__ == '__main__':
         help='Attempt to restore and continue training a model if it exists. Can not be used with overwrite')
     args = p.parse_args()
 
+    # Ensure that there are no unrecognized characters in the composition string
+    if not all(c in 'phof' for c in args.composition):
+        p.error('Unrecognized composition dataset combination requested')
+    # Sort the composition string into a predictable order
+    args.composition = ''.join(sorted(args.composition, key=lambda c: list('phof').index(c)))
+
+    # Ensure epochs are a valid number
     if args.epochs and args.epochs <= 0:
         p.error('Epochs must be a positive integer')
 

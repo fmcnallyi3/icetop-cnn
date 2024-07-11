@@ -31,9 +31,13 @@ def main(args):
     # Create model folder
     os.makedirs(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name), exist_ok=True)
     
+    # Optionally run the model off the cluster with a custom command prompt
     if args.test:
-        command = f'python trainer.py -c p -p {" ".join(args.predict)} -e 5 {("-r", "-o")[new_model]} -t {args.model_name}'
-        os.system('echo Starting training...')
+        if not args.epochs or args.epochs > 10:
+            print('Defaulting to 10 epochs...')
+            args.epochs = 10
+        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t {args.model_name}'
+        print('Starting training...')
         return os.system(command)
     
     # Create condor directories
@@ -147,7 +151,7 @@ if __name__ == '__main__':
         help='A list of one or more desired model outputs')
     p.add_argument(
         '-t', '--test', action='store_true',
-        help='Run the script off the cluster on a limited dataset for 5 epochs')
+        help='Run the script off the cluster on a limited dataset for a maximum of 10 epochs')
     g = p.add_mutually_exclusive_group()
     g.add_argument(
         '-o', '--overwrite', action='store_true',
@@ -157,7 +161,17 @@ if __name__ == '__main__':
         help='Attempt to restore and continue training a model if it exists. Can not be used with overwrite')
     args = p.parse_args()
     
-    # Manual argument validation
+    '''
+    MANUAL ARGUMENT VALIDATION
+    All arguments get passed directly to trainer.py, so only arguments that
+        will crash a program need to be validated in submit.py (so the time
+        spent idling isn't wasted).
+    '''
+    # Ensure that there are no unrecognized characters in the composition string
+    if not all(c in 'phof' for c in args.composition):
+        p.error('Unrecognized composition dataset combination requested')
+     
+    # Ensure epochs are a valid number
     if args.epochs and args.epochs <= 0:
         p.error('Epochs must be a positive value')
     

@@ -52,16 +52,14 @@ def files(simdata_folder_path: str, data: str, composition: str = 'pf', test: bo
 
     # Mapping of nuclei to IceCube Simulation IDs
     composition_aliases = {'p':'12360', 'h':'12630', 'o':'12631', 'f':'12362'}
-
-    filenames = sorted(glob(os.path.join(simdata_folder_path, data, data + '_*.npy')))
     alias_list = [composition_aliases[nucleus] for nucleus in composition]
 
     composition_files = []
-    for filename in filenames:
-        if any(alias in filename for alias in alias_list):
-            composition_files.append(filename)
+    for alias in sorted(alias_list):
+        filenames = sorted(glob(os.path.join(simdata_data_path, f'{data}_{alias}_*.npy')))[:1 if test else None]
+        composition_files.extend(filenames)
 
-    return composition_files if not test else composition_files[:1]
+    return composition_files
 
 
 ### DETECTOR ARRAY DATA ###
