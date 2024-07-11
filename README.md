@@ -28,7 +28,10 @@ The next step is to clone the GitHub repository.
 ``` bash
 git clone https://github.com/fmcnallyi3/icetop-cnn.git
 ```
-:warning:WARNING:warning:: It is discouraged for new users to specify a different name for the directory.\
+<div style="text-align: center;">
+  :warning:`WARNING`:warning:
+</div>
+It is discouraged for new users to specify a different name for the directory.\
 This is because some file paths depend on this naming convention.\
 For more experienced users, edit at your own risk.
 
@@ -38,7 +41,10 @@ New users are recommended to take the time to first configure their .ssh.\
 It is also highly recommended to set up an authentication key. This avoids the need to enter your password each time you log in.\
 If you are unfamiliar with how to do that, [here](https://www.ssh.com/academy/ssh/keygen) is a link to help get you started.
 
-:warning:`WARNING`:warning:: Cobalt has 8 nodes to choose from, 1-8. It is VERY important that you choose one of the latter four nodes, 5-8. \
+<div style="text-align: center;">
+  :warning:`WARNING`:warning:
+</div>
+Cobalt has 8 nodes to choose from, 1-8. It is VERY important that you choose one of the latter four nodes, 5-8. \
 This is because the former nodes use an older CPU architecture that is incompatable with our machine learning library, [TensorFlow](https://www.tensorflow.org/versions/r2.14/api_docs).\
 Below is an example configuration file, complete with entries for an authentication key.
 ```
