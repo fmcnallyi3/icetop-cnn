@@ -6,4 +6,5 @@ tutorial/.ipynb_checkpoints/
 .venv/
 .vscode/
 .ipynb_checkpoints/
+.DS_Store/
 
