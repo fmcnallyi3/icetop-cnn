@@ -52,7 +52,7 @@ If you are new to working in the command line or in a Linux environment, check o
 </details>
 <br>
 <details open>
-  <summary><b>Running the Setup Script</b></summary>
+  <summary><b>Run the Setup Script</b></summary>
 
   Assuming the default naming convention, make the cloned repository your new working directory.
   ```bash
@@ -68,7 +68,7 @@ If you are new to working in the command line or in a Linux environment, check o
 </details>
 <br>
 <details open>
-  <summary><b>Editing .bashrc</b></summary>
+  <summary><b>Edit .bashrc</b></summary>
   <p align="center">
     <b>NOTE</b><br>
     For the more experienced users who edited the name of the repository when cloning,<br>
