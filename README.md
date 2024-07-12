@@ -1,3 +1,4 @@
+![IceCube Neutrino Observatory](https://res.cloudinary.com/icecube/images/v1598387622/Header_HomeA_2000/Header_HomeA_2000.png)
 # IceTop ML Cosmic Ray Reconstruction
 
 ## Quick Links
