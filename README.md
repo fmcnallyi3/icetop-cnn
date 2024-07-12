@@ -1,11 +1,11 @@
 ![IceCube Neutrino Observatory](https://res.cloudinary.com/icecube/images/v1598387622/Header_HomeA_2000/Header_HomeA_2000.png)
 # IceTop ML Cosmic Ray Reconstruction
-<table style="width:100%; table-layout: fixed; font-size: 1.75vw;">
+<table align="center">
   <tr>
-    <td style="text-align: center;"><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#introduction">Introduction</a></td>
-    <td style="text-align: center;"><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#how-to-install">Installation</a></td>
-    <td style="text-align: center;"><a href="https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide">User Guide</a></td>
-    <td style="text-align: center;"><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#known-issues-wip">Known Issues</a></td>
+    <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#introduction">Introduction</a></td>
+    <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#how-to-install">Installation</a></td>
+    <td><a href="https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide">User Guide</a></td>
+    <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#known-issues-wip">Known Issues</a></td>
   </tr>
 </table>
 
@@ -19,7 +19,7 @@ This installation tutorial assumes you have some familiarity with navigating a t
 If you are new to working in the command line or in a Linux environment, check out [this section](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#linux) on Linux in our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
 <details open>
-  <summary style="font-size:1.5vw;"><b>Log in to Cobalt</b></summary>
+  <summary><b>Log in to Cobalt</b></summary>
 
   First, open the command prompt (Windows) or terminal (Mac/Linux).\
   If you have configured your .ssh, then you may log in with the following command:
@@ -35,9 +35,9 @@ If you are new to working in the command line or in a Linux environment, check o
   *Be sure to replace the example username with your actual IceCube username.*\
   There is a section on [configuring your SSH](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh) in the [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 </details>
-<hr>
+<br>
 <details open>
-  <summary style="font-size:1.5vw;"><b>Clone the GitHub Repository</b></summary>
+  <summary><b>Clone the GitHub Repository</b></summary>
   <p align="center">
     :warning:<b>WARNING</b>:warning:<br>
     It is discouraged for new users to specify a different name for the repository.<br>
@@ -50,9 +50,9 @@ If you are new to working in the command line or in a Linux environment, check o
   git clone https://github.com/fmcnallyi3/icetop-cnn.git
   ```
 </details>
-<hr>
+<br>
 <details open>
-  <summary style="font-size:1.5vw;"><b>Running the Setup Script</b></summary>
+  <summary><b>Running the Setup Script</b></summary>
 
   Assuming the default naming convention, make the cloned repository your new working directory.
   ```bash
@@ -66,9 +66,9 @@ If you are new to working in the command line or in a Linux environment, check o
   ./first_time_setup.sh
   ```
 </details>
-<hr>
+<br>
 <details open>
-  <summary style="font-size:1.5vw;"><b>Editing .bashrc</b></summary>
+  <summary><b>Editing .bashrc</b></summary>
   <p align="center">
     <b>NOTE</b><br>
     For the more experienced users who edited the name of the repository when cloning,<br>
@@ -114,8 +114,8 @@ This section is a work and progress and may be expanded as issues arise.\
 If you have found an issue that you would like to report, please do so under the "Issues" section of the repository.
 
 <details>
-  <summary style="font-size:1.5vw;"><b>Memory Limit Exceeded</b></summary>
-  <div style="padding-left: 1.25vw;">
+  <summary><b>Memory Limit Exceeded</b></summary>
+  <div>
     Sometimes when submitting a job to the cluster, your job will be held with a "Policy Violation: Memory Limit Exceeded" error.<br>
     You will find that in many cases, simply re-submitting the job will be sufficient to get past this error.<br>
     Due to the nature of working with a computing cluster, there is some unpredictability with architectures and concurrent jobs that is unavoidable.<br>
@@ -124,8 +124,8 @@ If you have found an issue that you would like to report, please do so under the
 </details>
 
 <details>
-  <summary style="font-size:1.5vw;"><b>No Module Named Matplotlib</b></summary>
-  <div style="padding-left: 1.25vw;">
+  <summary><b>No Module Named Matplotlib</b></summary>
+  <div>
     This is a recently reported error that is yet to be thoroughly investigated.<br>
     It seems that, in rare cases, the node that receives a job may not have matplotlib installed.<br>
     Luckily, the model will have trained and saved its reconstructions by this point.<br>
