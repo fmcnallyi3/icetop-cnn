@@ -1,10 +1,10 @@
 # IceTop ML Cosmic Ray Reconstruction
 
-## Table of Contents
+## Quick Links
 
 - [Introduction](#introduction)
 - [Installation](#how-to-install)
-- [Usage](#user-guide)
+- [Usage](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide)
 - [Known Issues](#known-issues-wip)
 
 ## Introduction
@@ -13,10 +13,11 @@ Welcome to icetop-cnn!
 As a high-level overview, this project aims to train neural networks on low-statistics data collected from the IceTop surface detector.
 
 ## How to Install
-This installation tutorial assumes you have some familiarity with navigating the Linux operating system.\
-If you are new to working in the command line or in a Linux environment, check out [this section](#linux) on Linux in our user guide.
+This installation tutorial assumes you have some familiarity with navigating a terminal and the Linux operating system.\
+If you are new to working in the command line or in a Linux environment, check out [this section](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#linux) on Linux in our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
 ### Log in to Cobalt
+First, open the command prompt (Windows) or terminal (Mac/Linux).\
 If you have configured your .ssh, then you may log in with the following command:
 ```bash
 ssh cobalt
@@ -24,10 +25,11 @@ ssh cobalt
 Otherwise, you may log in with the following commands:
 ```bash
 ssh jdoe@pub.icecube.wisc.edu
+
 ssh cobalt
 ```
 *Be sure to replace the example username with your actual IceCube username.*\
-There is a section on [configuring your SSH](#configuring-ssh) further on in this document.
+There is a section on [configuring your SSH](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh) in the [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
 ### Clone the GitHub Repository
 <p align="center">
@@ -89,72 +91,12 @@ icetop-cnn() {
     fi
 }
 ```
+You can now save and exit the file.
 
 ### Finished
 Congratulations! You are now ready to begin working on the icetop-cnn project.\
 For an introduction to Machine Learning, be sure to check out the folder labeled "tutorial".\
-For help on getting started, see our [user guide](#how-to-use-the-project).
-
-## User Guide
-### How to Use the Project
-Your entry point is going to be **submit.py**. This program is meant to be called from the command line.\
-To learn more about this program, you may print its help page by running it with the **-h** flag.
-```bash
-./submit.py -h
-```
-<p align="center">
-  <b>NOTE</b><br>
-  While it is possible, it is discouraged to run <b>trainer.py</b> directly as an executable.<br>
-  For debugging off the cluster, simply run <b>submit.py</b> with the <b>-t</b> flag.
-</p>
-
-Models are created within 
-
-Both **submit.py** and **trainer.py** offer the full range of features available with this project without any necessary modifications.\
-As new functionality is added to the project, the scripts will need to be updated.\
-For first-time users, it is encouraged to spend some time experimenting with existing functionality.
-
-
-### Configuring SSH
-<p align="center">
-  :warning:<b>WARNING</b>:warning:<br>
-  Cobalt has 8 nodes to choose from, 1-8. It is VERY important that you choose one of the latter four nodes, 5-8.<br>
-  This is because the former nodes use an older CPU architecture that is incompatable<br>
-  with our machine learning library,
-  <a target="_blank" rel="noopener noreferrer" href="https://www.tensorflow.org/versions/r2.14/api_docs">TensorFlow</a>.
-</p>
-
-New users are recommended to take the time to first configure their .ssh.\
-It is also highly recommended to set up an authentication key. This avoids the need to enter your password each time you log in.\
-If you are unfamiliar with how to do that, [here](https://www.ssh.com/academy/ssh/keygen) is a link to help get you started.
-
-Below is an example configuration file, complete with entries for an authentication key.
-
-```
-# ~/.ssh/config:
-
-# ICECUBE PUBLIC
-Host pub
-  HostName pub.icecube.wisc.edu
-  User jdoe
-  IdentityFile ~/.ssh/id_rsa
-
-# COBALT
-Host cobalt
-  HostName cobalt06.icecube.wisc.edu
-  User jdoe
-  IdentityFile ~/.ssh/id_rsa
-  ProxyJump jdoe@pub.icecube.wisc.edu
-
-# SUBMITTER
-Host submit
-  HostName submitter.icecube.wisc.edu
-  User jdoe
-  IdentityFile ~/.ssh/id_rsa
-  ProxyJump jdoe@pub.icecube.wisc.edu
-```
-
-### Linux
+For help on getting started, see our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
 ## Known Issues (WIP)
 This section is a work and progress and may be expanded as issues arise.\
