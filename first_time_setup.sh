@@ -17,6 +17,9 @@ KERNEL="$JUPYTER_ICETOP_CNN_KERNEL_DIR/kernel.json"
 cat <<EOF > $START_KERNEL
 #!/bin/sh
 source $PWD/.venv/bin/activate
+export ICETOP_CNN_DIR=$PWD
+export ICETOP_CNN_DATA_DIR=/data/user/$USER/icetop-cnn
+export ICETOP_CNN_SCRATCH_DIR=/scratch/$USER/icetop-cnn
 exec $PWD/.venv/bin/python -m ipykernel_launcher -f \$1 2>/dev/null
 EOF
 
