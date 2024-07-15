@@ -48,6 +48,7 @@ def main(args):
         f'arguments = "{" ".join(sys.argv[1:])}"',
         f'environment = "ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
         'transfer_input_files = config.py,utils.py,model.py,loss_grapher.py',
+        'getenv = True',
         '',
         f'log = {os.path.join(LOGS_DIR, f"{args.model_name}.log")}',
         f'output = {os.path.join("condor", "output", f"{args.model_name}.out")}',
