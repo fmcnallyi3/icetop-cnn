@@ -122,13 +122,3 @@ If you have found an issue that you would like to report, please do so under the
     If you find that the issue persists, it may be necessary to adjust the memory allocated in a model's submission file.
   </div>
 </details>
-
-<details>
-  <summary><b>No Module Named Matplotlib</b></summary>
-  <div>
-    This is a recently reported error that is yet to be thoroughly investigated.<br>
-    It seems that, in rare cases, the node that receives a job may not have matplotlib installed.<br>
-    Luckily, the model will have trained and saved its reconstructions by this point.<br>
-    The error only occurs when graphing the model's loss curves, which can be done manually by itself off the cluster.
-  </div>
-</details>
