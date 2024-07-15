@@ -217,7 +217,7 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(
         description = 'Trains ML models using TensorFlow')
     p.add_argument(
-        'model_name', type=str, metavar='name',
+        '-n', '--name', dest='model_name', type=str, required=True,
         help='Name of the model to train')
     p.add_argument(
         '-c', '--composition', type=str, required=True,

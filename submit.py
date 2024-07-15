@@ -138,7 +138,7 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(
         description='Submission script to train ML models with TensorFlow on the cluster using GPUs')
     p.add_argument(
-        'model_name', type=str, metavar='name',
+        '-n', '--name', dest='model_name', type=str, required=True,
         help='Name of the model to train')
     p.add_argument(
         '-c', '--composition', type=str, default='phof',
