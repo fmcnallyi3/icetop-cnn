@@ -375,7 +375,7 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 #
 ########################################################################################################################
 
-def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: str, prep: dict[str, Any]) -> np.ndarray:
+def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: str | None, prep: dict[str, Any]) -> np.ndarray:
     '''Returns a cut based on whether the user is training or assessing a model'''
 
     # Make sure user selects a valid mode
