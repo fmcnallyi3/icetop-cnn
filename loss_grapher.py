@@ -10,7 +10,7 @@ from sys import argv
 import matplotlib.pyplot as plt
 import numpy as np
 
-ICETOP_CNN_DATA_DIR = os.environ['ICETOP_CNN_DATA_DIR']
+ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
 MODELS_FOLDER_PATH = os.path.join(ICETOP_CNN_DATA_DIR, 'models')
 
 # Ensure that 'models' folder is found
