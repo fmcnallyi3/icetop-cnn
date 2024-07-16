@@ -22,7 +22,7 @@ If you are new to working in the command line or in a Linux environment, check o
   <summary><b>Log in to Cobalt</b></summary>
 
   First, open the command prompt (Windows) or terminal (Mac/Linux).\
-  If you have configured your .ssh, then you may log in with the following command:
+  If you have [configured your .ssh](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh), then you may log in with the following command:
   ```bash
   ssh cobalt
   ```
