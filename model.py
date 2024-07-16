@@ -13,36 +13,6 @@ def get_compiled_model(input_shapes, model_name, prep, predictions):
     # Create dictionary of input tensors
     inputs = {input_name: tf.keras.layers.Input(shape=shape) for input_name, shape in input_shapes.items()}
 
-    '''
-    conv1 = BatchNormalization()(
-        Conv2D(16, kernel_size=3, padding='same', activation='relu', data_format='channels_last')(inputs['icetop'])
-    )
-    conv2 = BatchNormalization()(
-        Conv2D(32, kernel_size=3, padding='same', activation='relu', data_format='channels_last')(conv1)
-    )
-
-    dense_input = Flatten()(conv2)
-    if prep['infill']:
-        dense_input = Concatenate()([dense_input, Flatten()(inputs['infill'])])
-    if prep['reco']:
-        dense_input = Concatenate()([dense_input, Flatten()(inputs[prep['reco']])])
-
-    ## Create two batch-normalized dense layers with relu activation
-    dense1 = BatchNormalization()(
-        Dense(16, activation='relu')(dense_input)
-    )
-    dense2 = BatchNormalization()(
-        Dense(32, activation='relu')(dense1)
-    )
-    dense3 = BatchNormalization()(
-        Dense(32, activation='relu')(dense2)
-    )
-    dense4 = BatchNormalization()(
-        Dense(64, activation='relu')(dense3)
-    )
-    outputs = Dense(1, activation='relu')(dense4)
-    '''
-
     # MINI0 - DESIGNED TO TRAIN QUICKLY WITH REASONABLE PERFORMANCE
     ## Create two batch-normalized convolutional layers of kernel size 3 with relu activation
     conv1 = tf.keras.layers.BatchNormalization()(
@@ -103,11 +73,14 @@ def get_compiled_model(input_shapes, model_name, prep, predictions):
     dense2 = BatchNormalization()(
         Dense(512, activation='relu', kernel_constraint=MaxNorm(3))(dropout1))
     dropout2 = Dropout(0.2)(dense2)
-    outputs = Dense(1, activation='relu')(dropout2)
+
+    composition_output = tf.keras.layers.Dense(4, activation='softmax', name='comp')(dropout2)
+    energy_output = tf.keras.layers.Dense(1, activation='relu', name='energy')(dropout2)
+    outputs = [composition_output, energy_output]
     '''
 
-    # TODO: Adjust output based on args
-    model = tf.keras.models.Model( # Create model
+    # Create model
+    model = tf.keras.models.Model(
         inputs=inputs,
         outputs=[output for output in outputs if output.name[:output.name.index('/')] in predictions],
         name=model_name
@@ -125,5 +98,5 @@ def get_compiled_model(input_shapes, model_name, prep, predictions):
         loss={prediction: loss_functions[prediction] for prediction in predictions},
         metrics={prediction: metrics[prediction] for prediction in predictions}
     )
-    #model.summary()
+    model.summary()
     return model
