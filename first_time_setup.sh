@@ -39,6 +39,25 @@ cat <<EOF > $KERNEL
 }
 EOF
 
+# Create settings for VSCode
+mkdir $PWD/.vscode
+cat <<EOF > $PWD/.vscode/settings.json
+{
+    "files.exclude": {
+        "__pycache__": true,
+        "**/.ipynb_checkpoints": true,
+        ".venv": true,
+        ".vscode": true,
+    },
+    "files.watcherExclude": {
+        "**/.venv/**": true,
+    },
+    "python.analysis.extraPaths": [
+        "$PWD/.venv/lib/python3.11/site-packages"
+    ],
+}
+EOF
+
 echo "TensorFlow environment and JupyterHub kernel initialized!"
 
 
