@@ -223,8 +223,8 @@ if __name__ == '__main__':
         '-c', '--composition', type=str, required=True,
         help='Composition of datasets to load and train the model on')
     p.add_argument(
-        '-e', '--epochs', type=int, default=cg.NUM_EPOCHS,
-        help='The number of epochs that the model should train for')
+        '-e', '--epochs', type=int, default=cg.MAX_EPOCHS,
+        help='The maximum number of epochs that the model should train for')
     p.add_argument(
         '-p', '--predict', nargs='+', type=str, choices=['comp', 'energy'],
         help='A list of one or more desired model outputs')

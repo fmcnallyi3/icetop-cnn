@@ -15,7 +15,7 @@ PREP = {
     'reco': 'plane',
 }
 
-NUM_EPOCHS = 100
+MAX_EPOCHS = 100
 
 MIN_ES_DELTA = 1e-4
 ES_PATIENCE = 10
