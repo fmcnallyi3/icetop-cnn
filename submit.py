@@ -36,7 +36,7 @@ def main(args):
         if not args.epochs or args.epochs > 10:
             print('Defaulting to 10 epochs...')
             args.epochs = 10
-        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t {args.model_name}'
+        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name}'
         print('Starting training...')
         return os.system(command)
     
