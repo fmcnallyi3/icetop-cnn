@@ -12,17 +12,16 @@
 ## Introduction
 Welcome to icetop-cnn!
 
-As a high-level overview, this project aims to train neural networks on low-statistics data collected from the IceTop surface detector.
+This project aims to train neural networks on low-level cosmic-ray air shower data collected from the IceTop surface detector. It is built for energy but can be extended to core position, direction, and maybe even composition.
 
 ## How to Install
-This installation tutorial assumes you have some familiarity with navigating a terminal and the Linux operating system.\
-If you are new to working in the command line or in a Linux environment, check out [this section](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#linux) on Linux in our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
+This installation tutorial assumes you have some familiarity with navigating a terminal and the Linux operating system. If you are new to working in the command line or in a Linux environment, check out [this section](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#linux) on Linux in our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
 <details open>
   <summary><b>Log in to Cobalt</b></summary>
 
-  First, open the command prompt (Windows) or terminal (Mac/Linux).\
-  If you have [configured your .ssh](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh), then you may log in with the following command:
+  IceTop-CNN is designed to use IceCube's computing resources. You must log in to a computing node ("cobalt") to get started.\
+  First, open the command prompt (Windows) or terminal (Mac/Linux). If you have [configured your .ssh](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh), then you may log in with the following command:
   ```bash
   ssh cobalt
   ```
@@ -38,30 +37,35 @@ If you are new to working in the command line or in a Linux environment, check o
 <br>
 <details open>
   <summary><b>Clone the GitHub Repository</b></summary>
-  <p align="center">
-    :warning:<b>WARNING</b>:warning:<br>
-    It is discouraged for new users to specify a different name for the repository.<br>
-    This is because some file paths depend on this naming convention.<br>
-    For more experienced users, edit at your own risk.
-  </p>
 
-  From your home directory, the next step is to clone the GitHub repository.
+  You should now be in your home directory on a cobalt node. To get code from this GitHub repository to your IceCube filesystem, you will have to copy it. Luckily, Git offers a way to do this easily.
+
+  From your home directory, clone the GitHub repository.
   ```bash
   git clone https://github.com/fmcnallyi3/icetop-cnn.git
   ```
+  <table align="center">
+    <tr><td>
+      <p align="center">
+        :warning:<b>WARNING</b>:warning:<br>
+        It is discouraged for new users to deviate from this command and specify a different name for the repository.<br>
+        This is because some file paths depend on this naming convention.<br>
+        For more experienced users, edit at your own risk.
+      </p>
+    </td></tr>
+  </table>
 </details>
 <br>
 <details open>
   <summary><b>Run the Setup Script</b></summary>
 
+  Before you can launch in to training your own models, you must create and initialize your working environment. This includes your [TensorFlow](https://www.tensorflow.org/versions/r2.14/api_docs) environment as well as the necessary files to use that environment in [JupyterHub](https://jupyterhub.icecube.wisc.edu/hub/). Thankfully, all the work is done by a single script, and all you have to do is run it. 
+
   Assuming the default naming convention, make the cloned repository your new working directory.
   ```bash
   cd icetop-cnn
   ```
-  You should now be ready to run the setup script.\
-  This will create your [TensorFlow](https://www.tensorflow.org/versions/r2.14/api_docs) environment
-  as well as the necessary files to use that environment in [JupyterHub](https://jupyterhub.icecube.wisc.edu/hub/).\
-  The process may take a few minutes and will notify you once completed.
+  You should now be ready to run the setup script. The process may take a few minutes and will notify you once completed.
   ```bash
   ./first_time_setup.sh
   ```
@@ -69,13 +73,9 @@ If you are new to working in the command line or in a Linux environment, check o
 <br>
 <details open>
   <summary><b>Edit .bashrc</b></summary>
-  <p align="center">
-    <b>NOTE</b><br>
-    For the more experienced users who edited the name of the repository when cloning,<br>
-    this next step is where you will be able to adjust your folder paths.
-  </p>
 
-  This is the final and one of the most cruicial steps. Without this, your scripts will not run.\
+  Now that your environment has been initialized, we are going to write a function to activate it, as well as create some needed environment variables. This is a cruicial step; without this, your scripts will not work.
+
   First navigate back to your home directory.
   ```bash
   cd
@@ -102,11 +102,24 @@ If you are new to working in the command line or in a Linux environment, check o
       fi
   }
   ```
-  You can now save and exit the file.
+  <table align="center">
+    <tr><td>
+      <p align="center">
+        <b>NOTE</b><br>
+        For the more experienced users who edited the name of the repository when cloning,
+        this step is where you should adjust your folder paths. Additionally, check out <a href=https://wiki.icecube.wisc.edu/index.php/Jupyterhub>this</a> page on how to configure your <a href=https://jupyterhub.icecube.wisc.edu/hub>JupyterHub</a> kernel.
+      </p>
+    </td></tr>
+  </table>
+
+  You can now save and exit the file. At this point, your .bashrc has been edited, but you are still running off of the older version before the "icetop-cnn" function was added. To restart your .bashrc, enter the following command:
+  ```bash
+    source .bashrc
+  ```
 
   Congratulations! You are now ready to begin working on the icetop-cnn project.\
-  For an introduction to Machine Learning, be sure to check out the folder labeled "tutorial".\
-  For help on getting started, see our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
+  For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.\
+  For help on getting started with the project, see our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 </details>
 
 ## Known Issues (WIP)
