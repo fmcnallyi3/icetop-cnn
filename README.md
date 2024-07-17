@@ -48,7 +48,8 @@ This installation tutorial assumes you have some familiarity with navigating a t
       <p align="center">
         :warning:<b>WARNING</b>:warning:<br>
         It is discouraged for new users to deviate from this command and specify a different name for the repository.<br>
-        This is because some file paths depend on this naming convention. For more experienced users, edit at your own risk.
+        This is because some file paths depend on this naming convention.<br>
+        For more experienced users, edit at your own risk.
       </p>
     </td></tr>
   </table>
