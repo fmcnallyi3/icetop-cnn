@@ -106,7 +106,7 @@ def get_datasets(composition):
     '''Loads and prepares simulation data from files'''
     
     # Load detector inputs and event parameters
-    simdata_folder_path = os.path.join(os.sep, 'data', 'user', 'edorr', 'icetop-cnn', 'simdata') # TODO: Change to fmcnally
+    simdata_folder_path = os.path.join(os.sep, 'data', 'user', 'fmcnally', 'icetop-cnn', 'simdata')
     detector_data, event_parameters = get_preprocessed(simdata_folder_path, composition=composition, test=args.test)
     
     # Prepare simulation data

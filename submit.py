@@ -55,7 +55,7 @@ def main(args):
         f'error = {os.path.join("condor", "errors", f"{args.model_name }.err")}',
         'notification = never',
         '',
-        f'+SingularityImage = "{os.path.join(os.sep, "data", "user", "edorr", "icetop-cnn", "tf.sif")}"', # TODO: replace with fmcnally
+        f'+SingularityImage = "{os.path.join(os.sep, "data", "user", "fmcnally", "icetop-cnn", "tf.sif")}"',
         'should_transfer_files = YES',
         'when_to_transfer_output = ON_EXIT',
         f'initialdir = {ICETOP_CNN_DIR}',

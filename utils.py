@@ -83,8 +83,8 @@ def load_detector_array(filepaths: list[str]) -> np.ndarray:
     # Replace the garbage pre-allocated data with detector data in-place
     start_idx = 0
     for filepath in filepaths:
-        composition_data = np.load(filepath)
-        detector_array[start_idx : (start_idx := start_idx + composition_data.shape[0])] = composition_data.astype('float32')
+        composition_data = np.load(filepath).astype('float32')
+        detector_array[start_idx : (start_idx := start_idx + composition_data.shape[0])] = composition_data
 
     return detector_array
 
