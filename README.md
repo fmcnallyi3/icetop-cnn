@@ -20,8 +20,7 @@ This installation tutorial assumes you have some familiarity with navigating a t
 <details open>
   <summary><b>Log in to Cobalt</b></summary>
 
-  IceTop-CNN is designed to use IceCube's computing resources. You must log in to a computing node ("cobalt") to get started.\
-  First, open the command prompt (Windows) or terminal (Mac/Linux). If you have [configured your .ssh](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh), then you may log in with the following command:
+  IceTop-CNN is designed to use IceCube's computing resources. You must log in to a computing node ("cobalt") to get started. First, open the command prompt (Windows) or terminal (Mac/Linux). If you have [configured your .ssh](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh), then you may log in with the following command:
   ```bash
   ssh cobalt
   ```
@@ -49,8 +48,7 @@ This installation tutorial assumes you have some familiarity with navigating a t
       <p align="center">
         :warning:<b>WARNING</b>:warning:<br>
         It is discouraged for new users to deviate from this command and specify a different name for the repository.<br>
-        This is because some file paths depend on this naming convention.<br>
-        For more experienced users, edit at your own risk.
+        This is because some file paths depend on this naming convention. For more experienced users, edit at your own risk.
       </p>
     </td></tr>
   </table>
@@ -118,7 +116,8 @@ This installation tutorial assumes you have some familiarity with navigating a t
   ```
 
   Congratulations! You are now ready to begin working on the icetop-cnn project.\
-  For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.\
+  For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
+  
   For help on getting started with the project, see our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 </details>
 
