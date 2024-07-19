@@ -10,7 +10,7 @@
 </table>
 
 ## Introduction
-Welcome to icetop-cnn!
+Welcome to IceTop-CNN!
 
 This project aims to train neural networks on low-level cosmic-ray air shower data collected from the IceTop surface detector. It is built for energy but can be extended to core position, direction, and maybe even composition.
 
