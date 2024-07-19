@@ -49,18 +49,7 @@ def get_training_datasets():
     '''Prepares tensorflow datasets used for training'''
 
     # Load data used for training/testing in its entirety
-    model_inputs, event_parameters = get_datasets(args.composition)
-
-    # Get training cut
-    training_assessment_cut = get_training_assessment_cut(event_parameters, 'training', cg.PREP)
-
-    # Apply cuts to data
-    model_inputs = {
-        input_name: model_input[training_assessment_cut] for input_name, model_input in model_inputs.items()
-    }
-    event_parameters = {
-        key: val[training_assessment_cut] for key, val in event_parameters.items()
-    }
+    model_inputs, event_parameters = get_datasets(args.composition, 'training', args.test)
 
     # One-hot encode the composition data if composition is to be predicted
     if 'comp' in args.predict:
@@ -102,24 +91,36 @@ def get_training_datasets():
     ), input_shapes
 
 
-def get_datasets(composition):
+def get_datasets(composition, mode, test=False):
     '''Loads and prepares simulation data from files'''
     
     # Load detector inputs and event parameters
     simdata_folder_path = os.path.join(os.sep, 'data', 'user', 'fmcnally', 'icetop-cnn', 'simdata')
-    detector_data, event_parameters = get_preprocessed(simdata_folder_path, composition=composition, test=args.test)
+    detector_data, event_parameters = get_preprocessed(simdata_folder_path, cg.PREP['infill'], composition=composition, test=test)
+
+    # Get training/assessment cut
+    training_assessment_cut = get_training_assessment_cut(event_parameters, mode, cg.PREP)
+
+    # Apply cuts
+    detector_data = {
+        detector_name: data[training_assessment_cut] for detector_name, data in detector_data.items()
+    }
+    event_parameters = {
+        key: val[training_assessment_cut] for key, val in event_parameters.items()
+    }
     
     # Prepare simulation data
     model_inputs = data_prep(detector_data, cg.PREP)
     
     # Add reconstruction data if it is used
+    # TODO: Isolate into its own thing? Should not go in data_prep, that is designed for detector data
     if cg.PREP['reco']:
         assert f'{cg.PREP["reco"]}_dir' in event_parameters, f"Invalid reco choice, received {cg.PREP['reco']}"
         # Get and compute the zenith angle
         zenith = np.pi - event_parameters[f"{cg.PREP['reco']}_dir"].transpose()[0].astype('float32')
         # Normalize if specified
         if cg.PREP['normed']:
-            zenith /= np.nanmax(zenith)
+            zenith /= np.amax(zenith)
         # Add zenith to model inputs
         model_inputs[cg.PREP['reco']] = zenith
     
@@ -188,15 +189,7 @@ def assess_model(model: tf.keras.Model, assess_comp: str = 'phof'):
     '''Assesses the model once it has finished training'''
 
     # Load data used for training/testing in its entirety
-    model_inputs, event_parameters = get_datasets(assess_comp)
-    
-    # Get assessment cut
-    training_assessment_cut = get_training_assessment_cut(event_parameters, 'assessment', cg.PREP)
-
-    # Apply cuts to data
-    model_inputs = {
-        input_name: model_input[training_assessment_cut] for input_name, model_input in model_inputs.items()
-    }
+    model_inputs, _ = get_datasets(assess_comp, 'assessment')
 
     # Assess the model
     reconstructions = model.predict(model_inputs.values())

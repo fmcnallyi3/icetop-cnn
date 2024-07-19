@@ -10,7 +10,7 @@ PREP = {
     'q': None,
     't': None,
     't_shift': True,
-    't_clip': 0.0,
+    't_clip': False,
     'normed': True,
     'reco': 'plane',
 }

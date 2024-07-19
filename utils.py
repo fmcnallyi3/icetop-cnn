@@ -89,19 +89,18 @@ def load_detector_array(filepaths: list[str]) -> np.ndarray:
     return detector_array
 
 
-def get_detector_inputs(simdata_folder_path: str, composition: str = 'pf', test: bool = False) -> dict[str, np.ndarray]:
+def get_detector_inputs(simdata_folder_path: str, infill: bool, composition: str = 'pf', test: bool = False) -> dict[str, np.ndarray]:
     '''Loads detector inputs of desired composition. Returns a dictionary mapping input names to numpy ndarrays.'''
 
     # Prepare IceTop files/data
     icetop_files = files(simdata_folder_path, 'icetop', composition=composition, test=test)
-    icetop = load_detector_array(icetop_files)
+    detector_inputs = {'icetop': load_detector_array(icetop_files)}
 
-    # Prepare Infill files/data
-    infill_files = files(simdata_folder_path, 'infill', composition=composition, test=test)
-    infill = load_detector_array(infill_files)
-
-    # Store detector-based data as dictionary
-    detector_inputs = {'icetop':icetop, 'infill':infill}
+    # Prepare Infill files/data, if specified
+    if infill:
+        infill_files = files(simdata_folder_path, 'infill', composition=composition, test=test)
+        detector_inputs.update({'infill': load_detector_array(infill_files)})
+    
     return detector_inputs
 
 
@@ -141,9 +140,9 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
 
 ### BOTH DETECTOR ARRAY DATA AND EVENT PARAMETERS ### 
 
-def get_preprocessed(simdata_folder_path: str, composition: str = 'pf', test: bool = False) -> tuple[dict[str, np.ndarray]]:
+def get_preprocessed(simdata_folder_path: str, infill: bool, composition: str = 'pf', test: bool = False) -> tuple[dict[str, np.ndarray]]:
     '''Loads both detector inputs and event parameters of desired composition.'''
-    detector_inputs = get_detector_inputs(simdata_folder_path, composition=composition, test=test)
+    detector_inputs = get_detector_inputs(simdata_folder_path, infill, composition=composition, test=test)
     event_parameters = get_event_parameters(simdata_folder_path, composition=composition, test=test)
 
     return detector_inputs, event_parameters
@@ -161,10 +160,21 @@ def get_preprocessed(simdata_folder_path: str, composition: str = 'pf', test: bo
 #      2b) If you are having trouble visualizing this 4-dimensional data structure, it is essentially a row
 #          of rank three tensors, which themselves can be visualized as rectangular prisms.
 #
+# TODO: Rename
+#
 ########################################################################################################################
 
 def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
     '''Augments and prepares raw data for model input'''
+
+    minimums = {
+        'charge': None,
+        'time': 7023.3447265625
+    }
+    maximums = {
+        'charge': 3.949448997609407,
+        'time': 35047.6552734375
+    }
 
     # Create slices to keep track of which channels are charge and time
     layer_slices = {'charge': np.s_[:2], 'time': np.s_[-2:]}
@@ -266,53 +276,24 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
         return array
 
     def clip_time(detector_inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
-        '''Clips the top t_clip% of times to not exceed the time at the (100 - t_clip)th percentile'''
+        '''Clips the top time values to not exceed the maximum time'''
 
-        if prep['t'] == False:
-            return detector_inputs
-            
-        assert 0 <= prep['t_clip'] < 100, f"Invalid value for t_clip: {prep['t_clip']}. Choose value in range [0, 100)."
-
-        # Get list of all nonzero time values for each detector-based input.
-        nonzero_time_values = [detector_input[..., layer_slices['time']][
-            np.nonzero(detector_input[..., layer_slices['time']])
-        ] for detector_input in detector_inputs.values()]
-
-        # Flatten list
-        nonzero_time_values = [nonzero_time for nonzero_times in nonzero_time_values for nonzero_time in nonzero_times]
-
-        # Find time value that corresponds to top t_clip% of nonzero time data
-        clip_time = np.percentile(nonzero_time_values, 100 - prep['t_clip'])
+        if prep['t'] == False or not prep['t_clip']: return detector_inputs
 
         # Clip all time values that are greater than the clip_time corresponding to the t_clip% of data
-        for detector_name, detector_input in detector_inputs.items():
-            detector_inputs[detector_name][..., layer_slices['time']] = np.clip(
-                detector_input[..., layer_slices['time']],
-                None, clip_time
-            )
+        for detector_input in detector_inputs.values():
+            np.clip(detector_input[..., layer_slices['time']], None, maximums['time'], out=detector_input[..., layer_slices['time']])
 
         return detector_inputs
     
     def shift_time(detector_inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         '''Shifts all time values such that the smallest nonzero time is shifted to zero'''
 
-        if prep['t'] == False or not prep['t_shift']:
-            return detector_inputs
-
-        # Get nonzero minimum time from all nonzero times across all time layers and inputs
-        smallest_nonzero_time_value = np.min([
-            np.min(
-                detector_input[..., layer_slices['time']][np.nonzero(
-                    detector_input[..., layer_slices['time']]
-                )]
-            ) for detector_input in detector_inputs.values()
-        ])
+        if prep['t'] == False or not prep['t_shift']: return detector_inputs
 
         # Subtract nonzero mimimum time from all nonzero times across all time layers and inputs
-        for detector_name, detector_input in detector_inputs.items():
-            detector_inputs[detector_name][..., layer_slices['time']][np.nonzero(
-                detector_input[..., layer_slices['time']]
-            )] -= smallest_nonzero_time_value
+        for detector_input in detector_inputs.values():
+            detector_input[..., layer_slices['time']][np.nonzero(detector_input[..., layer_slices['time']])] -= minimums['time']
 
         return detector_inputs
 
@@ -327,20 +308,11 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
             if merge_type == False:
                 continue
 
-            # Get max value across all events for all detector inputs
-            max_value = np.max([
-                np.max(detector_input[..., layer_slices[layer_type]]) for detector_input in detector_inputs.values()
-            ])
-
             # Normalize values between the range [0,1] by dividing by the maximum value
-            for detector_name in detector_inputs.keys():
-                detector_inputs[detector_name][..., layer_slices[layer_type]] /= max_value
+            for detector_input in detector_inputs.values():
+                detector_input[..., layer_slices[layer_type]] /= maximums[layer_type]
 
         return detector_inputs
-
-    # Remove infill if specified in model prep arguments
-    if not prep['infill'] and 'infill' in detector_inputs:
-        detector_inputs.pop('infill')
 
     # Merge tank layers based on whether we are analyzing soft local coincidences
     for detector_name, detector_input in detector_inputs.items():
@@ -375,6 +347,7 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 #
 ########################################################################################################################
 
+# TODO: Rename (does a lot more than training/assessment)
 def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: str | None, prep: dict[str, Any]) -> np.ndarray:
     '''Returns a cut based on whether the user is training or assessing a model'''
 
@@ -409,12 +382,11 @@ def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: s
     # Filter NaNs from directional reconstruction data if used
     if prep['reco']:
         assert prep['reco'] in ['plane', 'laputop', 'small'], f"Invalid reco choice, received {prep['reco']}"
-        cut *= ~np.isnan(event_parameters[f"{prep['reco']}_dir"].transpose()[0].astype('float64'))
+        cut *= ~np.isnan(event_parameters[f"{prep['reco']}_dir"].transpose()[0].astype('float32'))
 
     return cut
     
 
-# Get cut to display on plots
 def get_cuts(data_cut, event_parameters, cut_str):
     '''Returns a cut for reconstructed parameter and a cut for true parameter'''
     available_cuts = {'No Cut', 'Uncontained Cut', 'Quality Cut'}
