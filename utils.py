@@ -78,12 +78,12 @@ def load_detector_array(filepaths: list[str]) -> np.ndarray:
     else:
         detector_shape = composition_data.shape[1:]
 
-    detector_array = np.empty((num_events,) + detector_shape) # Pre-allocate
+    detector_array = np.empty((num_events,) + detector_shape, dtype=np.float32) # Pre-allocate
 
     # Replace the garbage pre-allocated data with detector data in-place
     start_idx = 0
     for filepath in filepaths:
-        composition_data = np.load(filepath).astype('float32')
+        composition_data = np.load(filepath).astype(np.float32)
         detector_array[start_idx : (start_idx := start_idx + composition_data.shape[0])] = composition_data
 
     return detector_array
@@ -180,7 +180,7 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
     layer_slices = {'charge': np.s_[:2], 'time': np.s_[-2:]}
 
     # Ensure prep dictionary contains all keys required for data preparation
-    required_keys = ['infill', 'clc', 'sta5', 'q', 't', 't_shift', 't_clip', 'normed']
+    required_keys = ['infill', 'clc', 'sta5', 'q', 't', 't_shift', 'q_clip', 't_clip', 'normed']
     assert all(key in prep for key in required_keys), 'Error: one or more required keys missing from prep arguments.'
 
     def merge_tank_layers(array: np.ndarray) -> np.ndarray:
@@ -195,8 +195,8 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
             q1 = np.where(tank1mask, array[..., 0], array[..., 1])
             q2 = np.where(tank2mask, array[..., 2], array[..., 3])
             t1 = np.where(tank1mask, array[..., 4], array[..., 5])
-            t2 = np.where(tank1mask, array[..., 6], array[..., 7])
-            
+            t2 = np.where(tank2mask, array[..., 6], array[..., 7])
+
             # Return new array with merged tank layers
             return np.stack((q1, q2, t1, t2), axis=-1)
 
@@ -251,9 +251,9 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 
             # Maintain channel order
             if layer_type == 'charge':
-                array = np.concatenate((merged_layer, np.delete(array, layer_slices[layer_type], -1)), axis=-1)
+                array = np.concatenate((merged_layer, np.delete(array, layer_slices[layer_type], axis=-1)), axis=-1)
             elif layer_type == 'time':
-                array = np.concatenate((np.delete(array, layer_slices[layer_type], -1), merged_layer), axis=-1)
+                array = np.concatenate((np.delete(array, layer_slices[layer_type], axis=-1), merged_layer), axis=-1)
 
         return array
 
@@ -275,33 +275,43 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 
         return array
 
-    def clip_time(detector_inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def clip_charge(array: np.ndarray) -> np.ndarray:
+        '''Clips the top charge values to not exceed the maximum charge'''
+
+        if prep['q'] == False or not prep['q_clip']: return array
+
+        # Clip all charge values that are greater than the heuristic maximum charge
+        np.clip(array[..., layer_slices['charge']], None, maximums['charge'],
+                out=array[..., layer_slices['charge']])
+
+        return array
+
+    def clip_time(array: np.ndarray) -> np.ndarray:
         '''Clips the top time values to not exceed the maximum time'''
 
-        if prep['t'] == False or not prep['t_clip']: return detector_inputs
+        if prep['t'] == False or not prep['t_clip']: return array
 
-        # Clip all time values that are greater than the clip_time corresponding to the t_clip% of data
-        for detector_input in detector_inputs.values():
-            np.clip(detector_input[..., layer_slices['time']], None, maximums['time'], out=detector_input[..., layer_slices['time']])
-
-        return detector_inputs
+        # Clip all time values that are greater than the heuristic maximum time
+        np.clip(array[..., layer_slices['time']], None, maximums['time'],
+                out=array[..., layer_slices['time']])
+        
+        return array
     
-    def shift_time(detector_inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def shift_time(array: np.ndarray) -> np.ndarray:
         '''Shifts all time values such that the smallest nonzero time is shifted to zero'''
 
-        if prep['t'] == False or not prep['t_shift']: return detector_inputs
+        if prep['t'] == False or not prep['t_shift']: return array
 
-        # Subtract nonzero mimimum time from all nonzero times across all time layers and inputs
-        for detector_input in detector_inputs.values():
-            detector_input[..., layer_slices['time']][np.nonzero(detector_input[..., layer_slices['time']])] -= minimums['time']
+        # Subtract nonzero mimimum time from all nonzero times across all time layers
+        array[..., layer_slices['time']][array[..., layer_slices['time']].astype(bool)] -= minimums['time']
 
-        return detector_inputs
+        return array
 
-    def normalize(detector_inputs: dict[str, np.ndarray]) -> np.ndarray:
+    def normalize(array: np.ndarray) -> np.ndarray:
         '''Normalizes charge/time data to be within the range [0,1]'''
 
         if not prep['normed']:
-            return detector_inputs
+            return array
 
         # Normalize charge and time layers
         for layer_type, merge_type in zip(layer_slices.keys(), (prep['q'], prep['t'])):
@@ -309,11 +319,10 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
                 continue
 
             # Normalize values between the range [0,1] by dividing by the maximum value
-            for detector_input in detector_inputs.values():
-                detector_input[..., layer_slices[layer_type]] /= maximums[layer_type]
+            array[..., layer_slices[layer_type]] /= maximums[layer_type]
 
-        return detector_inputs
-
+        return array
+    
     # Merge tank layers based on whether we are analyzing soft local coincidences
     for detector_name, detector_input in detector_inputs.items():
         detector_inputs[detector_name] = merge_tank_layers(detector_input)
@@ -329,14 +338,21 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
     for detector_name, detector_input in detector_inputs.items():
         detector_inputs[detector_name] = log_charge(detector_input)
 
+    # Clip charge values to not exceed some maximum value
+    for detector_name, detector_input in detector_inputs.items():
+        detector_inputs[detector_name] = clip_charge(detector_input)
+
     # Clip time values to not exceed some maximum value
-    detector_inputs = clip_time(detector_inputs)
+    for detector_name, detector_input in detector_inputs.items():
+        detector_inputs[detector_name] = clip_time(detector_input)
 
     # Shift time values such that minimum falls at zero
-    detector_inputs = shift_time(detector_inputs)
+    for detector_name, detector_input in detector_inputs.items():
+        detector_inputs[detector_name] = shift_time(detector_input)
 
     # Normalize detector data
-    detector_inputs = normalize(detector_inputs)
+    for detector_name, detector_input in detector_inputs.items():
+        detector_inputs[detector_name] = normalize(detector_input)
     
     return detector_inputs
 
