@@ -5,12 +5,19 @@ import os
 import sys
 from glob import glob
 
+ERROR_ENVIRONMENT_NOT_ACTIVATED = 'Virtual environment not activated. Activate with the command "icetop-cnn"'
+ERROR_ARCHITECTURE_NOT_FOUND = f'Model architecture not found in "architectures" folder. Please check for typos.'
+ERROR_MODEL_ALREADY_FOUND = 'Model folder already found with this name, but it is incomplete.\n'\
+    '  This indicates a model with that name may be currently training.\n'\
+    '  You can check your active jobs with "condor_q" when logged on to the submitter.\n'\
+    '  At your own risk, re-run with the "--overwrite" flag to overwrite existing data.'
+
 # Check that the environment has been activated
 # Not necessary to check if ran on the cluster
 # Should check first before the rest of the code is parsed
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR', '')
 venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
-assert os.getenv('VIRTUAL_ENV') == venv_path, 'ERROR: Virtual environment not activated. Activate with the command "icetop-cnn"'
+assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
 ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR')
@@ -28,6 +35,8 @@ def main(args):
     # Check if the user is okay overwriting files if a new model is being trained
     if new_model and not ok_to_overwrite_files(args): return
 
+    assert os.path.exists(f'architectures/{args.model_design}.py'), ERROR_ARCHITECTURE_NOT_FOUND
+
     # Create model folder
     os.makedirs(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name), exist_ok=True)
     
@@ -36,7 +45,7 @@ def main(args):
         if not args.epochs or args.epochs > 10:
             print('Defaulting to 10 epochs...')
             args.epochs = 10
-        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name}'
+        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design}'
         print('Starting training...')
         return os.system(command)
     
@@ -84,22 +93,15 @@ def get_model_origin(args):
     if not os.path.exists(model_path): return True
 
     # The model folder exists -> check for model weights and configuration files
-    assert all(os.path.exists(os.path.join(model_path, f'{args.model_name}.{ext}')) for ext in ('keras', 'json')), (
-        # The model folder exists but it is empty or incomplete, indicating that a model could be actively training
-        # The user should submit with the --overwrite flag if they are sure they want to overwrite existing data
-        'ERROR: Model folder already found with this name, but it is incomplete.\n'
-        '       This indicates a model with that name may be currently training.\n'
-        '       You can check your active jobs with "condor_q" when logged on to the submitter.\n'
-        '       At your own risk, re-run with the "--overwrite" flag to overwrite existing data.'
-    )
+    assert all(os.path.exists(os.path.join(model_path, f'{args.model_name}.{ext}')) for ext in ('keras', 'json')), ERROR_MODEL_ALREADY_FOUND
 
     # Model was found, and the user indicated that they would like to restore it
     if args.restore:
         return False
 
     # Model was found, but the user did not indicate whether they wanted to restore or overwrite the model
-    print('ERROR: Model already found with this name.\n'
-          '       Choose a different name or run with EITHER the "--overwrite" or "--restore" flags enabled.')
+    print('Model already found with this name.\n'
+          '  Choose a different name or run with EITHER the "--overwrite" or "--restore" flags enabled.')
     return
 
 def ok_to_overwrite_files(args):
@@ -139,16 +141,25 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(
         description='Submission script to train ML models with TensorFlow on the cluster using GPUs')
     p.add_argument(
-        '-n', '--name', dest='model_name', type=str, required=True,
+        '-n', '--name', dest='model_name', type=str,
+        required=True,
         help='Name of the model to train')
     p.add_argument(
-        '-c', '--composition', type=str, default='phof',
+        '-c', '--composition', type=str,
+        default='phof',
         help='Composition of datasets to load and train the model on.')
     p.add_argument(
         '-e', '--epochs', type=int,
         help='The number of epochs that the model should train for')
     p.add_argument(
-        '-p', '--predict', nargs='+', type=str, choices=['comp', 'energy'], required=True,
+        '-m', '--model', dest='model_design', type=str,
+        choices=[os.path.splitext(arch)[0] for arch in glob('*.py', root_dir='architectures')],
+        default='mini0',
+        help='Desired model architecture')
+    p.add_argument(
+        '-p', '--predict', nargs='+', type=str,
+        choices=['comp', 'energy'],
+        required=True,
         help='A list of one or more desired model outputs')
     p.add_argument(
         '-t', '--test', action='store_true',

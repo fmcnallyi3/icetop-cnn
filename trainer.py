@@ -3,13 +3,16 @@
 import argparse
 import json
 import os
+from glob import glob
+
+ERROR_ENVIRONMENT_NOT_ACTIVATED = 'Virtual environment not activated. Activate with the command "icetop-cnn"'
 
 # Check that the environment has been activated
 # Should only check when not run on the condor cluster
 # Should check before importing external libraries
 if not os.getenv('_CONDOR_SLOT'):
     venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv')
-    assert os.getenv('VIRTUAL_ENV') == venv_path, 'ERROR: Virtual environment not activated. Activate with the command "icetop-cnn"'
+    assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 # Supress debugging information
 # Can remove safely, just makes for cleaner output
@@ -137,7 +140,7 @@ def create_or_restore_model(input_shapes):
             os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.keras')
         )
     # Otherwise, create and return a new model
-    return get_compiled_model(input_shapes, args.model_name, cg.PREP, args.predict)
+    return get_compiled_model(input_shapes, args.model_name, args.model_design, cg.PREP, args.predict)
 
 
 def train_model(model, training_dataset, validation_dataset):
@@ -210,16 +213,26 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(
         description = 'Trains ML models using TensorFlow')
     p.add_argument(
-        '-n', '--name', dest='model_name', type=str, required=True,
+        '-n', '--name', dest='model_name', type=str,
+        required=True,
         help='Name of the model to train')
     p.add_argument(
-        '-c', '--composition', type=str, required=True,
+        '-c', '--composition', type=str,
+        required=True,
         help='Composition of datasets to load and train the model on')
     p.add_argument(
-        '-e', '--epochs', type=int, default=cg.MAX_EPOCHS,
+        '-e', '--epochs', type=int,
+        default=cg.MAX_EPOCHS,
         help='The maximum number of epochs that the model should train for')
     p.add_argument(
-        '-p', '--predict', nargs='+', type=str, choices=['comp', 'energy'],
+        '-m', '--model', dest='model_design', type=str,
+        choices=[os.path.splitext(arch)[0] for arch in glob('*.py', root_dir='architectures')],
+        required=True,
+        help='Desired model architecture')
+    p.add_argument(
+        '-p', '--predict', nargs='+', type=str,
+        choices=['comp', 'energy'],
+        required=True,
         help='A list of one or more desired model outputs')
     p.add_argument(
         '-t', '--test', action='store_true',
