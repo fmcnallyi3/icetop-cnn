@@ -47,10 +47,10 @@ for model_name in argv[1:]:
     # Loop over each loss function while keeping track of the subplot index
     # Need to check if non metrics were passed in -> no subplots generated 
     for axs_idx, loss_function in enumerate(unique_labels):
-        (axs[axs_idx] if type(axs) is list else axs).plot(epochs, model_data[:, header.index(loss_function)], label=loss_function)                      # Plot training loss
-        (axs[axs_idx] if type(axs) is list else axs).plot(epochs, model_data[:, header.index(f'val_{loss_function}')], label=f'val_{loss_function}')    # Plot validation loss
-        (axs[axs_idx] if type(axs) is list else axs).legend(loc='upper right', fontsize='x-small')                                                      # Plot legend
-        (axs[axs_idx] if type(axs) is list else axs).set_yscale('log')                                                                                  # Set logarithmic scale in y-axis
+        (axs[axs_idx] if type(axs) is np.ndarray else axs).plot(epochs, model_data[:, header.index(loss_function)], label=loss_function)                      # Plot training loss
+        (axs[axs_idx] if type(axs) is np.ndarray else axs).plot(epochs, model_data[:, header.index(f'val_{loss_function}')], label=f'val_{loss_function}')    # Plot validation loss
+        (axs[axs_idx] if type(axs) is np.ndarray else axs).legend(loc='upper right', fontsize='x-small')                                                      # Plot legend
+        (axs[axs_idx] if type(axs) is np.ndarray else axs).set_yscale('log')                                                                                  # Set logarithmic scale in y-axis
     
     # Save image as a png
     plt.savefig(os.path.join(MODELS_FOLDER_PATH, model_name, f'{model_name}.png'), format='png')
