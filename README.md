@@ -113,15 +113,20 @@ This installation tutorial assumes you have some familiarity with navigating a t
   ```bash
     source .bashrc
   ```
-
-  Congratulations! You are now ready to begin working on the icetop-cnn project. You can now activate your environment at any time by running the following command:
-  ```bash
-  icetop-cnn
-  ```
-  For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
-
-  For help on getting started with the project, see our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 </details>
+
+Congratulations! You are now ready to begin working on the icetop-cnn project. You can now activate your environment at any time by running the following command:
+```bash
+icetop-cnn
+```
+You may test that you did the installation correctly by running the following command:
+```bash
+./submit.py -c pf -e 10 -p energy -n install_test -m mini0 -t
+```
+
+For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
+
+For help on getting started with the project, see our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
 ## Known Issues (WIP)
 This section is a work and progress and may be expanded as issues arise.\
