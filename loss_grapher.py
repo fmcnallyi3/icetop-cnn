@@ -33,6 +33,10 @@ for model_name in argv[1:]:
 
     # Extract all of the actual model data
     model_data = np.genfromtxt(model_path, delimiter=',', skip_header=1)
+
+    # Skip if trained for one epoch
+    if len(model_data.shape) == 1: continue
+    
     # Pull out the epochs specifically
     epochs = model_data[:, header.index('epoch')]
 
