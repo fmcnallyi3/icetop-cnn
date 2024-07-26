@@ -13,7 +13,7 @@ PREP = {
     'q_clip': False,
     't_clip': False,
     'normed': True,
-    'reco': 'plane',
+    'reco': None,
 }
 
 MAX_EPOCHS = 100
