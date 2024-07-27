@@ -56,7 +56,7 @@ def main(args):
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
         f'arguments = "{" ".join(sys.argv[1:])}"',
         f'environment = "ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
-        'transfer_input_files = config.py,utils.py,model.py,loss_grapher.py',
+        f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py,architectures/{args.model_design}.py',
         'getenv = True',
         '',
         f'log = {os.path.join(LOGS_DIR, f"{args.model_name}.log")}',
@@ -153,7 +153,7 @@ if __name__ == '__main__':
         help='The number of epochs that the model should train for')
     p.add_argument(
         '-m', '--model', dest='model_design', type=str,
-        choices=[os.path.splitext(arch)[0] for arch in glob('*.py', root_dir='architectures')],
+        choices=sorted(os.path.splitext(arch)[0] for arch in glob('*.py', root_dir=f'{ICETOP_CNN_DIR}/architectures')),
         default='mini0',
         help='Desired model architecture')
     p.add_argument(

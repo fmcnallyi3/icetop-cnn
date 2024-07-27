@@ -26,6 +26,7 @@ import config as cg
 from utils import data_prep, get_preprocessed, get_training_assessment_cut
 from model import get_compiled_model
 
+ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR')
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')    
 
 def main():
@@ -226,7 +227,7 @@ if __name__ == '__main__':
         help='The maximum number of epochs that the model should train for')
     p.add_argument(
         '-m', '--model', dest='model_design', type=str,
-        choices=[os.path.splitext(arch)[0] for arch in glob('*.py', root_dir='architectures')],
+        choices=sorted(os.path.splitext(arch)[0] for arch in glob('*.py', root_dir=f'{ICETOP_CNN_DIR}/architectures')),
         required=True,
         help='Desired model architecture')
     p.add_argument(

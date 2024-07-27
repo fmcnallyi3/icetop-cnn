@@ -14,7 +14,7 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
     inputs = {input_name: tf.keras.layers.Input(shape=shape) for input_name, shape in input_shapes.items()}
 
     # Import desired model architecture
-    arch = importlib.import_module(f'architectures.{model_design}')
+    arch = importlib.import_module(model_design)
 
     # Load desired model architecture
     outputs = arch.get_architecture(inputs, prep)
