@@ -1,7 +1,8 @@
 # MODEL FILE
 # Should only contain the method 'get_compiled_model()'
 
-import importlib
+import importlib.util
+import os
 
 import tensorflow as tf
 
@@ -14,7 +15,9 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
     inputs = {input_name: tf.keras.layers.Input(shape=shape) for input_name, shape in input_shapes.items()}
 
     # Import desired model architecture
-    arch = importlib.import_module(model_design)
+    spec = importlib.util.spec_from_file_location(model_design, f'{os.getenv("ICETOP_CNN_DIR")}/architectures/{model_design}.py')
+    arch = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(arch)
 
     # Load desired model architecture
     outputs = arch.get_architecture(inputs, prep)

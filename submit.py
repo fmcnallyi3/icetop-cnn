@@ -56,7 +56,7 @@ def main(args):
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
         f'arguments = "{" ".join(sys.argv[1:])}"',
         f'environment = "ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
-        f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py,architectures/{args.model_design}.py',
+        f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py',
         'getenv = True',
         '',
         f'log = {os.path.join(LOGS_DIR, f"{args.model_name}.log")}',
