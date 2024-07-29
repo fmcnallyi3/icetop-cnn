@@ -119,7 +119,7 @@ Congratulations! You are now ready to begin working on the icetop-cnn project. Y
 ```bash
 icetop-cnn
 ```
-You may test that you did the installation correctly by running the following command:
+You may test that you did the installation correctly by returning to the project directory (`cd icetop-cnn`) and running the following command:
 ```bash
 ./submit.py -c pf -e 10 -p energy -n install_test -m mini0 -t
 ```
