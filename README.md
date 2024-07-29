@@ -124,9 +124,20 @@ You may test that you did the installation correctly by returning to the project
 ./submit.py -c pf -e 10 -p energy -n install_test -m mini0 -t
 ```
 
+If all went well, you should see a model train for 10 epochs (~5s each), then be run over the assessment events (~10s).
+
+<table align="center">
+    <tr><td>
+      <p align="center">
+        <b>WARNING</b><br>
+        While fine for a test, running on cobalt is computationally <i>expensive</i> and should not be done regularly. See the <a href=https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide>User Guide</a> for best practices on model training. 
+      </p>
+    </td></tr>
+</table>
+
 For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
 
-For help on getting started with the project, see our [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
+For help on getting started with the project, see our [User Guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
 ## Known Issues (WIP)
 This section is a work and progress and may be expanded as issues arise.\
