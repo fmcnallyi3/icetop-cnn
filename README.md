@@ -12,7 +12,7 @@
 ## Introduction
 Welcome to IceTop-CNN!
 
-This project aims to train neural networks on low-level cosmic-ray air shower data collected from the IceTop surface detector. It is built for energy but can be extended to core position, direction, and maybe even composition.
+This project aims to train neural networks for use with low-level cosmic-ray air shower data collected from the IceTop surface detector. It is built for energy but can be extended to core position, direction, and maybe even composition.
 
 ## How to Install
 This installation tutorial assumes you have some familiarity with navigating a terminal and the Linux operating system. If you are new to working in the command line or in a Linux environment, check out [this section](https://github.com/fmcnallyi3/icetop-cnn/wiki/Useful-Resources#linux) on Linux in our wiki page on [useful resources](https://github.com/fmcnallyi3/icetop-cnn/wiki/Useful-Resources).
