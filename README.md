@@ -115,7 +115,7 @@ This installation tutorial assumes you have some familiarity with navigating a t
   ```
 </details>
 
-Congratulations! You are now ready to begin working on the icetop-cnn project. You can now activate your environment at any time by running the following command:
+Congratulations! You are now ready to begin working on the IceTop-CNN project. You can now activate your environment at any time by running the following command:
 ```bash
 icetop-cnn
 ```
