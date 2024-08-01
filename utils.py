@@ -16,21 +16,21 @@ ASSESSMENT_SPLIT = 0.1
 #
 ########################################################################################################################
 
-def mod_log(n):
+def mod_log(n: np.ndarray[int | float]):
     '''Modified logarithm convenient for dealing with zeros and maintaining sign.'''
     return np.sign(n) * np.log10(np.abs(n) + 1)
 
-def mod_ilog(n):
+def mod_ilog(n: np.ndarray[int | float]):
     """Modified logarithm convenient for dealing with zeros and maintaining sign. \\
     This function modifies the input in-place."""
     np.multiply(np.sign(n), np.log10(np.abs(n) + 1), out=n)
 
 
-def r_log(m):
+def r_log(m: np.ndarray[int | float]):
     '''Modified antilogarithm convenient for dealing with zeros and maintaining sign.'''
     return np.sign(m) * (10**np.abs(m) - 1)
 
-def r_ilog(m):
+def r_ilog(m: np.ndarray[int | float]):
     """Modified antilogarithm convenient for dealing with zeros and maintaining sign. \\
     This function modifies the input in-place."""
     np.multiply(np.sign(m), (np.power(10, np.abs(m)) - 1), out=m)
@@ -403,17 +403,17 @@ def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: s
     return cut
     
 
-def get_cuts(data_cut, event_parameters, cut_str):
+def get_cuts(data_cut: np.ndarray, event_parameters: dict[str, np.ndarray], cut_str: str):
     '''Returns a cut for reconstructed parameter and a cut for true parameter'''
-    available_cuts = {'No Cut', 'Uncontained Cut', 'Quality Cut'}
-    assert cut_str in available_cuts, f'Bad cut! Options are {available_cuts}'
+    available_cuts = {'Uncut', 'Uncontained', 'Quality'}
+    assert cut_str.title() in available_cuts, f'Bad cut! Options are {available_cuts}'
 
     # No Cut
-    if cut_str == 'No Cut':
+    if cut_str == 'Uncut':
         return np.full(np.sum(data_cut), True), data_cut
     # Uncontained Cut
-    if cut_str == 'Uncontained Cut':
+    if cut_str == 'Uncontained':
         return event_parameters['uncontained_cut'][data_cut], data_cut * event_parameters['uncontained_cut']
     # Quality Cut
-    if cut_str == 'Quality Cut':
+    if cut_str == 'Quality':
         return event_parameters['quality_cut'][data_cut], data_cut * event_parameters['quality_cut']
