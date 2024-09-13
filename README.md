@@ -79,7 +79,12 @@ This installation tutorial assumes you have some familiarity with navigating a t
   ```bash
   cd
   ```
-  Next, we need to edit the hidden ".bashrc" file. This file is run each time a new bash shell is created. For more information on .bashrc, visit [this](https://www.digitalocean.com/community/tutorials/bashrc-file-in-linux) website. In the text editor of your choice, copy the below function into your .bashrc:
+  Next, we need to edit the hidden ".bashrc" file. This file is run each time a new bash shell is created. For more information on .bashrc, visit [this](https://www.digitalocean.com/community/tutorials/bashrc-file-in-linux) website. \
+  Open the hidden ".bashrc" file.
+  ```bash
+  nano .bashrc
+  ```
+  Finally, copy the function below into your .bashrc.
   ```bash
   # TensorFlow environment activation toggle function
   icetop-cnn() {
