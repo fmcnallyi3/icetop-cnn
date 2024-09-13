@@ -79,7 +79,8 @@ This installation tutorial assumes you have some familiarity with navigating a t
   ```bash
   cd
   ```
-  Next, we need to edit the hidden ".bashrc" file. This file is run each time a new bash shell is created. For more information on .bashrc, visit [this](https://www.digitalocean.com/community/tutorials/bashrc-file-in-linux) website. \
+  Next, we need to edit the hidden ".bashrc" file. This file is run each time a new bash shell is created. For more information on .bashrc, visit [this](https://www.digitalocean.com/community/tutorials/bashrc-file-in-linux) website.
+  
   Open the hidden ".bashrc" file.
   ```bash
   nano .bashrc
