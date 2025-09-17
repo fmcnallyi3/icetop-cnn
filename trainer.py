@@ -64,7 +64,25 @@ def get_training_datasets():
             56: [0, 0, 0, 1]
         }
         event_parameters['comp'] = np.array([one_hot_map[c] for c in event_parameters['comp']])
+        
+    # Get zenith data if zenith or direction is to be predicted
+    if 'zenith' or 'x_dir' or 'y_dir' or 'z_dir' in args.predict:
+        event_parameters['zenith'] = event_parameters['dir'][:, 0]
+        
+    # Get azimuth data if azimuth or direction is to be predicted    
+    if 'azimuth' or 'x_dir' or 'y_dir' or in args.predict:
+        event_parameters['azimuth'] = event_parameters['dir'][:, 1]
 
+    # Convert zenith and azimuth data to x, y, z if direction is to be predicted
+    if 'x_dir' or 'y_over_x' in args.predict:
+        event_parameters['x_dir'] = (np.sin(event_parameters['zenith'])*np.cos(event_parameters['azimuth'])+1)*0.5
+        
+    if 'y_dir' or 'y_over_x' in args.predict:
+        event_parameters['y_dir'] = (np.sin(event_parameters['zenith'])*np.sin(event_parameters['azimuth'])+1)*0.5
+        
+    if 'z_dir' in args.predict:
+        event_parameters['z_dir'] = (np.cos(event_parameters['zenith'])+1)*0.5
+    
     # Get number of events from an arbitrary key
     num_events = event_parameters['file_info'].shape[0]
 
@@ -232,7 +250,7 @@ if __name__ == '__main__':
         help='Desired model architecture')
     p.add_argument(
         '-p', '--predict', nargs='+', type=str,
-        choices=['comp', 'energy'],
+        choices=['comp', 'energy', 'zenith', 'azimuth', 'y_over_x', 'x_dir', 'y_dir', 'z_dir'],
         required=True,
         help='A list of one or more desired model outputs')
     p.add_argument(

@@ -158,7 +158,7 @@ if __name__ == '__main__':
         help='Desired model architecture')
     p.add_argument(
         '-p', '--predict', nargs='+', type=str,
-        choices=['comp', 'energy'],
+        choices=['comp', 'energy', 'azimuth', 'zenith', 'x_dir', 'y_dir', 'z_dir'],
         required=True,
         help='A list of one or more desired model outputs')
     p.add_argument(

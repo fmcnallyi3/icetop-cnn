@@ -39,5 +39,10 @@ def get_architecture(inputs, prep):
     ## Create output tensors
     composition_output = tf.keras.layers.Dense(4, activation='softmax', name='comp')(dropout2)
     energy_output = tf.keras.layers.Dense(1, activation='relu', name='energy')(dropout2)
+    zenith_output = tf.keras.layers.Dense(1, activation='relu', name='zenith')(dropout2)
+    azimuth_output = tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dropout2)
+    x_output = tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dropout2)
+    y_output = tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dropout2)
+    z_output = tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dropout2)
 
-    return [composition_output, energy_output]
+    return [composition_output, energy_output, zenith_output, azimuth_output, x_output, y_output, z_output]

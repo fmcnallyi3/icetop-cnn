@@ -30,11 +30,23 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
     )
     loss_functions = {
         'comp': tf.keras.losses.CategoricalCrossentropy(),
-        'energy': tf.keras.losses.Huber()
+        'energy': tf.keras.losses.Huber(),
+        'zenith': tf.keras.losses.Huber(),
+        'azimuth': tf.keras.losses.Huber(),
+        'y_over_x': tf.keras.losses.Huber(),
+        'x_dir': tf.keras.losses.Huber(),
+        'y_dir': tf.keras.losses.Huber(),
+        'z_dir': tf.keras.losses.Huber()
     }
     metrics = {
         'comp': [tf.keras.metrics.CategoricalAccuracy()],
-        'energy': [None]
+        'energy': [None],
+        'zenith': [None],
+        'azimuth': [None],
+        'y_over_x': [None],
+        'x_dir': [None],
+        'y_dir': [None],
+        'z_dir': [None]
     }
     model.compile( # Compile model
         optimizer=tf.keras.optimizers.Adam(),
