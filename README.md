@@ -1,7 +1,7 @@
 ![IceCube Neutrino Observatory](https://res.cloudinary.com/icecube/images/q_auto/v1602553309/gal_Detector_IMG_4263_207090c7a/gal_Detector_IMG_4263_207090c7a.jpg)
 # IceTop ML Cosmic Ray Reconstruction
 
-## <a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#revised-introduction">New  to Ice-Top CNN? Click here!</a>
+## <a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#revised-intro">New  to Ice-Top CNN? Click here!</a>
 <table align="center">
   <tr>
     <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#introduction">Introduction</a></td>
@@ -164,12 +164,11 @@ If you have found an issue that you would like to report, please do so under the
 
 
 
-# Newbie Guide to Icetop-CNN 2.0!
+# Revised Intro
 This setup is temporary. Anything above this part is the legacy Readme that was used until Fall '25. There is a VERY good chance there is information in there that's crucial that I've forgotten to include. My apologies in advance.
 Please take note of any problems you had and report them to me, Johnathan Stowers, in detail! I'm very receptive to criticism, and I'm  sure Dr. McNally would like to hear about the notes you take over your experience regardless. The worst thing you can do is to not communicate or ask for help. 
 
 *The real revision begins here! Thank you again!*
-## Revised Intro
 Welcome to IceTop-CNN!
 
 This project aims to train a convolutional neural network (CNN) for use with low-level cosmic-ray air shower data collected from the IceTop surface detector. It is built for energy but can be extended to core position, direction, and perhaps even composition.
