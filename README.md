@@ -181,7 +181,7 @@ The project interface is within JupyterHub for all intensive purposes. This mean
 The interactivity with a command line interface (CLI) will be limited for this project. Instead, it’ll only be used for setting up the initial project and submitting models to the computing cluster. 
 The two most important terminal commands you need to be familiar with are:
 ```bash 
-ssh submit
+ssh npx-submitter
 ```
 And
 ```
@@ -223,7 +223,7 @@ Nano is the name of our CLI text editor. You should be in a totally blank screen
     <tr><td>
       <p align="center">
         <b>NOTICE:</b><br>
-            The carrot before the letter represents the control key. This means that Cntrl-C will NOT work as copy, and Cntrl-S is not set up to save. However, Cntrl-V will still function to copy text within nano. 
+            The carrot before the letter represents the control key. This means that Cntrl-C will NOT work as copy, and Cntrl-S is not set up to save. However, Cntrl-V will still function to paste text within nano. 
       </p>
     </td></tr>
 </table>
@@ -276,7 +276,7 @@ to enter the virtual environment.
 ## Submitting a Model
 To submit a model for training, the first thing that needs to be done is remoting into the submitter node. This can be done by running:
 ```bash
-ssh submit
+ssh npx-submitter
 ```
 Then enter your IceCube password. Upon entering the note, you’ll leave your initial virtual environment so be sure to run the command to enter it once more. Now change into your project folder by running 
 ```bash
