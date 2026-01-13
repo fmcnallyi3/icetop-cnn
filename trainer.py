@@ -70,7 +70,7 @@ def get_training_datasets():
         event_parameters['zenith'] = event_parameters['dir'][:, 0]
         
     # Get azimuth data if azimuth or direction is to be predicted    
-    if 'azimuth' or 'x_dir' or 'y_dir' or in args.predict:
+    if 'azimuth' or 'x_dir' or 'y_dir' or 'z_dir' in args.predict:
         event_parameters['azimuth'] = event_parameters['dir'][:, 1]
 
     # Convert zenith and azimuth data to x, y, z if direction is to be predicted
