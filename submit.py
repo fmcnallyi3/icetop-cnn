@@ -72,7 +72,7 @@ def main(args):
         'request_memory = 16G',
         'request_gpus = 1',
         '',
-        'requirements = HasSingularity && CudaCapability',
+        'requirements = HasSingularity && GPUS_Capability',
         '',
         'queue',
         ''
