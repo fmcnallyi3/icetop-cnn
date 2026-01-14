@@ -32,6 +32,10 @@ ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
 def main():
     '''Creates/restores and trains a model based on the settings located in "config"'''
 
+    # Set up tensorflow
+    if args.test: print("Configuring tensorflow...")
+    configure_training();
+
     # Get datasets
     if args.test: print('Getting datasets...')
     (training_dataset, validation_dataset), input_shapes = get_training_datasets()
@@ -48,6 +52,16 @@ def main():
     if args.test: print('Assessing model...')
     assess_model(model)
     
+
+def configure_training():
+    '''Set's up TensorFlow's training configuration'''
+
+    # Limit thread count
+    tf.config.threading.set_inter_op_parallelism_threads(args.limit_cpus)
+    tf.config.threading.set_intra_op_parallelism_threads(args.limit_cpus)
+
+    return
+
 
 def get_training_datasets():
     '''Prepares tensorflow datasets used for training'''
@@ -161,7 +175,6 @@ def create_or_restore_model(input_shapes):
     # Otherwise, create and return a new model
     return get_compiled_model(input_shapes, args.model_name, args.model_design, cg.PREP, args.predict)
 
-
 def train_model(model, training_dataset, validation_dataset):
     '''Trains the model using the provided training/validation datasets and settings from "config"'''
 
@@ -256,6 +269,10 @@ if __name__ == '__main__':
     p.add_argument(
         '-t', '--test', action='store_true',
         help='Run the script off the cluster with a limited dataset')
+    p.add_argument(
+        '--limit-cpus', type=int,
+        default=0,
+        help='Maximum number of CPUs that the training process is allowed to use. Allows tensorflow to pick the best values by default.')
     g = p.add_mutually_exclusive_group()
     g.add_argument(
         '-o', '--overwrite', action='store_true',

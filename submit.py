@@ -45,7 +45,7 @@ def main(args):
         if not args.epochs or args.epochs > 10:
             print('Defaulting to 10 epochs...')
             args.epochs = 10
-        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design}'
+        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
         print('Starting training...')
         return os.system(command)
     
@@ -69,6 +69,7 @@ def main(args):
         'when_to_transfer_output = ON_EXIT',
         f'initialdir = {ICETOP_CNN_DIR}',
         '',
+        f'request_cpus = {args.limit_cpus}',
         'request_memory = 16G',
         'request_gpus = 1',
         '',
@@ -164,6 +165,10 @@ if __name__ == '__main__':
     p.add_argument(
         '-t', '--test', action='store_true',
         help='Run the script off the cluster on a limited dataset for a maximum of 10 epochs')
+    p.add_argument(
+        '--limit-cpus', type=int,
+        default=1,
+        help='Maximum number of CPUs that the training process is allowed to use.')
     g = p.add_mutually_exclusive_group()
     g.add_argument(
         '-o', '--overwrite', action='store_true',
@@ -172,7 +177,7 @@ if __name__ == '__main__':
         '-r', '--restore', action='store_true',
         help='Attempt to restore and continue training a model if it exists. Can not be used with overwrite')
     args = p.parse_args()
-    
+
     '''
     MANUAL ARGUMENT VALIDATION
     All arguments get passed directly to trainer.py, so only arguments that
