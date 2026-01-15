@@ -45,7 +45,7 @@ def main(args):
         if not args.epochs or args.epochs > 10:
             print('Defaulting to 10 epochs...')
             args.epochs = 10
-        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
+        command = f'python trainer.py {get_trainer_arguments(args)}'
         print('Starting training...')
         return os.system(command)
     
@@ -54,7 +54,7 @@ def main(args):
     
     lines = [
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
-        f'arguments = "{" ".join(sys.argv[1:])}"',
+        f'arguments = "{get_trainer_arguments(args)}"',
         f'environment = "ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
         f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py',
         'getenv = True',
@@ -84,6 +84,27 @@ def main(args):
         f.write('\n'.join(lines))
 
     return os.system(f'condor_submit {submission_filepath}')
+
+def get_trainer_arguments(args):
+    '''Returns the arguments passed to the trainer program'''
+
+    # Base argument format string
+    trainer_args = f'-c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
+
+    # Add testing argument if testing
+    if args.test:
+        trainer_args += ' -t'
+
+    # Add overwrite argument if present
+    if args.overwrite:
+        trainer_args += ' -o'
+
+    # Add restore argument if present
+    if args.restore:
+        trainer_args += ' -r'
+
+    return trainer_args
+
 
 def get_model_origin(args):
     '''Returns True if a new model should be created, False if and old model should be restored, and None if there is an error.'''
