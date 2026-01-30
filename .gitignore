@@ -5,6 +5,8 @@ condor/
 .venv/
 .vscode/
 .DS_Store/
+.vscode_hpo/
+*.tar.gz
 
 tutorial/.ipynb_checkpoints/
 .ipynb_checkpoints/
