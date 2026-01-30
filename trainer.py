@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import sys
 from glob import glob
 
 ERROR_ENVIRONMENT_NOT_ACTIVATED = 'Virtual environment not activated. Activate with the command "icetop-cnn"'
@@ -191,6 +192,7 @@ def train_model(model, training_dataset, validation_dataset):
         training_dataset,
         epochs=args.epochs,
         validation_data=validation_dataset,
+        verbose=1 if sys.stdout.isatty() else 2,
         callbacks=[
             tf.keras.callbacks.CSVLogger(
                 os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.csv'),
