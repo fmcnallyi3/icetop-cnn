@@ -19,6 +19,8 @@ ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR', '')
 venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
 assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
 
+
+#NOTE: THIS CODE IS USELESS BUT IM TOO SCARED TO REMOVE IT
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
 ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR')
 LOGS_DIR = os.path.join(ICETOP_CNN_SCRATCH_DIR, 'condor', 'logs')
@@ -59,7 +61,10 @@ def main(args):
         f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py',
         'getenv = True',
         '',
-        f'log = {os.path.join(LOGS_DIR, f"{args.model_name}.log")}',
+
+        #THIS WAS THE LINE I CHANGED TO GAIN ACCESS TO THE LOGS IN THE VE
+        f'log = {os.path.join("condor", "logs", f"{args.model_name}.log")}',
+    
         f'output = {os.path.join("condor", "output", f"{args.model_name}.out")}',
         f'error = {os.path.join("condor", "errors", f"{args.model_name }.err")}',
         'notification = never',

@@ -1,0 +1,14 @@
+{
+    "files.exclude": {
+        "__pycache__": true,
+        "**/.ipynb_checkpoints": true,
+        ".venv": true,
+        ".vscode": true,
+    },
+    "files.watcherExclude": {
+        "**/.venv/**": true,
+    },
+    "python.analysis.extraPaths": [
+        "/home/jstowers/icetop-cnn/.venv/lib/python3.12/site-packages"
+    ],
+}
