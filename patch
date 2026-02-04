@@ -1,0 +1,326 @@
+diff --git a/architectures/adamw5.py b/architectures/adamw5.py
+index d19b5d7..17b0b28 100644
+--- a/architectures/adamw5.py
++++ b/architectures/adamw5.py
+@@ -37,12 +37,12 @@ def get_architecture(inputs, prep):
+     dropout2 = tf.keras.layers.Dropout(0.2)(dense2)
+ 
+     ## Create output tensors
+-    composition_output = tf.keras.layers.Dense(4, activation='softmax', name='comp')(dropout2)
+-    energy_output = tf.keras.layers.Dense(1, activation='relu', name='energy')(dropout2)
+-    zenith_output = tf.keras.layers.Dense(1, activation='relu', name='zenith')(dropout2)
+-    azimuth_output = tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dropout2)
+-    x_output = tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dropout2)
+-    y_output = tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dropout2)
+-    z_output = tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dropout2)
+-
+-    return [composition_output, energy_output, zenith_output, azimuth_output, x_output, y_output, z_output]
+\ No newline at end of file
++    return {
++        'comp': tf.keras.layers.Dense(4, activation='softmax', name='comp')(dropout2),
++        'energy': tf.keras.layers.Dense(1, activation='relu', name='energy')(dropout2),
++        'zenith': tf.keras.layers.Dense(1, activation='relu', name='zenith')(dropout2),
++        'azimuth': tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dropout2),
++        'x_dir': tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dropout2),
++        'y_dir': tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dropout2),
++        'z_dir': tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dropout2)
++    }
+diff --git a/architectures/baseline.py b/architectures/baseline.py
+index dec9e11..08ce653 100644
+--- a/architectures/baseline.py
++++ b/architectures/baseline.py
+@@ -23,12 +23,12 @@ def get_architecture(inputs, prep):
+         tf.keras.layers.Dense(32, activation='relu', kernel_constraint=tf.keras.constraints.MaxNorm(3))(dense1))
+ 
+     ## Create output tensors
+-    composition_output = tf.keras.layers.Dense(4, activation='softmax', name='comp')(dense2)
+-    energy_output = tf.keras.layers.Dense(1, activation='relu', name='energy')(dense2)
+-    zenith_output = tf.keras.layers.Dense(1, activation='relu', name='zenith')(dense2)
+-    azimuth_output = tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dense2)
+-    x_output = tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dense2)
+-    y_output = tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dense2)
+-    z_output = tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dense2)
+-
+-    return [composition_output, energy_output, zenith_output, azimuth_output, x_output, y_output, z_output]
+\ No newline at end of file
++    return {
++        'comp': tf.keras.layers.Dense(4, activation='softmax', name='comp')(dense2),
++        'energy': tf.keras.layers.Dense(1, activation='relu', name='energy')(dense2),
++        'zenith': tf.keras.layers.Dense(1, activation='relu', name='zenith')(dense2),
++        'azimuth': tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dense2),
++        'x_dir': tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dense2),
++        'y_dir': tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dense2),
++        'z_dir': tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dense2),
++    }
+diff --git a/architectures/hybrid0.py b/architectures/hybrid0.py
+index 579886c..35280d6 100644
+--- a/architectures/hybrid0.py
++++ b/architectures/hybrid0.py
+@@ -32,12 +32,13 @@ def get_architecture(inputs, prep):
+     dropout2 = tf.keras.layers.Dropout(1/8)(dense2)
+ 
+     ## Create output tensors
+-    composition_output = tf.keras.layers.Dense(4, activation='softmax', name='comp')(dropout2)
+-    energy_output = tf.keras.layers.Dense(1, activation='relu', name='energy')(dropout2)
+-    zenith_output = tf.keras.layers.Dense(1, activation='relu', name='zenith')(dropout2)
+-    azimuth_output = tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dropout2)
+-    x_output = tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dropout2)
+-    y_output = tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dropout2)
+-    z_output = tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dropout2)
++    return {
++        'comp': tf.keras.layers.Dense(4, activation='softmax', name='comp')(dropout2),
++        'energy': tf.keras.layers.Dense(1, activation='relu', name='energy')(dropout2),
++        'zenith': tf.keras.layers.Dense(1, activation='relu', name='zenith')(dropout2),
++        'azimuth': tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dropout2),
++        'x_dir': tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dropout2),
++        'y_dir': tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dropout2),
++        'z_dir': tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dropout2)
++    }
+ 
+-    return [composition_output, energy_output, zenith_output, azimuth_output, x_output, y_output, z_output]
+\ No newline at end of file
+diff --git a/architectures/mini0.py b/architectures/mini0.py
+index ceb23ec..421d934 100644
+--- a/architectures/mini0.py
++++ b/architectures/mini0.py
+@@ -22,12 +22,12 @@ def get_architecture(inputs, prep):
+         tf.keras.layers.Dense(16, activation='relu')(dense1))
+ 
+     ## Create output tensors
+-    composition_output = tf.keras.layers.Dense(4, activation='softmax', name='comp')(dense2)
+-    energy_output = tf.keras.layers.Dense(1, activation='relu', name='energy')(dense2)
+-    zenith_output = tf.keras.layers.Dense(1, activation='relu', name='zenith')(dense2)
+-    azimuth_output = tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dense2)
+-    x_output = tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dense2)
+-    y_output = tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dense2)
+-    z_output = tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dense2)
+-    
+-    return [composition_output, energy_output, zenith_output, azimuth_output, x_output, y_output, z_output]
+\ No newline at end of file
++    return {
++        'comp': tf.keras.layers.Dense(4, activation='softmax', name='comp')(dense2),
++        'energy': tf.keras.layers.Dense(1, activation='relu', name='energy')(dense2),
++        'zenith': tf.keras.layers.Dense(1, activation='relu', name='zenith')(dense2),
++        'azimuth': tf.keras.layers.Dense(1, activation='relu', name='azimuth')(dense2),
++        'x_dir': tf.keras.layers.Dense(1, activation='relu', name='x_dir')(dense2),
++        'y_dir': tf.keras.layers.Dense(1, activation='relu', name='y_dir')(dense2),
++        'z_dir': tf.keras.layers.Dense(1, activation='relu', name='z_dir')(dense2)
++    }
+diff --git a/first_time_setup.sh b/first_time_setup.sh
+index a1cbfb3..a233fa5 100755
+--- a/first_time_setup.sh
++++ b/first_time_setup.sh
+@@ -5,7 +5,13 @@ eval `/cvmfs/icecube.opensciencegrid.org/py3-v4.3.0/setup.sh`
+ unset PYTHONPATH
+ python -m virtualenv $PWD/.venv
+ source $PWD/.venv/bin/activate
+-pip install -r requirements.txt
++pip install -U -r requirements.txt
++
++# Fix tensorflow https://commons.wikimedia.org/wiki/File:Tom_Lea_-_2000_Yard_Stare.jpg (blindly pasted from tensorflow install instructions)
++pushd $(dirname $(python -c 'print(__import__("tensorflow").__file__)'))
++ln -sf ../nvidia/*/lib/*.so* .
++popd
++ln -sf $(find $(dirname $(dirname $(python -c "import nvidia.cuda_nvcc; print(nvidia.cuda_nvcc.__file__)"))/*/bin/) -name ptxas -print -quit) $VIRTUAL_ENV/bin/ptxas
+ 
+ # Create JupyterHub kernel
+ JUPYTER_ICETOP_CNN_KERNEL_DIR="$HOME/.local/share/jupyter/kernels/icetop-cnn"
+diff --git a/model.py b/model.py
+index d67aff3..bb8dd88 100644
+--- a/model.py
++++ b/model.py
+@@ -12,7 +12,7 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
+     input_shapes = {input_name: shape if shape else (1,) for input_name, shape in input_shapes.items()}
+ 
+     # Create dictionary of input tensors
+-    inputs = {input_name: tf.keras.layers.Input(shape=shape) for input_name, shape in input_shapes.items()}
++    inputs = {input_name: tf.keras.layers.Input(shape=shape, name=input_name) for input_name, shape in input_shapes.items()}
+ 
+     # Import desired model architecture
+     spec = importlib.util.spec_from_file_location(model_design, f'{os.getenv("ICETOP_CNN_DIR")}/architectures/{model_design}.py')
+@@ -25,9 +25,10 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
+     # Create model
+     model = tf.keras.models.Model(
+         inputs=inputs,
+-        outputs=[output for output in outputs if output.name[:output.name.index('/')] in predictions],
++        outputs=[outputs[name] for name in outputs if name in predictions],
+         name=model_name
+     )
++
+     loss_functions = {
+         'comp': tf.keras.losses.CategoricalCrossentropy(),
+         'energy': tf.keras.losses.Huber(),
+@@ -54,4 +55,5 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
+         metrics={prediction: metrics[prediction] for prediction in predictions}
+     )
+     model.summary()
+-    return model
+\ No newline at end of file
++
++    return model
+diff --git a/requirements.txt b/requirements.txt
+index f7fb640..8c4fb70 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -59,15 +59,18 @@ jupyterlab==4.2.5
+ jupyterlab_pygments==0.3.0
+ jupyterlab_server==2.27.2
+ jupyterlab_widgets==3.0.11
+-keras==2.14.0
++keras==3.13.2
+ kiwisolver==1.4.5
+ libclang==18.1.1
+ Markdown==3.6
++markdown-it-py==4.0.0
+ MarkupSafe==2.1.5
+ matplotlib==3.9.1
+ matplotlib-inline==0.1.7
++mdurl==0.1.2
+ mistune==3.0.2
+-ml-dtypes==0.2.0
++ml-dtypes==0.3.2
++namex==0.1.0
+ nbclient==0.10.0
+ nbconvert==7.16.4
+ nbformat==5.10.4
+@@ -75,8 +78,21 @@ nest-asyncio==1.6.0
+ notebook==7.2.2
+ notebook_shim==0.2.4
+ numpy==1.26.0
++nvidia-cublas-cu12==12.3.4.1
++nvidia-cuda-cupti-cu12==12.3.101
++nvidia-cuda-nvcc-cu12==12.3.107
++nvidia-cuda-nvrtc-cu12==12.3.107
++nvidia-cuda-runtime-cu12==12.3.101
++nvidia-cudnn-cu12==8.9.7.29
++nvidia-cufft-cu12==11.0.12.1
++nvidia-curand-cu12==10.3.4.107
++nvidia-cusolver-cu12==11.5.4.101
++nvidia-cusparse-cu12==12.2.0.103
++nvidia-nccl-cu12==2.19.3
++nvidia-nvjitlink-cu12==12.3.101
+ oauthlib==3.2.2
+ opt-einsum==3.3.0
++optree==0.18.0
+ overrides==7.7.0
+ packaging==24.1
+ pandocfilters==1.5.1
+@@ -106,6 +122,7 @@ requests==2.32.3
+ requests-oauthlib==2.0.0
+ rfc3339-validator==0.1.4
+ rfc3986-validator==0.1.1
++rich==14.3.2
+ rpds-py==0.19.0
+ rsa==4.9
+ Send2Trash==1.8.3
+@@ -113,10 +130,10 @@ six==1.16.0
+ sniffio==1.3.1
+ soupsieve==2.5
+ stack-data==0.6.3
+-tensorboard==2.14.1
++tensorboard==2.16.2
+ tensorboard-data-server==0.7.2
+-tensorflow==2.14.0
+-tensorflow-estimator==2.14.0
++tensorflow==2.16.1
++tensorflow-estimator==2.15.0
+ tensorflow-io-gcs-filesystem==0.37.1
+ termcolor==2.4.0
+ terminado==0.18.1
+diff --git a/submit.py b/submit.py
+index b5b9b95..80cfbfc 100755
+--- a/submit.py
++++ b/submit.py
+@@ -70,7 +70,7 @@ def main(args):
+         f'initialdir = {ICETOP_CNN_DIR}',
+         '',
+         f'request_cpus = {args.limit_cpus}',
+-        'request_memory = 16G',
++        'request_memory = 12G',
+         'request_gpus = 1',
+         '',
+         'requirements = HasSingularity && GPUS_Capability',
+@@ -89,7 +89,7 @@ def get_trainer_arguments(args):
+     '''Returns the arguments passed to the trainer program'''
+ 
+     # Base argument format string
+-    trainer_args = f'-c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
++    trainer_args = f'-c {args.composition} -p {" ".join(args.predict)} -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
+ 
+     # Add testing argument if testing
+     if args.test:
+@@ -103,6 +103,10 @@ def get_trainer_arguments(args):
+     if args.restore:
+         trainer_args += ' -r'
+ 
++    # Add epochs argument if present
++    if args.epochs:
++        trainer_args += f' -e {args.epochs}'
++
+     return trainer_args
+ 
+ 
+diff --git a/trainer.py b/trainer.py
+index 487bbb6..5a2da9e 100755
+--- a/trainer.py
++++ b/trainer.py
+@@ -15,10 +15,12 @@ if not os.getenv('_CONDOR_SLOT'):
+     venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv')
+     assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
+ 
++# TODO(npatts): Add a verbosity option to the command line arguments for both the submitter and the other thing
+ # Supress debugging information
+ # Can remove safely, just makes for cleaner output
+ # Should be set before importing TensorFlow
+-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
++if os.getenv('TF_CPP_MIN_LOG_LEVEL') == None:
++    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+ 
+ import numpy as np
+ import tensorflow as tf
+@@ -57,6 +59,9 @@ def main():
+ def configure_training():
+     '''Set's up TensorFlow's training configuration'''
+ 
++    # Log device allocation
++    # tf.debugging.set_log_device_placement(True)
++
+     # Limit thread count
+     tf.config.threading.set_inter_op_parallelism_threads(args.limit_cpus)
+     tf.config.threading.set_intra_op_parallelism_threads(args.limit_cpus)
+@@ -106,11 +111,11 @@ def get_training_datasets():
+     validation_cut = np.logical_not(training_cut)
+ 
+     # Assign training data
+-    training_inputs = [model_input[training_cut] for model_input in model_inputs.values()]
++    training_inputs = {input_name: input_values[training_cut] for input_name, input_values in model_inputs.items()}
+     training_outputs = [event_parameters[output][training_cut] for output in args.predict]
+ 
+     # Assign validation data
+-    validation_inputs = [model_input[validation_cut] for model_input in model_inputs.values()]
++    validation_inputs = {input_name: input_values[validation_cut] for input_name, input_values in model_inputs.items()}
+     validation_outputs = [event_parameters[output][validation_cut] for output in args.predict]
+ 
+     input_shapes = {input_name: model_input.shape[1:] for input_name, model_input in model_inputs.items()}
+@@ -121,10 +126,10 @@ def get_training_datasets():
+     return (
+         # Training data
+         tf.data.Dataset.from_tensor_slices(
+-            (tuple(training_inputs), tuple(training_outputs))).shuffle(np.sum(training_cut)).batch(cg.BATCH_SIZE),
++            (training_inputs, tuple(training_outputs))).shuffle(np.sum(training_cut)).batch(cg.BATCH_SIZE),
+         # Validation data
+         tf.data.Dataset.from_tensor_slices(
+-            (tuple(validation_inputs), tuple(validation_outputs))).batch(cg.BATCH_SIZE),
++            (validation_inputs, tuple(validation_outputs))).batch(cg.BATCH_SIZE),
+     ), input_shapes
+ 
+ 
+@@ -229,7 +234,7 @@ def assess_model(model: tf.keras.Model, assess_comp: str = 'phof'):
+     model_inputs, _ = get_datasets(assess_comp, 'assessment')
+ 
+     # Assess the model
+-    reconstructions = model.predict(model_inputs.values())
++    reconstructions = model.predict(model_inputs)
+ 
+     # Save the reconstruction(s)
+     for i, prediction in enumerate(args.predict):

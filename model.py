@@ -12,7 +12,7 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
     input_shapes = {input_name: shape if shape else (1,) for input_name, shape in input_shapes.items()}
 
     # Create dictionary of input tensors
-    inputs = {input_name: tf.keras.layers.Input(shape=shape) for input_name, shape in input_shapes.items()}
+    inputs = {input_name: tf.keras.layers.Input(shape=shape, name=input_name) for input_name, shape in input_shapes.items()}
 
     # Import desired model architecture
     spec = importlib.util.spec_from_file_location(model_design, f'{os.getenv("ICETOP_CNN_DIR")}/architectures/{model_design}.py')
@@ -25,9 +25,10 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
     # Create model
     model = tf.keras.models.Model(
         inputs=inputs,
-        outputs=[output for output in outputs if output.name[:output.name.index('/')] in predictions],
+        outputs=[outputs[name] for name in outputs if name in predictions],
         name=model_name
     )
+
     loss_functions = {
         'comp': tf.keras.losses.CategoricalCrossentropy(),
         'energy': tf.keras.losses.Huber(),
@@ -54,4 +55,5 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
         metrics={prediction: metrics[prediction] for prediction in predictions}
     )
     model.summary()
+
     return model
