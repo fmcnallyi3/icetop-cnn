@@ -15,10 +15,12 @@ if not os.getenv('_CONDOR_SLOT'):
     venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv')
     assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
 
+# TODO(npatts): Add a verbosity option to the command line arguments for both the submitter and the other thing
 # Supress debugging information
 # Can remove safely, just makes for cleaner output
 # Should be set before importing TensorFlow
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+if os.getenv('TF_CPP_MIN_LOG_LEVEL') == None:
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import numpy as np
 import tensorflow as tf
@@ -56,6 +58,9 @@ def main():
 
 def configure_training():
     '''Set's up TensorFlow's training configuration'''
+
+    # Log device allocation
+    # tf.debugging.set_log_device_placement(True)
 
     # Limit thread count
     tf.config.threading.set_inter_op_parallelism_threads(args.limit_cpus)
@@ -106,11 +111,11 @@ def get_training_datasets():
     validation_cut = np.logical_not(training_cut)
 
     # Assign training data
-    training_inputs = [model_input[training_cut] for model_input in model_inputs.values()]
+    training_inputs = {input_name: input_values[training_cut] for input_name, input_values in model_inputs.items()}
     training_outputs = [event_parameters[output][training_cut] for output in args.predict]
 
     # Assign validation data
-    validation_inputs = [model_input[validation_cut] for model_input in model_inputs.values()]
+    validation_inputs = {input_name: input_values[validation_cut] for input_name, input_values in model_inputs.items()}
     validation_outputs = [event_parameters[output][validation_cut] for output in args.predict]
 
     input_shapes = {input_name: model_input.shape[1:] for input_name, model_input in model_inputs.items()}
@@ -121,10 +126,10 @@ def get_training_datasets():
     return (
         # Training data
         tf.data.Dataset.from_tensor_slices(
-            (tuple(training_inputs), tuple(training_outputs))).shuffle(np.sum(training_cut)).batch(cg.BATCH_SIZE),
+            (training_inputs, tuple(training_outputs))).shuffle(np.sum(training_cut)).batch(cg.BATCH_SIZE),
         # Validation data
         tf.data.Dataset.from_tensor_slices(
-            (tuple(validation_inputs), tuple(validation_outputs))).batch(cg.BATCH_SIZE),
+            (validation_inputs, tuple(validation_outputs))).batch(cg.BATCH_SIZE),
     ), input_shapes
 
 
@@ -229,7 +234,7 @@ def assess_model(model: tf.keras.Model, assess_comp: str = 'phof'):
     model_inputs, _ = get_datasets(assess_comp, 'assessment')
 
     # Assess the model
-    reconstructions = model.predict(model_inputs.values())
+    reconstructions = model.predict(model_inputs)
 
     # Save the reconstruction(s)
     for i, prediction in enumerate(args.predict):

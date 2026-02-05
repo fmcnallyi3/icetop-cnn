@@ -70,7 +70,7 @@ def main(args):
         f'initialdir = {ICETOP_CNN_DIR}',
         '',
         f'request_cpus = {args.limit_cpus}',
-        'request_memory = 16G',
+        'request_memory = 12G',
         'request_gpus = 1',
         '',
         'requirements = HasSingularity && GPUS_Capability',
@@ -89,7 +89,7 @@ def get_trainer_arguments(args):
     '''Returns the arguments passed to the trainer program'''
 
     # Base argument format string
-    trainer_args = f'-c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
+    trainer_args = f'-c {args.composition} -p {" ".join(args.predict)} -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
 
     # Add testing argument if testing
     if args.test:
@@ -102,6 +102,10 @@ def get_trainer_arguments(args):
     # Add restore argument if present
     if args.restore:
         trainer_args += ' -r'
+
+    # Add epochs argument if present
+    if args.epochs:
+        trainer_args += f' -e {args.epochs}'
 
     return trainer_args
 
