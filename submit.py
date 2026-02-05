@@ -71,9 +71,9 @@ def main(args):
         '',
         f'request_cpus = {args.limit_cpus}',
         'request_memory = 12G',
-        'request_gpus = 1',
+        f'request_gpus = {args.limit_gpus}',
         '',
-        'requirements = HasSingularity && GPUS_Capability',
+        f'requirements = {get_trainer_requirements(args)}',
         '',
         'queue',
         ''
@@ -125,6 +125,18 @@ def get_trainer_environment_string(args):
         output = output[1:]
 
     return f'environment="{output}"'
+
+def get_trainer_requirements(args):
+    '''Returns a ClassAd expression dictating what machines the trainer should run on'''
+
+    # Base ClassAd expression
+    trainer_reqs = 'HasSingularity'
+
+    # Add CUDA if requested
+    if args.limit_gpus >= 1:
+        trainer_reqs += ' && GPUS_Capability'
+
+    return trainer_reqs
 
 def get_model_origin(args):
     '''Returns True if a new model should be created, False if and old model should be restored, and None if there is an error.'''
@@ -209,7 +221,11 @@ if __name__ == '__main__':
     p.add_argument(
         '--limit-cpus', type=int,
         default=1,
-        help='Maximum number of CPUs that the training process is allowed to use.')
+        help='Number of CPUs that the training process should use. Defaults to 1.')
+    p.add_argument(
+        '--limit-gpus', type=int,
+        default=1,
+        help='Number of GPUs that the training process should use. Only works for non-test runs. Defaults to 1.') # TODO(npatts): Only works for non-test runs??? Get real.
     g = p.add_mutually_exclusive_group()
     g.add_argument(
         '-o', '--overwrite', action='store_true',
