@@ -16,6 +16,8 @@ ASSESSMENT_SPLIT = 0.1
 #
 ########################################################################################################################
 
+
+
 def mod_log(n: np.ndarray[int | float]):
     '''Modified logarithm convenient for dealing with zeros and maintaining sign.'''
     return np.sign(n) * np.log10(np.abs(n) + 1)
@@ -383,6 +385,7 @@ def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: s
 
     # Create the same randomized cut each time
     # Seed is arbitrary - what's important is that it's set and never changed
+
     np.random.seed(1148)
 
     # Create training cut
