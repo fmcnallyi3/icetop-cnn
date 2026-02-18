@@ -3,6 +3,25 @@
 import argparse
 import json
 import os
+
+def set_seed(seed: int):
+    import os
+    import random
+
+    # python-level determinism
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
+    # tensorFlow / cuda determinism (must be set BEFORE TF import)
+    os.environ["TF_DETERMINISTIC_OPS"] = "1"
+    os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
+
+    import numpy as np
+    import tensorflow as tf
+
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+    
 import sys
 from glob import glob
 
