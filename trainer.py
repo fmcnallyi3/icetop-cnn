@@ -2,8 +2,26 @@
 
 import argparse
 import json
-import os    
-import sys
+import os
+
+def set_seed(seed: int):
+    import os
+    import random
+
+    # python-level determinism
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
+    # tensorFlow / cuda determinism (must be set BEFORE TF import)
+    os.environ["TF_DETERMINISTIC_OPS"] = "1"
+    os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
+
+    import numpy as np
+    import tensorflow as tf
+
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+    
 from glob import glob
 
 ERROR_ENVIRONMENT_NOT_ACTIVATED = 'Virtual environment not activated. Activate with the command "icetop-cnn"'
@@ -15,15 +33,10 @@ if not os.getenv('_CONDOR_SLOT'):
     venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv')
     assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
 
-# TODO(npatts): Add a verbosity option to the command line arguments for both the submitter and the other thing
 # Supress debugging information
 # Can remove safely, just makes for cleaner output
 # Should be set before importing TensorFlow
-if os.getenv('TF_CPP_MIN_LOG_LEVEL') == None:
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-import numpy as np
-import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import config as cg
 from utils import data_prep, get_preprocessed, get_training_assessment_cut
@@ -31,6 +44,9 @@ from model import get_compiled_model
 
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR')
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')    
+
+import numpy as np
+import tensorflow as tf
 
 def main():
     '''Creates/restores and trains a model based on the settings located in "config"'''
@@ -41,7 +57,7 @@ def main():
 
     # Get datasets
     if args.test: print('Getting datasets...')
-    (training_dataset, validation_dataset), input_shapes = get_training_datasets()
+    training_dataset, validation_dataset, input_shapes = get_training_datasets()
 
     # Get model
     if args.test: print('Fetching model...')
@@ -58,9 +74,6 @@ def main():
 
 def configure_training():
     '''Set's up TensorFlow's training configuration'''
-
-    # Log device allocation
-    # tf.debugging.set_log_device_placement(True)
 
     # Limit thread count
     tf.config.threading.set_inter_op_parallelism_threads(args.limit_cpus)
@@ -107,15 +120,16 @@ def get_training_datasets():
     num_events = event_parameters['file_info'].shape[0]
 
     # Create training / validation split
-    training_cut = np.random.rand(num_events) > cg.VALIDATION_SPLIT
+    rng = np.random.default_rng(args.seed)
+    training_cut = rng.random(num_events) > cg.VALIDATION_SPLIT
     validation_cut = np.logical_not(training_cut)
 
     # Assign training data
-    training_inputs = {input_name: input_values[training_cut] for input_name, input_values in model_inputs.items()}
+    training_inputs = [model_input[training_cut] for model_input in model_inputs.values()]
     training_outputs = [event_parameters[output][training_cut] for output in args.predict]
 
     # Assign validation data
-    validation_inputs = {input_name: input_values[validation_cut] for input_name, input_values in model_inputs.items()}
+    validation_inputs = [model_input[validation_cut] for model_input in model_inputs.values()]
     validation_outputs = [event_parameters[output][validation_cut] for output in args.predict]
 
     input_shapes = {input_name: model_input.shape[1:] for input_name, model_input in model_inputs.items()}
@@ -123,15 +137,13 @@ def get_training_datasets():
     # This format for organizing the training/validation data allows for unlimited inputs/outputs
     # To adjust for multiple outputs, convert to a tuple
     # Also returns the shapes of all inputs so that we can use the Keras functional API
-    return (
-        # Training data
-        tf.data.Dataset.from_tensor_slices(
-            (training_inputs, tuple(training_outputs))).shuffle(np.sum(training_cut)).batch(cg.BATCH_SIZE),
-        # Validation data
-        tf.data.Dataset.from_tensor_slices(
-            (validation_inputs, tuple(validation_outputs))).batch(cg.BATCH_SIZE),
-    ), input_shapes
 
+    # Training data
+    training_dataset = tf.data.Dataset.from_tensor_slices((tuple(training_inputs), tuple(training_outputs))).shuffle(np.sum(training_cut), seed=args.seed, reshuffle_each_iteration=False).batch(cg.BATCH_SIZE)
+    # Validation data
+    validation_dataset = tf.data.Dataset.from_tensor_slices((tuple(validation_inputs), tuple(validation_outputs))).batch(cg.BATCH_SIZE)
+
+    return training_dataset, validation_dataset, input_shapes
 
 def get_datasets(composition, mode, test=False):
     '''Loads and prepares simulation data from files'''
@@ -197,7 +209,6 @@ def train_model(model, training_dataset, validation_dataset):
         training_dataset,
         epochs=args.epochs,
         validation_data=validation_dataset,
-        verbose=1 if sys.stdout.isatty() else 2,
         callbacks=[
             tf.keras.callbacks.CSVLogger(
                 os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.csv'),
@@ -234,7 +245,7 @@ def assess_model(model: tf.keras.Model, assess_comp: str = 'phof'):
     model_inputs, _ = get_datasets(assess_comp, 'assessment')
 
     # Assess the model
-    reconstructions = model.predict(model_inputs)
+    reconstructions = model.predict(model_inputs.values())
 
     # Save the reconstruction(s)
     for i, prediction in enumerate(args.predict):
@@ -269,6 +280,10 @@ if __name__ == '__main__':
         required=True,
         help='Desired model architecture')
     p.add_argument(
+        '-s','--seed', type=int, 
+        default=1148,
+        help='Random seed for full reproducibility')
+    p.add_argument(
         '-p', '--predict', nargs='+', type=str,
         choices=['comp', 'energy', 'zenith', 'azimuth', 'y_over_x', 'x_dir', 'y_dir', 'z_dir'],
         required=True,
@@ -295,6 +310,9 @@ if __name__ == '__main__':
     # Sort the composition string into a predictable order
     args.composition = ''.join(sorted(args.composition, key=lambda c: list('phof').index(c)))
 
+     #set seed for reproducibility
+    set_seed(args.seed)
+    
     # Ensure epochs are a valid number
     if args.epochs and args.epochs <= 0:
         p.error('Epochs must be a positive integer')
