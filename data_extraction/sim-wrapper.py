@@ -11,8 +11,6 @@ TO DO:
     -Clean up outputs, specfically order the outputs in ascending order first (should be easy?)
         -Also when getting the version clear out uneccessary folders (like rootfiles and stuff)
         -This also means make the outputs more consistent (ex: EVERY listing has a endl afterwards)
-    -Fix the general problem with this whole menagerie not working on Condor (Important!!!!)
-        -Seems like something to do with pathing issues?
     -Add in the whole pass-parameter methods to sim-maker.py and sim-converter.py (Definitely important)
     -Add more comments
     -Make the code cleaner
@@ -192,12 +190,12 @@ def main(args):
         GCD_path = getGCD(GCD_path, simInfo[1])
     
         #Run sim-maker.py
-        subprocess.run([f"{os.getcwd()}/./sim-maker.py", f"-g {GCD_path}", f"-i {data_path}", f"-o {outPath}", "--test"])
+        subprocess.run([f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py", f"-g {GCD_path}", f"-i {data_path}", f"-o {outPath}"])
 
     #Now run sim-converter.py if that argument was passed
     if(args.convert == True):
         print("Now converting data:")
-        subprocess.run([f"{os.getcwd()}/./sim-converter.py", f"-s {outPath}"])
+        subprocess.run([f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-converter.py", f"-s {outPath}"])
     
 if __name__ == "__main__":
     p = argparse.ArgumentParser(

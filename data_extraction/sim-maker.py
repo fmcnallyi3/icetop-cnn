@@ -17,14 +17,15 @@ def main(args):
     #Create the output folder and parse the sim name
     Path(args.out_dir.lstrip()).mkdir(parents=True, exist_ok=True)
     sim_name = args.out_dir.lstrip()[args.out_dir.lstrip().rfind('/')+1:]
+    
     #Path to extractor
-    exe = './sim-extractor.py'
+    exe = f'/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-extractor.py'
     #Path to data 
     l3sim = '/data/ana/CosmicRay/IceTop_level3/sim/IC86.2012'
 
     comp = {'proton': [12360], 'helium': [12630], 'oxygen': [12631], 'iron': [12362], 'all': [12360, 12630, 12631, 12362]}
     c = comp[args.composition]    
-    count = 0
+
     for ID in c:
         #gcd = f'{l3sim}/GCD/Level3_{ID}_GCD.i3.gz'
         #files = glob(f'{l3sim}/oldstructure/{ID}/Level3_IC86.2012_{ID}_Run??????.i3.gz')
@@ -57,11 +58,8 @@ def main(args):
             
             pysubmit(exelines, outdir=f'./condor', test=args.test)
 
-            if count == 0:
+            if args.test:
                 break
-            count += 1
-            #print(count)
-        break
 
 
 if __name__ == "__main__":
