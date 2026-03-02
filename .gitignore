@@ -12,3 +12,5 @@ tutorial/.ipynb_checkpoints/
 .ipynb_checkpoints/
 
 *.pyc
+
+*.so*
