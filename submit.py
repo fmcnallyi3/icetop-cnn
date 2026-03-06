@@ -16,8 +16,8 @@ ERROR_MODEL_ALREADY_FOUND = 'Model folder already found with this name, but it i
 # Not necessary to check if ran on the cluster
 # Should check first before the rest of the code is parsed
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR', '')
-venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
-assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
+venv_path = os.path.join('data', 'user', 'jstowers', '.venv')
+assert ('.venv') in os.getenv('VIRTUAL_ENV'), ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
 ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR')
