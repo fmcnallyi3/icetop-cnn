@@ -383,6 +383,9 @@ def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: s
     if mode is None:
         return np.full(num_events, True)
 
+    #set seed so model_cut isn't random
+    np.random.seed(1148)
+    
     # Create training cut
     cut = np.random.rand(num_events) > ASSESSMENT_SPLIT
     # Assessment cut is the complement of the training cut
