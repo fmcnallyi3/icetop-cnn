@@ -369,6 +369,9 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: str | None, prep: dict[str, Any]) -> np.ndarray:
     '''Returns a cut based on whether the user is training or assessing a model'''
 
+    #set seed (will give boolean index error in energy.ipynb if not set)
+    np.random.seed(1148)
+    
     # Make sure user selects a valid mode
     assert mode in ['training', 'assessment', None], f'Invalid mode choice, received {mode}'
 
