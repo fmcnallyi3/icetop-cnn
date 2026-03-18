@@ -1,7 +1,7 @@
 ![IceCube Neutrino Observatory](https://res.cloudinary.com/icecube/images/q_auto/v1602553309/gal_Detector_IMG_4263_207090c7a/gal_Detector_IMG_4263_207090c7a.jpg)
 # IceTop ML Cosmic Ray Reconstruction
 
-##Introduction 
+## Introduction 
 
 Welcome to IceTop-CNN!
 
@@ -102,7 +102,7 @@ to enter the virtual environment.
     <tr><td>
       <p align="center">
         <b>NOTICE:</b><br>
-        If entering the virtual environment ever gives you an error AFTER this point, that means that you need to re-source your .bashrc file. To do this, simply rerun ```source .bashrc``` and you should be fine. 
+        If entering the virtual environment ever gives you an error AFTER this point, that means that you need to re-source your .bashrc file. To do this, simply rerun source .bashrc and you should be fine. 
       </p>
     </td></tr>
 </table>
