@@ -55,7 +55,7 @@ def main(args):
     lines = [
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
         f'arguments = "{get_trainer_arguments(args)}"',
-        f'{get_trainer_environment_string(args)}',
+        f'environment = "ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
         f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py',
         'getenv = True',
         '',
@@ -70,7 +70,7 @@ def main(args):
         f'initialdir = {ICETOP_CNN_DIR}',
         '',
         f'request_cpus = {args.limit_cpus}',
-        'request_memory = 12G',
+        'request_memory = 16G',
         'request_gpus = 1',
         '',
         'requirements = HasSingularity && GPUS_Capability',
@@ -89,7 +89,7 @@ def get_trainer_arguments(args):
     '''Returns the arguments passed to the trainer program'''
 
     # Base argument format string
-    trainer_args = f'-c {args.composition} -p {" ".join(args.predict)} -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus}'
+    trainer_args = f'-c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} -n {args.model_name} -m {args.model_design} --limit-cpus {args.limit_cpus} --seed {args.seed}'
 
     # Add testing argument if testing
     if args.test:
@@ -103,28 +103,8 @@ def get_trainer_arguments(args):
     if args.restore:
         trainer_args += ' -r'
 
-    # Add epochs argument if present
-    if args.epochs:
-        trainer_args += f' -e {args.epochs}'
-
     return trainer_args
 
-def get_trainer_environment_string(args):
-    '''Returns the condor environment string included in the trainer submission'''
-
-    # https://htcondor.readthedocs.io/en/latest/man-pages/condor_submit.html#environment
-    output = ''
-    for [name, value] in args.trainer_set_env:
-        if '"' in name or '\'' in name:
-            raise RuntimeError(f'Invalid environment variable name "{name}"')
-
-        output += ' ' + name + '=\'' + value.replace('\'', '\'\'').replace('"', '""') + "\'"
-
-    # Remove preceding whitespace
-    if len(output) > 0:
-        output = output[1:]
-
-    return f'environment="{output}"'
 
 def get_model_origin(args):
     '''Returns True if a new model should be created, False if and old model should be restored, and None if there is an error.'''
@@ -199,6 +179,10 @@ if __name__ == '__main__':
         default='mini0',
         help='Desired model architecture')
     p.add_argument(
+        '-s','--seed', type=int,
+        default=1148,
+        help='Random seed for reproducibility')
+    p.add_argument(
         '-p', '--predict', nargs='+', type=str,
         choices=['comp', 'energy', 'azimuth', 'zenith', 'x_dir', 'y_dir', 'z_dir'],
         required=True,
@@ -217,16 +201,6 @@ if __name__ == '__main__':
     g.add_argument(
         '-r', '--restore', action='store_true',
         help='Attempt to restore and continue training a model if it exists. Can not be used with overwrite')
-    g = p.add_argument_group('Runner configuration', 'Configure specific trainer settings. Cannot be used with test jobs.') # TODO(npatts): Make it work with test jobs.
-    g.add_argument(
-        '-Xe', nargs=2, action='append', type=str,
-        dest='trainer_set_env',
-        default=[
-            ['ICETOP_CNN_DIR', ICETOP_CNN_DIR],
-            ['ICETOP_CNN_DATA_DIR', ICETOP_CNN_DATA_DIR],
-            ['ICETOP_CNN_SCRATCH_DIR', ICETOP_CNN_SCRATCH_DIR]],
-        metavar=('NAME', 'VALUE'),
-        help='Set an environment variable on the trainer')
     args = p.parse_args()
 
     '''
@@ -238,7 +212,7 @@ if __name__ == '__main__':
     # Ensure that there are no unrecognized characters in the composition string
     if not all(c in 'phof' for c in args.composition):
         p.error('Unrecognized composition dataset combination requested')
-     
+
     # Ensure epochs are a valid number
     if args.epochs and args.epochs <= 0:
         p.error('Epochs must be a positive value')
