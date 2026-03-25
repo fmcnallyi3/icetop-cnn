@@ -1,6 +1,21 @@
 ![IceCube Neutrino Observatory](https://res.cloudinary.com/icecube/images/q_auto/v1602553309/gal_Detector_IMG_4263_207090c7a/gal_Detector_IMG_4263_207090c7a.jpg)
 # IceTop ML Cosmic Ray Reconstruction
 
+## Table of Contents
+
+| Section       		 	 																							 | 
+| -----------------------------------------------------------------------------------------------------------------------|
+| [Introcduction](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#introduction)      		 				 | 
+| [Access Information](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#accessing-the-project) 	 		 	 |
+| [Install](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#downloading-project-files) 						 |
+| [Setup](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#running-the-setup-script) 				 	 	 |
+| [Virtual Environments](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#entering-the-virtual-environment) 	 |
+| [First Model Submission](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#submitting-a-model)  			 |
+| [Model Analysis](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#analyzing-a-model) 			 			 |
+| [New Model Training](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#training-a-new-model) 		 		 |
+| [Common Pitfalls](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#training-failures)          			 |
+| [Next Steps](https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#next-steps) 				 					 |
+
 ## Introduction 
 
 Welcome to IceTop-CNN!
@@ -190,6 +205,8 @@ Train on less epochs and train on Cobalt for a live session
 
 ## Next steps
 For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
+
+The IceTop-CNN Wiki is a great place to start. It contains guides to using Github, common errors, the Masters Thesis, and many other pieces of information that are quite useful. Check out the [Wiki](https://github.com/fmcnallyi3/icetop-cnn/wiki/)!
 
 For help on getting started with the project, see our [User Guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
