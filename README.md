@@ -6,7 +6,7 @@
   <tr>
     <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#introduction">Introduction</a></td>
     <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#how-to-install">Installation</a></td>
-    <td><a href="https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide">User Guide</a></td>
+    <td><a href="https://github.com/fmcnallyi3/icetop-cnn/wiki/Documentation-And-Resources">UDocumentation & Resources</a></td>
     <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#known-issues-wip">Known Issues</a></td>
   </tr>
 </table>
