@@ -6,7 +6,7 @@
   <tr>
     <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#introduction">Introduction</a></td>
     <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#how-to-install">Installation</a></td>
-    <td><a href="https://github.com/fmcnallyi3/icetop-cnn/wiki/Documentation-And-Resources">Documentation & Resources</a></td>
+    <td><a href="ttps://github.com/fmcnallyi3/icetop-cnn/wiki/Getting-Started">Getting Started</a></td>
     <td><a href="https://github.com/fmcnallyi3/icetop-cnn?tab=readme-ov-file#known-issues-wip">Known Issues</a></td>
   </tr>
 </table>
@@ -22,7 +22,7 @@ This installation tutorial assumes you have some familiarity with navigating a t
 <details open>
   <summary><b>Log in to Cobalt</b></summary>
 
-  IceTop-CNN is designed to use IceCube's computing resources. You must log in to a computing node ("cobalt") to get started. First, open the command prompt (Windows) or terminal (Mac/Linux). If you have [configured your SSH](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh), then you may log in with the following command:
+  IceTop-CNN is designed to use IceCube's computing resources. You must log in to a computing node ("cobalt") to get started. First, open the command prompt (Windows) or terminal (Mac/Linux). If you have [configured your SSH](ttps://github.com/fmcnallyi3/icetop-cnn/wiki/Getting-Started#configuring-ssh), then you may log in with the following command:
   ```bash
   ssh cobalt
   ```
@@ -33,7 +33,7 @@ This installation tutorial assumes you have some familiarity with navigating a t
   ssh cobalt
   ```
   *Be sure to replace the example username with your actual IceCube username.*\
-  There is a section on [configuring your SSH](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide#configuring-ssh) in the [user guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
+  There is a section on [configuring your SSH](ttps://github.com/fmcnallyi3/icetop-cnn/wiki/Getting-Started#configuring-ssh) in the [user guide](ttps://github.com/fmcnallyi3/icetop-cnn/wiki/Getting-Started).
 </details>
 <br>
 <details open>
@@ -138,14 +138,14 @@ If all went well, you should see a model train for 10 epochs (~5s each), then be
     <tr><td>
       <p align="center">
         <b>WARNING</b><br>
-        While fine for a test, running on cobalt is computationally <i>expensive</i> and should not be done regularly. See the <a href=https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide>User Guide</a> for best practices on model training. 
+        While fine for a test, running on cobalt is computationally <i>expensive</i> and should not be done regularly. See the <a href=ttps://github.com/fmcnallyi3/icetop-cnn/wiki/Getting-Started>User Guide</a> for best practices on model training. 
       </p>
     </td></tr>
 </table>
 
 For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
 
-For help on getting started with the project, see our [User Guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
+For help on getting started with the project, see our [User Guide](ttps://github.com/fmcnallyi3/icetop-cnn/wiki/Getting-Started).
 
 ## Known Issues (WIP)
 This section is a work and progress and may be expanded as issues arise.\
