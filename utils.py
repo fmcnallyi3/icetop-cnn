@@ -16,6 +16,8 @@ ASSESSMENT_SPLIT = 0.1
 #
 ########################################################################################################################
 
+
+
 def mod_log(n: np.ndarray[int | float]):
     '''Modified logarithm convenient for dealing with zeros and maintaining sign.'''
     return np.sign(n) * np.log10(np.abs(n) + 1)
@@ -367,6 +369,9 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: str | None, prep: dict[str, Any]) -> np.ndarray:
     '''Returns a cut based on whether the user is training or assessing a model'''
 
+    #set seed (will give boolean index error in energy.ipynb if not set)
+    np.random.seed(1148)
+    
     # Make sure user selects a valid mode
     assert mode in ['training', 'assessment', None], f'Invalid mode choice, received {mode}'
 
@@ -381,10 +386,9 @@ def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: s
     if mode is None:
         return np.full(num_events, True)
 
-    # Create the same randomized cut each time
-    # Seed is arbitrary - what's important is that it's set and never changed
+    #set seed so model_cut isn't random
     np.random.seed(1148)
-
+    
     # Create training cut
     cut = np.random.rand(num_events) > ASSESSMENT_SPLIT
     # Assessment cut is the complement of the training cut
