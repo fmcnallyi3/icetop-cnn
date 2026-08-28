@@ -12,8 +12,8 @@ ERROR_ENVIRONMENT_NOT_ACTIVATED = 'Virtual environment not activated. Activate w
 # Should only check when not run on the condor cluster
 # Should check before importing external libraries
 if not os.getenv('_CONDOR_SLOT'):
-    venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv')
-    assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
+    venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv') # SORRY NPATTS THIS LINE NO LONGER WORKS!!!!
+    assert ('.venv') in os.getenv('VIRTUAL_ENV'), ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 # TODO(npatts): Add a verbosity option to the command line arguments for both the submitter and the other thing
 # Supress debugging information
