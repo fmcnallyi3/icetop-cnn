@@ -169,6 +169,8 @@ if __name__ == '__main__':
     p.add_argument(
         '-t', '--test', action='store_true',
         help='Run the script off the cluster on a limited dataset for a maximum of 10 epochs')
+    p.add_argument(
+        '--simdata', dest='simdata', type=str, default='/data/user/fmcnally/icetop-cnn/simdata', help='Simdata folder to train on')
     g = p.add_mutually_exclusive_group()
     g.add_argument(
         '-o', '--overwrite', action='store_true',

@@ -15,6 +15,7 @@
 #############################################################################
 
 import subprocess
+import sys
 import stat, random
 from pathlib import Path
 import os
