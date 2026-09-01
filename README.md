@@ -29,9 +29,14 @@ The project interface is within JupyterHub for all intensive purposes. This mean
 
 The interactivity with a command line interface (CLI) will be limited for this project. Instead, it’ll only be used for setting up the initial project and submitting models to the computing cluster. 
 The two most important terminal commands you need to be familiar with are:
-```bash 
+```
 ssh npx-submitter
 ```
+,
+```
+ssh cobalt
+```
+,
 And
 ```
 ./submit.py ~~~
@@ -41,7 +46,13 @@ And
 First things first, enter into JupyterHub and log in with your IceCube credentials. On the next screen select the first server model, since this guide won’t need any of the extra computing power that the other servers offer. Depending on a future task, you may need the extra power, but it’s bad manners to use more resources than you need. 
 
 Once you’re within a server, there should be a screen that shows lots of different options. Go to the other section, and select a terminal. Once inside of a terminal, run the following command:
-```bash
+```
+ssh cobalt
+```
+. 
+This will get you into the cobalt node which is needed to install the virtual environment. It will prompt you for your password, which will be the same password you used to enter JuptyerHub to begin with. Once safely within Cobalt, run:
+
+```
 git clone https://github.com/fmcnallyi3/icetop-cnn.git
 ```
 This command will copy over the important set up files that are hosted within this GitHub repository. Do not change anything about this command, a lot of files within it depend on the specific file structure it sets up.
@@ -50,7 +61,7 @@ This command will copy over the important set up files that are hosted within th
 Now that the files are installed to your account, we need to move the terminal’s directory to within that folder. To navigate the folder directory within the CLI, run the following command:
 ```cd icetop-cnn```
 CD will move the current directory to whatever path is specified within the command. Now that your terminal is active within the downloaded files, run this command to run the startup script:
-```bash ./first_time_setup.sh```
+```./first_time_setup.sh```
 This could take a few minutes, so don’t be stressed if it takes a while. You’ll be notified once everything is set up and finished.
 
 ## Entering the Virtual Environment 
