@@ -31,14 +31,7 @@ The interactivity with a command line interface (CLI) will be limited for this p
 The two most important terminal commands you need to be familiar with are:
 ```
 ssh npx-submitter
-```
-,
-```
 ssh cobalt
-```
-,
-And
-```
 ./submit.py ~~~
 ```
 
@@ -49,7 +42,7 @@ Once you’re within a server, there should be a screen that shows lots of diffe
 ```
 ssh cobalt
 ```
-. 
+
 This will get you into the cobalt node which is needed to install the virtual environment. It will prompt you for your password, which will be the same password you used to enter JuptyerHub to begin with. Once safely within Cobalt, run:
 
 ```
