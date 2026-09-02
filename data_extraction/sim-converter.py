@@ -18,16 +18,22 @@ def main(args):
     if not os.path.exists(source):
         raise Exception('Source folder containing extracted simulation data was not found.')
     # Verify destination folder exists, create otherwise.
-    dest = f'/data/user/{os.getlogin()}/preprocessed/{sim_name}'
-    if not os.path.exists(dest):
-        os.mkdir(dest)
+    dest = os.path.join(os.environ['ICETOP_CNN_DATA_DIR'], 'simdata', sim_name)
+    print(dest)
+    for sub in ('icetop', 'event_parameters'):
+        os.makedirs(os.path.join(dest, sub), exist_ok=True)
 
     # Loop over files and convert array and parameter data
     files = sorted(glob(f'{source}/sim_*.npy'))
+    comp = {'PPlus':1, 'He4Nucleus':4, 'O16Nucleus':16, 'Fe56Nucleus':56}
+    comp_aliases = {1:'12360', 4:'12630', 16:'12631', 56:'12362'}
     for f in files:
         print(f)
-        array_out = f.replace(f'/sim/{sim_name}/sim_', f'/preprocessed/{sim_name}/icetop_')
-        param_out = f.replace(f'/sim/{sim_name}/sim_', f'/preprocessed/{sim_name}/event_parameters_')
+        d = load_data(f, infill=args.infill)
+        batch = f.rsplit('_', 1)[-1]
+        alias = comp_aliases[comp[d['comp'][0]]]
+        array_out = os.path.join(dest, 'icetop', f'icetop_{alias}_{sim_name}_{batch}')
+        param_out = os.path.join(dest, 'event_parameters', f'event_parameters_{alias}_{sim_name}_{batch}')
 
         # Skip files already created if not overwriting
         if not args.overwrite and any([
@@ -38,7 +44,6 @@ def main(args):
             continue
 
         print(f'Converting {f}...')
-        d = load_data(f, infill=args.infill)
 
         if args.output in ['array', 'both']:
             array_data, infill_data = dict_to_mat(d)

@@ -11,8 +11,7 @@ ERROR_ENVIRONMENT_NOT_ACTIVATED = 'Virtual environment not activated. Activate w
 # Should only check when not run on the condor cluster
 # Should check before importing external libraries
 if not os.getenv('_CONDOR_SLOT'):
-    venv_path = os.path.join(os.getenv('ICETOP_CNN_DIR', ''), '.venv')
-    assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
+    assert os.getenv('VIRTUAL_ENV'), ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 # Supress debugging information
 # Can remove safely, just makes for cleaner output
@@ -99,7 +98,7 @@ def get_datasets(composition, mode, test=False):
     '''Loads and prepares simulation data from files'''
     
     # Load detector inputs and event parameters
-    simdata_folder_path = os.path.join(os.sep, 'data', 'user', 'fmcnally', 'icetop-cnn', 'simdata')
+    simdata_folder_path = args.simdata
     detector_data, event_parameters = get_preprocessed(simdata_folder_path, cg.PREP['infill'], composition=composition, test=test)
 
     # Get training/assessment cut
@@ -196,7 +195,7 @@ def assess_model(model: tf.keras.Model, assess_comp: str = 'phof'):
     model_inputs, _ = get_datasets(assess_comp, 'assessment')
 
     # Assess the model
-    reconstructions = model.predict(model_inputs.values())
+    reconstructions = model.predict(list(model_inputs.values()))
 
     # Save the reconstruction(s)
     for i, prediction in enumerate(args.predict):
@@ -238,6 +237,9 @@ if __name__ == '__main__':
     p.add_argument(
         '-t', '--test', action='store_true',
         help='Run the script off the cluster with a limited dataset')
+    p.add_argument(
+        '-d', '--simdata', dest='simdata', default=os.path.join(os.sep, 'data', 'user', 'fmcnally', 'icetop-cnn', 'simdata'),
+        help='Specify the path of the simulation data to train a model off of.')
     g = p.add_mutually_exclusive_group()
     g.add_argument(
         '-o', '--overwrite', action='store_true',

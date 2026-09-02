@@ -25,7 +25,7 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
     # Create model
     model = tf.keras.models.Model(
         inputs=inputs,
-        outputs=[output for output in outputs if output.name[:output.name.index('/')] in predictions],
+        outputs=[output for output in outputs if output._keras_history[0].name.split('/')[0] in predictions],
         name=model_name
     )
     loss_functions = {

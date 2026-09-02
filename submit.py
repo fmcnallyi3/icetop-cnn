@@ -17,7 +17,7 @@ ERROR_MODEL_ALREADY_FOUND = 'Model folder already found with this name, but it i
 # Should check first before the rest of the code is parsed
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR', '')
 venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
-assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
+assert os.getenv('VIRTUAL_ENV'), ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 
 #NOTE: THIS CODE IS USELESS BUT IM TOO SCARED TO REMOVE IT
@@ -47,7 +47,7 @@ def main(args):
         if not args.epochs or args.epochs > 10:
             print('Defaulting to 10 epochs...')
             args.epochs = 10
-        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design}'
+        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design} -d {args.simdata}'
         print('Starting training...')
         return os.system(command)
     
@@ -170,7 +170,11 @@ if __name__ == '__main__':
         '-t', '--test', action='store_true',
         help='Run the script off the cluster on a limited dataset for a maximum of 10 epochs')
     p.add_argument(
-        '--simdata', dest='simdata', type=str, default='/data/user/fmcnally/icetop-cnn/simdata', help='Simdata folder to train on')
+        '-d', '--dataset', dest='dataset', type=str,
+        help='Dataset name; resolved to $ICETOP_CNN_DATA_DIR/simdata/<name>')
+    p.add_argument(
+        '--simdata', dest='simdata', type=str,
+        help='Full simdata folder path; overrides -d')
     g = p.add_mutually_exclusive_group()
     g.add_argument(
         '-o', '--overwrite', action='store_true',
@@ -187,6 +191,28 @@ if __name__ == '__main__':
         spent idling isn't wasted).
     '''
     # Ensure that there are no unrecognized characters in the composition string
+    #Resolve simdata: full --simdata wins, else -d dataset name, else upstream default
+    args.simdata = args.simdata or (os.path.join(ICETOP_CNN_DATA_DIR, 'simdata', args.dataset) if args.dataset else '/data/user/fmcnally/icetop-cnn/simdata')
+
+    #Forward one full path to trainer.py: strip dataset flags, append resolved
+    def _strip(argv, flag):
+        out, skip = [], False
+        for a in argv:
+            if skip:
+                skip = False
+            elif a == flag:
+                skip = True
+            elif a.startswith(flag + '='):
+                continue
+            else:
+                out.append(a)
+        return out
+    argv = sys.argv[1:]
+    for flag in ('-d', '--dataset', '--simdata'):
+        argv = _strip(argv, flag)
+    sys.argv[1:] = argv + ['--simdata', args.simdata]
+
+    assert os.path.exists(args.simdata), f'Simdata folder not found: {args.simdata}'
     if not all(c in 'phof' for c in args.composition):
         p.error('Unrecognized composition dataset combination requested')
      
