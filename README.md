@@ -203,9 +203,13 @@ And
 
 Once the models are finished being computed, add the model name to the analysis notebooks and run each cell. The data and graphs will be calculated and compared to any other models also put into the notebooks.
 
+## Verify Training
+The best place to check if trained model data exists is at `/data/user/{YOUR_USER}/icetop-cnn/reconstructions/comp` (For models to reconstruct energy, it would be at /energy instead of /comp). If you know the job isn't in the queue, and don't see the model files, then it's time to start reading Condor files to see what happened during the job.
+
 ## Training Failures
-Also look at error logs and whatnot in /scratch/yourUsername (scroll to bottom of file)
-Train on less epochs and train on Cobalt for a live session 
+Inside of your main icetop-cnn folder on any node, there are 3 of the 4 condor files. `submissions` holds the file that condor sees when the job is submitted, `output` holds the file that condor writes to and a successful model should have a lot of lines about epochs, and `errors` holds the file that condor writes to with any errors when the code runs. Every model will probably write to an error file at least once about save_format or something, but if it doesn't explicitly tell you something is wrong then there's nothing wrong. Check near the ends of these files. 
+
+There are also Condor log files that are written to `/scratch/{YOUR_USER}/icetop-cnn/condor/logs` that are only on the n px-submitter node. I don't remember off the top of my head what the file will look like if the job totally failed, but they will look very similar. You'll have to read closely, or see if one file is a lot shorter than the other. The middle of these files aren't very important, but the lines at the top and bottom of each file are the most important.
 
 ## Next steps
 For an introduction to machine learning, be sure to check out the folder labeled "[tutorial](https://github.com/fmcnallyi3/icetop-cnn/tree/main/tutorial)". This will guide you through the "Hello World" of machine learning with the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset.
