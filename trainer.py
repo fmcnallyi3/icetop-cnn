@@ -152,7 +152,7 @@ def train_model(model, training_dataset, validation_dataset):
 
     # Save model parameters and nuclei
     with open(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.json'), 'w') as f:
-        json.dump({**cg.PREP, 'training_nuclei':args.composition}, f, indent=4)
+        json.dump({**cg.PREP, 'training_nuclei':args.composition, 'simdata':args.simdata}, f, indent=4)
 
     # Let 'er rip
     model.fit(
