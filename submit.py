@@ -75,7 +75,7 @@ def main(args):
         'when_to_transfer_output = ON_EXIT',
         f'initialdir = {ICETOP_CNN_DIR}',
         '',
-        'request_memory = 16G',
+        'request_memory = 8G',
         'request_gpus = 1',
         '',
         'requirements = HasSingularity',
