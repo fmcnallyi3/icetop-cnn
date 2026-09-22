@@ -30,7 +30,7 @@ def main(args):
         #gcd = f'{l3sim}/GCD/Level3_{ID}_GCD.i3.gz'
         #files = glob(f'{l3sim}/oldstructure/{ID}/Level3_IC86.2012_{ID}_Run??????.i3.gz')
         gcd = args.gcd_path
-        files = list(file_path.iterdir())
+        files = sorted(file_path.rglob('*.i3*'))
 
         if args.mc:
             mc_prefix = '/data/sim/IceTop/2012/generated/CORSIKA-ice-top'
