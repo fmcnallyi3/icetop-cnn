@@ -3,11 +3,11 @@
 # Create virtual environment
 eval `/cvmfs/icecube.opensciencegrid.org/py3-v4.3.0/setup.sh`
 unset PYTHONPATH
-python -m virtualenv $PWD/.venv
-source $PWD/.venv/bin/activate
+python -m virtualenv /data/user/$USER/.venv
+source /data/user/$USER/.venv/bin/activate
 pip install -U -r requirements.txt
 
-# Fix tensorflow https://commons.wikimedia.org/wiki/File:Tom_Lea_-_2000_Yard_Stare.jpg (blindly pasted from tensorflow install instructions)
+# Fix tensorflow (blindly pasted from tensorflow install instructions)
 pushd $(dirname $(python -c 'print(__import__("tensorflow").__file__)'))
 ln -sf ../nvidia/*/lib/*.so* .
 popd
@@ -20,13 +20,14 @@ mkdir -p $JUPYTER_ICETOP_CNN_KERNEL_DIR
 START_KERNEL="$JUPYTER_ICETOP_CNN_KERNEL_DIR/start-kernel.sh"
 KERNEL="$JUPYTER_ICETOP_CNN_KERNEL_DIR/kernel.json"
 
+# Populate the Jupyter Kernel File 
 cat <<EOF > $START_KERNEL
 #!/bin/sh
-source $PWD/.venv/bin/activate
+source /data/user/$USER/.venv/bin/activate
 export ICETOP_CNN_DIR=$PWD
 export ICETOP_CNN_DATA_DIR=/data/user/$USER/icetop-cnn
 export ICETOP_CNN_SCRATCH_DIR=/scratch/$USER/icetop-cnn
-exec $PWD/.venv/bin/python -m ipykernel_launcher -f \$1 2>/dev/null
+exec /data/user/$USER/.venv/bin/python -m ipykernel_launcher -f \$1 2>/dev/null
 EOF
 
 chmod +x $START_KERNEL
@@ -37,7 +38,7 @@ cat <<EOF > $KERNEL
         "$START_KERNEL",
         "{connection_file}"
     ],
-    "display_name": "IceTop-CNN",
+    "display_name": "IceTop-CNN", 
     "language": "python",
     "metadata": {
         "debugger": "true"
@@ -46,7 +47,8 @@ cat <<EOF > $KERNEL
 EOF
 
 # Create settings for VSCode
-mkdir $PWD/.vscode
+
+mkdir -p $PWD/.vscode
 cat <<EOF > $PWD/.vscode/settings.json
 {
     "files.exclude": {
@@ -59,13 +61,9 @@ cat <<EOF > $PWD/.vscode/settings.json
         "**/.venv/**": true,
     },
     "python.analysis.extraPaths": [
-        "$PWD/.venv/lib/python3.11/site-packages"
+        "/data/user/$USER/.venv/lib/python3.11/site-packages"
     ],
 }
 EOF
 
 echo "TensorFlow environment and JupyterHub kernel initialized!"
-
-
-
-

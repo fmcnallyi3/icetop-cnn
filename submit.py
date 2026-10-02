@@ -16,8 +16,8 @@ ERROR_MODEL_ALREADY_FOUND = 'Model folder already found with this name, but it i
 # Not necessary to check if ran on the cluster
 # Should check first before the rest of the code is parsed
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR', '')
-venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
-assert os.getenv('VIRTUAL_ENV') == venv_path, ERROR_ENVIRONMENT_NOT_ACTIVATED
+
+assert ('.venv') in os.getenv('VIRTUAL_ENV'), ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
 ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR')
@@ -64,7 +64,6 @@ def main(args):
         f'error = {os.path.join("condor", "errors", f"{args.model_name }.err")}',
         'notification = never',
         '',
-        f'+SingularityImage = "{os.path.join(os.sep, "data", "user", "fmcnally", "icetop-cnn", "tf.sif")}"',
         'should_transfer_files = YES',
         'when_to_transfer_output = ON_EXIT',
         f'initialdir = {ICETOP_CNN_DIR}',
@@ -73,7 +72,7 @@ def main(args):
         'request_memory = 12G',
         'request_gpus = 1',
         '',
-        'requirements = HasSingularity && GPUS_Capability',
+        'requirements = GPUS_Capability',
         '',
         'queue',
         ''
