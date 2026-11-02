@@ -131,6 +131,10 @@ def get_datasets(composition, mode, test=False):
 
 
 def create_or_restore_model(input_shapes):
+    # Seed all RNGs so runs are reproducible; different --seed values give
+    # genuinely independent models on the same dataset (study requirement).
+    if args.seed is not None:
+        tf.keras.utils.set_random_seed(args.seed)
     '''Creates or restores a model based on the command line arguments passed in by the user'''
 
     # User indicated that they would like to restore the model.
@@ -152,7 +156,7 @@ def train_model(model, training_dataset, validation_dataset):
 
     # Save model parameters and nuclei
     with open(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name, f'{args.model_name}.json'), 'w') as f:
-        json.dump({**cg.PREP, 'training_nuclei':args.composition, 'simdata':args.simdata}, f, indent=4)
+        json.dump({**cg.PREP, 'training_nuclei':args.composition, 'simdata':args.simdata, **({'seed':args.seed} if args.seed is not None else {})}, f, indent=4)
 
     # Let 'er rip
     model.fit(
@@ -234,6 +238,9 @@ if __name__ == '__main__':
         choices=['comp', 'energy'],
         required=True,
         help='A list of one or more desired model outputs')
+    p.add_argument(
+        '--seed', dest='seed', type=int, default=None,
+        help='Random seed; different values give independent models on the same dataset')
     p.add_argument(
         '-t', '--test', action='store_true',
         help='Run the script off the cluster with a limited dataset')

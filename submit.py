@@ -57,7 +57,7 @@ def main(args):
     lines = [
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
         f'arguments = "{" ".join(sys.argv[1:])}"',
-        f'environment = "ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
+        f'environment = "PATH=/usr/bin:/bin ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
         f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py',
         'getenv = True',
         '',
@@ -78,7 +78,8 @@ def main(args):
         'request_memory = 8G',
         'request_gpus = 1',
         '',
-        'requirements = HasSingularity',
+        # Old cards only: the TF/cuDNN stack cannot initialize on compute capability >= 8.0
+        'requirements = HasSingularity && GPUs_Capability < 8.0',
         '',
         'queue',
         ''
@@ -167,6 +168,9 @@ if __name__ == '__main__':
         choices=['comp', 'energy'],
         required=True,
         help='A list of one or more desired model outputs')
+    p.add_argument(
+        '--seed', dest='seed', type=int, default=None,
+        help='Random seed; forwarded to trainer.py for independent models on the same dataset')
     p.add_argument(
         '-t', '--test', action='store_true',
         help='Run the script off the cluster on a limited dataset for a maximum of 10 epochs')

@@ -11,7 +11,7 @@ from pathlib import Path
 from pysubmit import pysubmit
 
 def main(args):
-    gcd_path = Path(args.gcd_path)
+    gcd_path = Path(args.gcd_path) if args.gcd_path else None
     file_path = Path(args.inp_path.lstrip())
 
     #Create the output folder and parse the sim name
@@ -27,9 +27,19 @@ def main(args):
     c = comp[args.composition]    
 
     for ID in c:
-        #gcd = f'{l3sim}/GCD/Level3_{ID}_GCD.i3.gz'
-        #files = glob(f'{l3sim}/oldstructure/{ID}/Level3_IC86.2012_{ID}_Run??????.i3.gz')
+        # Auto-resolve the per-simset GCD from the input tree unless one was given.
+        # Weak spot fix: a single -g GCD is wrong for multi-primary extractions,
+        # every sim set has its own GCD (Level3_<simset>_GCD.i3.gz).
         gcd = args.gcd_path
+        if not gcd:
+            # simset comes from the <simset>_v1 directory itself; input may
+            # point at the simset root or a nested energy-bin directory
+            base = file_path
+            if '_' not in base.name:
+                base = base.parent
+            simset = base.name.split('_')[0]
+            gcd_dir = base.parents[2] / 'GCD'
+            gcd = str(gcd_dir / f'Level3_{simset}_GCD.i3.gz')
         files = sorted(file_path.rglob('*.i3*'))
 
         if args.mc:
@@ -46,7 +56,9 @@ def main(args):
             if args.test:
                 batch = batch[:5]
             batched_files = ' '.join(batch)            
-            out_file = f'{args.out_dir}/sim_{sim_name}_{i:03}.npy'
+            # Weak spot fix: include the sim set ID so batches from different
+            # primaries in one extraction cannot overwrite each other.
+            out_file = f'{args.out_dir}/sim_{sim_name}_{ID}_{i:03}.npy'
 
             if args.mc:
                 exe = exe.replace('extractor', 'mc_extractor')
@@ -82,7 +94,7 @@ if __name__ == "__main__":
         default=False, action='store_true',
         help='Option for running test off cluster')
     #Arguments added by yours truly!
-    p.add_argument('-g', '--gcdPath', dest='gcd_path', type=str,
+    p.add_argument('-g', '--gcdPath', dest='gcd_path', type=str, default=None,
         help='Path to the GCD file')
     p.add_argument('-i', '--inputPath', dest='inp_path', type=str,
         help='Path to the input files')
