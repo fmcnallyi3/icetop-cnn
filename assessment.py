@@ -16,14 +16,6 @@ comp_conversion = {'p':1, 'h':4, 'o':16, 'f':56}
 # so each model is converted to .h5 once, inside the container.
 SIF_PATH = '/data/user/fmcnally/icetop-cnn/tf.sif'
 
-# Short labels for models and datasets. Rename here; anything not listed keeps its full name.
-LABELS = {}
-
-
-def label(*parts):
-    '''Builds a short legend label from the LABELS map, e.g. 'p-model [Fe sim]'.'''
-    return ' '.join(LABELS.get(p, p) for p in parts)
-
 
 def ensure_h5(models_folder_path, model_name):
     '''Converts a container-era .keras model to .h5 so this venv can load it.'''

@@ -40,7 +40,12 @@ def main(args):
             simset = base.name.split('_')[0]
             gcd_dir = base.parents[2] / 'GCD'
             gcd = str(gcd_dir / f'Level3_{simset}_GCD.i3.gz')
-        files = sorted(f for f in file_path.rglob('*.i3*') if '_ITonly' not in f.parts)
+            # Newer productions (IC86.2018+) ship one year-wide GeoCalib file
+            if not Path(gcd).exists():
+                geo = sorted(glob(str(gcd_dir / '*.i3.gz')))
+                if len(geo) == 1:
+                    gcd = geo[0]
+        files = sorted(f for f in file_path.rglob('*.i3*') if not any(x in f.parts for x in ('_ITonly', 'incomplete_obsolete')))
 
         if args.mc:
             mc_prefix = '/data/sim/IceTop/2012/generated/CORSIKA-ice-top'

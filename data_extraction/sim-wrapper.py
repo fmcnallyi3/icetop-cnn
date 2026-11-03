@@ -27,10 +27,9 @@ def getYear(path):
     print("Here are the available years:")
     availableYears = []
     for folder in allData:
-        if(folder[:4] == "IC86"):
-            if(folder[-1] == "2" or folder[-1] == "5"): #Hardcoded to avoid getting any weird edge cases
-                availableYears.append(folder)
-                print(folder)
+        if(folder.startswith("IC86.")):
+            availableYears.append(folder)
+            print(folder)
 
     #Checks the user's input to get a valid year
     wantedYear = ""
@@ -137,6 +136,12 @@ def getGCD(path, sim):
         if(sim in GCD):
             return(updatePath(path, GCD))
 
+    # Newer productions (IC86.2018+) have a single year-wide GeoCalib file instead
+    # of per-simset Level3_<simset>_GCD files; use it when it is the only choice.
+    geo = [g for g in allGCD if g.endswith(".i3.gz")]
+    if(len(geo) == 1):
+        return(updatePath(path, geo[0]))
+
     #Needs better error handling, but this should NEVER occur
     return("error uh oh LOL")
 
@@ -189,8 +194,12 @@ def main(args):
         #print(data_path)
         GCD_path = getGCD(GCD_path, simInfo[1])
     
-        #Run sim-maker.py
-        subprocess.run([f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py", f"-g {GCD_path}", f"-i {data_path}", f"-o {outPath}"])
+        #Run sim-maker.py (pass the composition so output files get the right simset ID)
+        compFlag = {"p": "proton", "He": "helium", "O": "oxygen", "Fe": "iron"}.get(composition)
+        cmd = [f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py", f"-g {GCD_path}", f"-i {data_path}", f"-o {outPath}"]
+        if(compFlag):
+            cmd.append(f"-c {compFlag}")
+        subprocess.run(cmd)
 
     #Now run sim-converter.py if that argument was passed
     if(args.convert == True):
