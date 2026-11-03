@@ -18,7 +18,26 @@ import numpy as np
 
 from icecube import icetray
 from icecube.icetray import I3Tray
-from icecube.frame_object_diff.segments import uncompress
+from icecube.frame_object_diff.segments import uncompress as _uncompress_segment
+
+
+def uncompress(tray, name):
+    # Newer productions (IC86.2018+) ship full geometry frames instead of
+    # I3GeometryDiff; the stock uncompress segment KeyErrors on them. Detect
+    # the layout from the first file and only add the segment when needed.
+    from icecube import dataio
+    from icecube.icetray import I3Frame
+    needs_diff = False
+    # peek: check the first input file for a geometry diff frame
+    import sys
+    peek = dataio.I3File(str(sys.argv[sys.argv.index('-f') + 1].split()[0]))
+    while peek.more():
+        fr = peek.pop_frame()
+        if fr.Stop == I3Frame.Geometry:
+            needs_diff = 'I3GeometryDiff' in fr
+            break
+    if needs_diff:
+        _uncompress_segment(tray, name)
 
 
 
@@ -127,12 +146,15 @@ class extraction(icetray.I3ConditionalModule):
 
     def Physics(self, frame):
         # Must have 3 hits
-        if not frame['QFilterMask']['IceTopSTA3_12'].condition_passed:
+        sta3 = next((k for k in ('IceTopSTA3_12', 'IceTopSTA3_13') if k in frame['QFilterMask']), None)
+        sta5 = next((k for k in ('IceTopSTA5_12', 'IceTopSTA5_13') if k in frame['QFilterMask']), None)
+        if sta3 is None or not frame['QFilterMask'][sta3].condition_passed:
             self.PushFrame(frame)
             return
 
         data = [[{}, {}], [{}, {}]]
-        pulse_frames = ['OfflineIceTopHLCTankPulses', 'OfflineIceTopSLCTankPulses']
+        slc = next((k for k in ('OfflineIceTopSLCTankPulses', 'OfflineIceTopSLCVEMPulses') if k in frame.keys()), None)
+        pulse_frames = ['OfflineIceTopHLCTankPulses', slc]
         for i, (data_pair, pulse_frame) in enumerate(zip(data, pulse_frames)):
             pulse_map = frame[pulse_frame]
             for om, pulses in pulse_map.items():
@@ -186,9 +208,19 @@ class extraction(icetray.I3ConditionalModule):
         """ CODE GOES HERE """
 
         # Data/Quality cuts
-        self.passed_STA5 += [frame['QFilterMask']['IceTopSTA5_12'].condition_passed]
-        self.uncontained_cut += [frame['IT73AnalysisIceTopQualityCuts']['IceTop_StandardFilter'] and not frame['IT73AnalysisIceTopQualityCuts']['IceTopMaxSignalInside']]
-        self.quality_cut += [all(frame['IT73AnalysisIceTopQualityCuts'].values()) and np.pi - frame['Laputop'].dir.theta <= 40 * np.pi/180]
+        if sta5 is not None:
+            self.passed_STA5 += [frame['QFilterMask'][sta5].condition_passed]
+        else:
+            self.passed_STA5 += [sta3 is not None and frame['QFilterMask'][sta3].condition_passed]
+        if 'IT73AnalysisIceTopQualityCuts' in frame.keys():
+            cuts = frame['IT73AnalysisIceTopQualityCuts']
+            self.uncontained_cut += [cuts['IceTop_StandardFilter'] and not cuts['IceTopMaxSignalInside']]
+        else:
+            self.uncontained_cut += [sta3 is not None and frame['QFilterMask'][sta3].condition_passed]
+        if 'IT73AnalysisIceTopQualityCuts' in frame.keys() and 'Laputop' in frame.keys():
+            self.quality_cut += [all(frame['IT73AnalysisIceTopQualityCuts'].values()) and np.pi - frame['Laputop'].dir.theta <= 40 * np.pi/180]
+        else:
+            self.quality_cut += [sta3 is not None and frame['QFilterMask'][sta3].condition_passed]
 
         self.PushFrame(frame)
         return

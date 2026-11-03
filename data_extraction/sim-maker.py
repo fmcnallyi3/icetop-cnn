@@ -40,7 +40,7 @@ def main(args):
             simset = base.name.split('_')[0]
             gcd_dir = base.parents[2] / 'GCD'
             gcd = str(gcd_dir / f'Level3_{simset}_GCD.i3.gz')
-        files = sorted(file_path.rglob('*.i3*'))
+        files = sorted(f for f in file_path.rglob('*.i3*') if '_ITonly' not in f.parts)
 
         if args.mc:
             mc_prefix = '/data/sim/IceTop/2012/generated/CORSIKA-ice-top'
@@ -68,7 +68,8 @@ def main(args):
 
             exelines = f'{exe} -g {gcd} -f {batched_files} -o {out_file}'
             
-            pysubmit(exelines, outdir=f'./condor', test=args.test)
+            pysubmit(exelines, outdir=f'./condor', test=args.test,
+                      sublines=['request_memory = 8 GB'])
 
             if args.test:
                 break
