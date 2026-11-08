@@ -6,6 +6,15 @@ import os
 import subprocess
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cycler
+
+# 10 default colors are too few for the full model x dataset grid;
+# build a 30-color cycle from tab20 + tab20b once, notebook-wide.
+# 100 entries: golden-ratio hue step so adjacent legend entries are always
+# far apart in hue, not near-identical neighbors like a linear sweep.
+# ponytail: hsv was a hue wheel - golden-ratio walks collide at Fibonacci steps (13, 26...). tab20+b+c are 60 designed-distinct qualitative colors, enough for any legend this repo plots.
+plt.rcParams['axes.prop_cycle'] = cycler(color=[plt.cm.tab20(i % 20) for i in range(20)] + [plt.cm.tab20b(i % 20) for i in range(20)] + [plt.cm.tab20c(i % 20) for i in range(20)])
 
 from utils import data_prep, files, get_event_parameters, get_training_assessment_cut, load_detector_array
 
@@ -57,12 +66,25 @@ def predict(models_folder_path, model_parameters, model_name, dataset):
     return np.concatenate(out)
 
 
+def model_weights_exist(models_folder_path, model_name):
+    '''True when saved weights (.h5 or .keras) exist for a model.'''
+    for ext in ('.h5', '.keras'):
+        if os.path.exists(os.path.join(models_folder_path, model_name, model_name + ext)):
+            return True
+    return False
+
+
 def assess_models(model_parameters, DATASETS, eps, models_folder_path, reconstructions_folder_path):
     '''Returns (reconstructions, cuts), each keyed by (model, dataset) pairs.
     Cache-first: existing cross predictions and training-time reconstructions are loaded,
     missing pairs are predicted and cached.'''
     reconstructions, cuts = {}, {}
     for model_name, dataset in [(m, d) for m in model_parameters for d in DATASETS]:
+        # Skip models with no saved weights (e.g. still training) instead of
+        # crashing the whole assessment inside the apptainer conversion step.
+        if not model_weights_exist(models_folder_path, model_name):
+            print(f'WARNING: No saved weights for {model_name} (training in progress?); skipping model.')
+            continue
         model_prep = model_parameters[model_name]
         ep = eps[dataset]
 

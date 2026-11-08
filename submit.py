@@ -75,7 +75,7 @@ def main(args):
         'when_to_transfer_output = ON_EXIT',
         f'initialdir = {ICETOP_CNN_DIR}',
         '',
-        'request_memory = 8G',
+        'request_memory = 20G',
         'request_gpus = 1',
         '',
         # Old cards only: the TF/cuDNN stack cannot initialize on compute capability >= 8.0

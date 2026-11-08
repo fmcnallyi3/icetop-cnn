@@ -20,6 +20,11 @@ def updatePath(currPath, newArg):
     return(os.path.join(currPath, newArg))
 
 #getYear function, gets a selection of all the valid years and gets the user input on the wanted year
+#Only list folders that actually hold cosmic-ray primaries; avoids dead ends
+#like 2016 (GCD only), gamma-only years, oldstructure and temp dirs.
+def hasPrim(path):
+    return any(os.path.isdir(os.path.join(path, prim)) for prim in ('p', 'He', 'O', 'Fe'))
+
 def getYear(path):
     allData = os.listdir(path)
 
@@ -27,7 +32,8 @@ def getYear(path):
     print("Here are the available years:")
     availableYears = []
     for folder in allData:
-        if(folder.startswith("IC86.")):
+        if(folder.startswith("IC86.") and any(hasPrim(updatePath(updatePath(path, folder), m))
+                                              for m in os.listdir(updatePath(path, folder)) if not "GCD" in m)):
             availableYears.append(folder)
             print(folder)
 
@@ -52,7 +58,7 @@ def getInteractionModel(path):
     #Tells the user what interaction models are available
     availableModels = []
     for model in allModels:
-        if not("GCD" in model):
+        if not("GCD" in model) and hasPrim(updatePath(path, model)):
             print(model)
             availableModels.append(model)
 
@@ -74,7 +80,7 @@ def getComposition(path):
 
     availableComps = []
     for comp in allCompositions:
-        if (len(comp) <= 2): #This causes gamma folder to be ignored, irrelevant?
+        if comp in ("p", "He", "O", "Fe") and os.path.isdir(updatePath(path, comp)):
             print(comp)
             availableComps.append(comp)
 
@@ -84,11 +90,13 @@ def getComposition(path):
         
     wantedComp = ""
     while(True):
-        wantedComp = input("Please enter the composition you want to get data from: ")
+        wantedComp = input("Please enter the composition you want to get data from (or 'all' for every primary listed): ")
         if(wantedComp in availableComps):
             break
-        else:
-            print("Invalid selection was made.")
+        # 'all' expands to every primary present; main() makes one selection per primary
+        if(wantedComp.lower() == "all" and availableComps):
+            return("all")
+        print("Invalid selection was made.")
     return(wantedComp)
 
 #Gets the simulation set
@@ -170,36 +178,48 @@ def main(args):
         subprocess.run([f"{os.getcwd()}/./sim-maker.py", f"-g {GCD_path}", f"-i {data_path}", f"-o {outPath}", "--test"])
     else:
         data_path = os.path.join('/','data', 'ana', 'CosmicRay', 'IceTop_level3', 'sim')
-    
-        #Year
-        year = getYear(data_path)
-        data_path = updatePath(data_path, year)
-        GCD_path = updatePath(data_path, "GCD")
-    
-        #Model
-        model = getInteractionModel(data_path)
-        data_path = updatePath(data_path, model)
-    
-        #Composition, needs the extra protection if the oldstructure path was chosen
-        composition = getComposition(data_path)
-        if(composition == "no"):
-            print("oldstructure detected?!?!")
-        else:
-            data_path = updatePath(data_path, composition)
-    
-        #Finalizes the paths 
-        simInfo = getSimSet(data_path)
-        data_path = simInfo[0]
-         
-        #print(data_path)
-        GCD_path = getGCD(GCD_path, simInfo[1])
-    
-        #Run sim-maker.py (pass the composition so output files get the right simset ID)
-        compFlag = {"p": "proton", "He": "helium", "O": "oxygen", "Fe": "iron"}.get(composition)
-        cmd = [f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py", f"-g {GCD_path}", f"-i {data_path}", f"-o {outPath}"]
-        if(compFlag):
-            cmd.append(f"-c {compFlag}")
-        subprocess.run(cmd)
+        compFlags = {"p": "proton", "He": "helium", "O": "oxygen", "Fe": "iron"}
+
+        # One dataset can hold many selections (every primary of a year, several
+        # years, ...). sim-maker numbers batches per out dir and the converter
+        # globs by simset ID, so repeated runs into the same folder merge cleanly.
+        while(True):
+            #Year
+            year = getYear(data_path)
+            sel_path = updatePath(data_path, year)
+            gcd_base = updatePath(sel_path, "GCD")
+
+            #Model
+            model = getInteractionModel(sel_path)
+            sel_path = updatePath(sel_path, model)
+
+            #Composition, needs the extra protection if the oldstructure path was chosen
+            composition = getComposition(sel_path)
+            comps = ["p", "He", "O", "Fe"] if composition == "all" else [composition]
+            if(composition == "no"):
+                print("oldstructure detected?!?!")
+                comps = []
+
+            for comp in comps:
+                comp_path = updatePath(sel_path, comp)
+
+                #Finalizes the paths
+                simInfo = getSimSet(comp_path)
+                data_sel = simInfo[0]
+
+                GCD_path = getGCD(gcd_base, simInfo[1])
+
+                #Run sim-maker.py (pass the composition so output files get the right simset ID)
+                cmd = [f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py", f"-g {GCD_path}", f"-i {data_sel}", f"-o {outPath}"]
+                if(comp in compFlags):
+                    cmd.append(f"-c {compFlags[comp]}")
+                print("Running:", " ".join(cmd))
+                if(not args.dryrun):
+                    subprocess.run(cmd)
+
+            again = input("Add another selection to this dataset? [y/N] ")
+            if(again.strip().lower() != "y"):
+                break
 
     #Now run sim-converter.py if that argument was passed
     if(args.convert == True):
@@ -214,5 +234,7 @@ if __name__ == "__main__":
     
     p.add_argument('-c', '--convert', dest="convert", default=False, action='store_true',
                   help="Run sim-converter.py after extraction")
+    p.add_argument('-d', '--dryrun', dest="dryrun", default=False, action='store_true',
+                  help="Print the sim-maker commands without running them")
     
     main(p.parse_args())

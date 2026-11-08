@@ -17,12 +17,15 @@ if not os.getenv('_CONDOR_SLOT'):
 # Can remove safely, just makes for cleaner output
 # Should be set before importing TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+# Do not preallocate all GPU memory; big datasets OOM the copy to an
+# eager constant otherwise (Dst tensor is not initialized).
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 import numpy as np
 import tensorflow as tf
 
 import config as cg
-from utils import data_prep, get_preprocessed, get_training_assessment_cut
+from utils import data_prep, files, get_event_parameters, load_detector_array, get_preprocessed, get_training_assessment_cut
 from model import get_compiled_model
 
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR')
@@ -49,10 +52,20 @@ def main():
     
 
 def get_training_datasets():
-    '''Prepares tensorflow datasets used for training'''
+    """Prepares streaming tensorflow datasets used for training.
 
-    # Load data used for training/testing in its entirety
-    model_inputs, event_parameters = get_datasets(args.composition, 'training', args.test)
+    The full detector array for multi-million event datasets does not fit in
+    slot memory. Instead: event parameters load whole (small), and detector
+    data streams one simdata batch file at a time. Cuts and data_prep are
+    applied per file exactly as the whole-load path applies them, and a global
+    index permutation preserves full-event shuffle, so training semantics are
+    unchanged. Peak RAM is one batch file plus parameters.
+    """
+
+    simdata_folder_path = args.simdata
+
+    # Event parameters: small, load whole. Cuts need global event order.
+    event_parameters = get_event_parameters(simdata_folder_path, composition=args.composition, test=args.test)
 
     # One-hot encode the composition data if composition is to be predicted
     if 'comp' in args.predict:
@@ -67,30 +80,97 @@ def get_training_datasets():
     # Get number of events from an arbitrary key
     num_events = event_parameters['file_info'].shape[0]
 
-    # Create training / validation split
+    # Assessment cut first: it seeds np.random(1148) internally, so the
+    # training/validation split drawn after it is identical for every seed.
+    training_assessment_cut = get_training_assessment_cut(event_parameters, 'training', cg.PREP)
     training_cut = np.random.rand(num_events) > cg.VALIDATION_SPLIT
     validation_cut = np.logical_not(training_cut)
 
-    # Assign training data
-    training_inputs = [model_input[training_cut] for model_input in model_inputs.values()]
-    training_outputs = [event_parameters[output][training_cut] for output in args.predict]
+    train_rows = np.where(training_cut & training_assessment_cut)[0]
+    val_rows = np.where(validation_cut & training_assessment_cut)[0]
 
-    # Assign validation data
-    validation_inputs = [model_input[validation_cut] for model_input in model_inputs.values()]
-    validation_outputs = [event_parameters[output][validation_cut] for output in args.predict]
+    # File layout: icetop and event_parameters files share order and row counts
+    batch_files = files(simdata_folder_path, 'icetop', composition=args.composition, test=args.test)
+    infill_files = files(simdata_folder_path, 'infill', composition=args.composition, test=args.test) if cg.PREP['infill'] else None
 
-    input_shapes = {input_name: model_input.shape[1:] for input_name, model_input in model_inputs.items()}
+    # Row offset of each file (cheap: event parameter files are small)
+    ep_files = files(simdata_folder_path, 'event_parameters', composition=args.composition, test=args.test)
+    counts = [len(np.load(ef, allow_pickle=True).item()['energy']) for ef in ep_files]
+    boundaries = np.cumsum([0] + counts)
+    file_of_row = np.searchsorted(boundaries[1:], np.arange(num_events), side='right')
 
-    # This format for organizing the training/validation data allows for unlimited inputs/outputs
-    # To adjust for multiple outputs, convert to a tuple
-    # Also returns the shapes of all inputs so that we can use the Keras functional API
+    # Prep detector files once at startup and keep only the prepared result.
+    # Raw files are float64 with 8 tank channels (~6.4 kB/event, ~38 GB for
+    # 6M events); data_prep merges to the 4 model channels, so casting the
+    # result to float32 gives ~1.6 kB/event (~9.6 GB total). All prep ops are
+    # per-event with fixed constants, so per-file prep is identical to
+    # per-batch prep. Batches then gather from RAM with no TF-side copy, and
+    # epochs run at RAM speed. mmap streaming was tried first: random page
+    # reads over ceph cost ~20 min/epoch and jobs hit the 2 h slot limit
+    # before early stopping fired.
+    detector_mmaps = {
+        'icetop': [data_prep({'icetop': np.load(bf)}, cg.PREP)['icetop'].astype('float32') for bf in batch_files],
+    }
+    if infill_files:
+        detector_mmaps['infill'] = [data_prep({'infill': np.load(bf)}, cg.PREP)['infill'].astype('float32') for bf in infill_files]
+
+    # Optional reco input (zenith) comes from parameters, already in RAM
+    reco_inputs = {}
+    if cg.PREP['reco']:
+        zenith = np.pi - event_parameters[f"{cg.PREP['reco']}_dir"].transpose()[0].astype('float32')
+        if cg.PREP['normed']:
+            zenith /= np.amax(zenith)
+        reco_inputs[cg.PREP['reco']] = zenith
+
+    def load_rows(rows):
+        """Gather detector rows for the given global indices, reading each
+        involved batch file once. Returns dict of prepared input arrays."""
+        # Gather per file (file order), then undo the regrouping so inputs
+        # line up with outputs row-for-row. Without the reorder, labels are
+        # permuted within each batch and the model only learns the mean.
+        file_ids = file_of_row[rows]
+        by_file = np.argsort(file_ids, kind='stable')
+        back = np.empty_like(by_file)
+        back[by_file] = np.arange(len(rows))
+        parts = {name: [] for name in (['icetop'] + (['infill'] if infill_files else []))}
+        for fi in np.unique(file_ids):
+            pos = by_file[file_ids[by_file] == fi]
+            local = rows[pos] - boundaries[fi]
+            parts['icetop'].append(detector_mmaps['icetop'][fi][local])
+            if infill_files:
+                parts['infill'].append(detector_mmaps['infill'][fi][local])
+        out = {name: np.concatenate(pl)[back] for name, pl in parts.items() if pl}
+        out.update({name: arr[rows] for name, arr in reco_inputs.items()})
+        return out
+
+    def training_gen():
+        order = np.random.permutation(train_rows)
+        for s0 in range(0, len(order), cg.BATCH_SIZE):
+            b = order[s0:s0 + cg.BATCH_SIZE]
+            inputs = load_rows(b)
+            outputs = [event_parameters[output][b] for output in args.predict]
+            yield (tuple(inputs.values()), tuple(outputs))
+
+    def validation_gen():
+        order = np.random.permutation(val_rows)
+        for s0 in range(0, len(order), cg.BATCH_SIZE):
+            b = order[s0:s0 + cg.BATCH_SIZE]
+            inputs = load_rows(b)
+            outputs = [event_parameters[output][b] for output in args.predict]
+            yield (tuple(inputs.values()), tuple(outputs))
+
+    # Shapes from a probe batch (also primes the file layout)
+    probe_rows = train_rows[:cg.BATCH_SIZE]
+    probe = load_rows(probe_rows)
+    input_shapes = {name: arr.shape[1:] for name, arr in probe.items()}
+    sig = (
+        tuple(tf.TensorSpec((None,)+probe[name].shape[1:], probe[name].dtype) for name in probe),
+        tuple(tf.TensorSpec((None,)+event_parameters[output].shape[1:], event_parameters[output].dtype) for output in args.predict),
+    )
+
     return (
-        # Training data
-        tf.data.Dataset.from_tensor_slices(
-            (tuple(training_inputs), tuple(training_outputs))).shuffle(np.sum(training_cut)).batch(cg.BATCH_SIZE),
-        # Validation data
-        tf.data.Dataset.from_tensor_slices(
-            (tuple(validation_inputs), tuple(validation_outputs))).batch(cg.BATCH_SIZE),
+        tf.data.Dataset.from_generator(training_gen, output_signature=sig).prefetch(2),
+        tf.data.Dataset.from_generator(validation_gen, output_signature=sig),
     ), input_shapes
 
 
