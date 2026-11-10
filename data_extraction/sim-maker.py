@@ -52,6 +52,10 @@ def main(args):
             files = glob(f'{mc_prefix}/{ID}/topsimulator/*/*.i3.gz')
         files.sort()
         
+        # empty dir guard: version dirs / filtered dirs can hold zero extractable files
+        if not files:
+            print(f'No extractable .i3 files under {file_path}; skipping.')
+            return
         if not(".i3" in str(files[0])):
             files = files[1:]
 

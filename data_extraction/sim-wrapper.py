@@ -19,6 +19,49 @@ TO DO:
 def updatePath(currPath, newArg):
     return(os.path.join(currPath, newArg))
 
+class Back(Exception):
+    """Raised when the user backs out of a prompt; redo the selection pass."""
+
+
+# One picker for every prompt: numbered list, answer by number(s), name(s),
+# 'a' = all, 'b' = back. Names still accepted so old habits keep working.
+_autoall = False  # 'aa' seen: answer every remaining prompt with all options
+
+
+def pickMulti(label, options, aliases=None):
+    global _autoall
+    options = list(options)
+    print(f"Available {label}:")
+    for i, opt in enumerate(options, 1):
+        print(f"[{i}] {opt}")
+    while(True):
+        if(_autoall):
+            return options
+        raw = input(f"Pick {label} (numbers/names, space-separated, 'a'=all, 'b'=back, 'aa'=all from here on): ").strip()
+        if(raw.lower() in ("b", "back")):
+            raise Back()
+        if(raw.lower() in ("a", "all")):
+            return options
+        if(raw.lower() == "aa"):
+            _autoall = True
+            return options
+        picks = []
+        for tok in raw.replace(",", " ").split():
+            tok = tok.strip()
+            if(tok.isdigit() and 1 <= int(tok) <= len(options)):
+                picks.append(options[int(tok) - 1])
+            else:
+                match = [o for o in options if o.lower() == tok.lower()]
+                if not match and aliases:
+                    match = [o for o, al in aliases.items() if tok.lower() in [a.lower() for a in al] and o in options]
+                picks.append(match[0] if len(match) == 1 else None)
+                if len(match) != 1:
+                    picks = None
+                    break
+        if(picks):
+            return(list(dict.fromkeys(picks)))
+        print("Invalid selection was made.")
+
 #getYear function, gets a selection of all the valid years and gets the user input on the wanted year
 #Only list folders that actually hold cosmic-ray primaries; avoids dead ends
 #like 2016 (GCD only), gamma-only years, oldstructure and temp dirs.
@@ -26,109 +69,52 @@ def hasPrim(path):
     return any(os.path.isdir(os.path.join(path, prim)) for prim in ('p', 'He', 'O', 'Fe'))
 
 def getYear(path):
-    allData = os.listdir(path)
+    availableYears = [folder for folder in os.listdir(path)
+                      if folder.startswith("IC86.") and any(hasPrim(updatePath(updatePath(path, folder), m))
+                                                            for m in os.listdir(updatePath(path, folder)) if not "GCD" in m)]
+    picked = pickMulti("years", availableYears)
+    # tolerate years typed without the IC86. prefix
+    return([y if "IC86." in y else "IC86." + y for y in picked])
 
-    #Tells the user what years are available
-    print("Here are the available years:")
-    availableYears = []
-    for folder in allData:
-        if(folder.startswith("IC86.") and any(hasPrim(updatePath(updatePath(path, folder), m))
-                                              for m in os.listdir(updatePath(path, folder)) if not "GCD" in m)):
-            availableYears.append(folder)
-            print(folder)
-
-    #Checks the user's input to get a valid year
-    wantedYear = ""
-    while(True):
-        wantedYear = input("Please enter the year that you want to get data from: ")
-        if not("IC86." in wantedYear):
-            print("IC86. has been added to your input! If prompted to input selection again, please include IC86. at the front of your response.")
-            wantedYear = "IC86." + wantedYear
-        if(wantedYear in availableYears):
-              break
-        else:
-            print("Invalid selection was made.")
-    print()
-    return(wantedYear)
-
-#Gets the interaction model
+#Gets the interaction model(s)
 def getInteractionModel(path):
-    allModels = os.listdir(path)
-
-    #Tells the user what interaction models are available
-    availableModels = []
-    for model in allModels:
-        if not("GCD" in model) and hasPrim(updatePath(path, model)):
-            print(model)
-            availableModels.append(model)
-
-    #Checks the user's input to get a valid model
-    wantedModel = ""
-    while(True):
-        wantedModel = input("Please enter the model you want to get data from: ")
-        if(wantedModel in availableModels):
-            break
-        else:
-            print("Invalid selection was made.")
-            
-    print()
-    return(wantedModel)
+    availableModels = [model for model in os.listdir(path)
+                       if not("GCD" in model) and hasPrim(updatePath(path, model))]
+    return(pickMulti("interaction models", availableModels))
 
 #Gets the composition
 def getComposition(path):
-    allCompositions = os.listdir(path)
-
-    availableComps = []
-    for comp in allCompositions:
-        if comp in ("p", "He", "O", "Fe") and os.path.isdir(updatePath(path, comp)):
-            print(comp)
-            availableComps.append(comp)
+    availableComps = [comp for comp in os.listdir(path)
+                      if comp in ("p", "He", "O", "Fe") and os.path.isdir(updatePath(path, comp))]
 
     #The oldstructure folder doesn't have any compositions like this, so this can be ignored if that path was chosen
     if(len(availableComps) == 0):
-        return("no")
-        
-    wantedComp = ""
-    while(True):
-        wantedComp = input("Please enter the composition you want to get data from (or 'all' for every primary listed): ")
-        if(wantedComp in availableComps):
-            break
-        # 'all' expands to every primary present; main() makes one selection per primary
-        if(wantedComp.lower() == "all" and availableComps):
-            return("all")
-        print("Invalid selection was made.")
-    return(wantedComp)
+        return([])
 
-#Gets the simulation set
+    picked = pickMulti("compositions", availableComps,
+                       aliases={"p": ["proton"], "He": ["helium"], "O": ["oxygen"], "Fe": ["iron"]})
+    # common long names map to the folder names
+    alias = {"proton": "p", "helium": "He", "oxygen": "O", "iron": "Fe"}
+    return([alias.get(pv.lower(), pv) for pv in picked])
+
+#Gets the simulation set(s). Each simset may nest a version level; versions
+#are chosen per simset (multi-select works there too). Returns [path, name] pairs.
 def getSimSet(path):
-    allSims = os.listdir(path)
+    allSims = sorted(os.listdir(path))
+    picked = []
 
-    #All simulation sets will be valid, so no parsing array needs to be made
-    for sim in allSims:
-        print(sim)
-
-    wantedSim = ""
-    while(True):
-        wantedSim = input("Please enter the simulation set you want to get data from: ")
-        if(wantedSim in allSims):
-            break
-        else:
-            print("Invalid selection was made.")
-    newPath = updatePath(path, wantedSim)
-    newPathContents = os.listdir(newPath)
-    if not(".i3" in newPathContents[0]):
-        for ver in newPathContents:
-            print(ver)
-            
-        wantedVer = ""
-        while(True):
-            wantedVer = input("Please enter the version you want to select: ")
-            if(wantedVer in newPathContents):
-                break
-            else:
-                print("Invalid selection was made.")
-        newPath = updatePath(newPath, wantedVer)
-    return [newPath, wantedSim]
+    # 'a' at any version prompt means: stop asking, take every version of every
+    # remaining simset too (one 'a' covers the whole level instead of N prompts).
+    sims = pickMulti("simulation sets", allSims)
+    for wantedSim in sims:
+        newPath = updatePath(path, wantedSim)
+        newPathContents = sorted(os.listdir(newPath))
+        if(".i3" in newPathContents[0]):
+            picked.append([newPath, wantedSim])
+            continue
+        for ver in pickMulti(f"versions of {wantedSim}", newPathContents):
+            picked.append([updatePath(newPath, ver), wantedSim])
+    return picked
             
 
 #Gets the path to the GCD file
@@ -180,46 +166,63 @@ def main(args):
         data_path = os.path.join('/','data', 'ana', 'CosmicRay', 'IceTop_level3', 'sim')
         compFlags = {"p": "proton", "He": "helium", "O": "oxygen", "Fe": "iron"}
 
-        # One dataset can hold many selections (every primary of a year, several
-        # years, ...). sim-maker numbers batches per out dir and the converter
-        # globs by simset ID, so repeated runs into the same folder merge cleanly.
+        # Every step accepts numbers, names, several picks, or 'a'; 'b' backs out
+        # and redoes the whole selection pass (safe: nothing runs until you
+        # confirm the plan). sim-maker numbers batches per out dir and the
+        # converter globs by simset ID, so all runs merge into one dataset.
         while(True):
-            #Year
-            year = getYear(data_path)
-            sel_path = updatePath(data_path, year)
-            gcd_base = updatePath(sel_path, "GCD")
+            plan = []
+            try:
+                for year in getYear(data_path):
+                    year_path = updatePath(data_path, year)
+                    gcd_base = updatePath(year_path, "GCD")
 
-            #Model
-            model = getInteractionModel(sel_path)
-            sel_path = updatePath(sel_path, model)
+                    for model in getInteractionModel(year_path):
+                        model_path = updatePath(year_path, model)
 
-            #Composition, needs the extra protection if the oldstructure path was chosen
-            composition = getComposition(sel_path)
-            comps = ["p", "He", "O", "Fe"] if composition == "all" else [composition]
-            if(composition == "no"):
-                print("oldstructure detected?!?!")
-                comps = []
+                        comps = getComposition(model_path)
+                        if(not comps):
+                            print(f"oldstructure/gamma-only year detected at {model_path}; nothing extractable, skipping.")
+                            continue
 
-            for comp in comps:
-                comp_path = updatePath(sel_path, comp)
+                        for comp in comps:
+                            for simInfo in getSimSet(updatePath(model_path, comp)):
+                                data_sel, sim_name = simInfo
+                                GCD_path = getGCD(gcd_base, sim_name)
+                                # ponytail: -n 5000 keeps condor job count sane
+                                # (~70 jobs/year-comp instead of ~340); extractor
+                                # RAM scales with batch events, still well under 8 GB.
+                                cmd = [f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py",
+                                       "-g", GCD_path, "-i", data_sel, "-o", str(outPath), "-n", "5000"]
+                                if(comp in compFlags):
+                                    cmd += ["-c", compFlags[comp]]
+                                plan.append(cmd)
+            except Back:
+                print("Backed out - start over.")
+                continue
+            except AllRest:
+                pass  # _autoall flag set; loop replans with every pick auto-answered
 
-                #Finalizes the paths
-                simInfo = getSimSet(comp_path)
-                data_sel = simInfo[0]
 
-                GCD_path = getGCD(gcd_base, simInfo[1])
+            if(not plan):
+                print("Nothing selected.")
+                continue
 
-                #Run sim-maker.py (pass the composition so output files get the right simset ID)
-                cmd = [f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py", f"-g {GCD_path}", f"-i {data_sel}", f"-o {outPath}"]
-                if(comp in compFlags):
-                    cmd.append(f"-c {compFlags[comp]}")
-                print("Running:", " ".join(cmd))
-                if(not args.dryrun):
-                    subprocess.run(cmd)
-
-            again = input("Add another selection to this dataset? [y/N] ")
-            if(again.strip().lower() != "y"):
-                break
+            # rough condor job estimate: -n 5000 -> one job per ~5000 files.
+            # one find over all -i roots (ceph walk, takes a moment on big trees)
+            _roots = " ".join(f"'{cmd[cmd.index('-i') + 1]}'" for cmd in plan)
+            _n_files = int(subprocess.run(
+                f"find {_roots} -type f 2>/dev/null | wc -l",
+                shell=True, capture_output=True, text=True).stdout.strip() or 0)
+            _jobs = max(1, -(-_n_files // 5000))
+            print(f"\n{len(plan)} extractions planned (~{_jobs} condor jobs from ~{_n_files} files):")
+            for cmd in plan:
+                print(" ", " ".join(cmd))
+            if(args.dryrun or input("Run them? [y/N] ").strip().lower() == "y"):
+                for cmd in plan:
+                    if(not args.dryrun):
+                        subprocess.run(cmd)
+            break
 
     #Now run sim-converter.py if that argument was passed
     if(args.convert == True):
