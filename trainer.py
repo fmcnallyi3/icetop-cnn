@@ -102,17 +102,31 @@ def get_training_datasets():
     # Prep detector files once at startup and keep only the prepared result.
     # Raw files are float64 with 8 tank channels (~6.4 kB/event, ~38 GB for
     # 6M events); data_prep merges to the 4 model channels, so casting the
-    # result to float32 gives ~1.6 kB/event (~9.6 GB total). All prep ops are
+    # result to fp16 gives ~0.8 kB/event (~4.8 GB total). All prep ops are
     # per-event with fixed constants, so per-file prep is identical to
     # per-batch prep. Batches then gather from RAM with no TF-side copy, and
     # epochs run at RAM speed. mmap streaming was tried first: random page
     # reads over ceph cost ~20 min/epoch and jobs hit the 2 h slot limit
     # before early stopping fired.
-    detector_mmaps = {
-        'icetop': [data_prep({'icetop': np.load(bf)}, cg.PREP)['icetop'].astype('float32') for bf in batch_files],
-    }
-    if infill_files:
-        detector_mmaps['infill'] = [data_prep({'infill': np.load(bf)}, cg.PREP)['infill'].astype('float32') for bf in infill_files]
+    # Adaptive: hold all prepared batches in RAM only when the footprint fits
+    # the requested slot (~0.8 kB/event fp16, 75% cap leaves room for TF arena and
+    # the raw-file transient). Oversized datasets fall back to per-use
+    # mmap-prep in load_rows: slower epochs, but they train at all.
+    _footprint_gb = num_events * 800 / 1e9  # fp16 cache
+    _slot_gb = int(os.getenv('SLOT_GB', '0')) or None
+    _ram_ok = _slot_gb and _footprint_gb < 0.6 * _slot_gb
+    print(f'detector cache: {"RAM" if _ram_ok else "streaming"} '
+          f'({ _footprint_gb:.1f} GB prepared vs {_slot_gb or "?"} GB slot)')
+
+    detector_mmaps = None
+    if _ram_ok:
+        # ponytail: mmap during prep - full float64 loads once pooled ~18 GB of
+        # freed-but-unreturned glibc arena; mmap reads sequentially and frees.
+        detector_mmaps = {
+            'icetop': [data_prep({'icetop': np.load(bf, mmap_mode='r')}, cg.PREP)['icetop'].astype('float16') for bf in batch_files],
+        }
+        if infill_files:
+            detector_mmaps['infill'] = [data_prep({'infill': np.load(bf, mmap_mode='r')}, cg.PREP)['infill'].astype('float16') for bf in infill_files]
 
     # Optional reco input (zenith) comes from parameters, already in RAM
     reco_inputs = {}
@@ -136,9 +150,18 @@ def get_training_datasets():
         for fi in np.unique(file_ids):
             pos = by_file[file_ids[by_file] == fi]
             local = rows[pos] - boundaries[fi]
-            parts['icetop'].append(detector_mmaps['icetop'][fi][local])
-            if infill_files:
-                parts['infill'].append(detector_mmaps['infill'][fi][local])
+            if detector_mmaps is not None:
+                parts['icetop'].append(detector_mmaps['icetop'][fi][local].astype('float32'))
+                if infill_files:
+                    parts['infill'].append(detector_mmaps['infill'][fi][local].astype('float32'))
+            else:
+                raw = np.load(batch_files[fi], mmap_mode='r')
+                prep = data_prep({'icetop': raw}, cg.PREP)['icetop'].astype('float32')
+                parts['icetop'].append(prep[local])
+                if infill_files:
+                    draw = np.load(infill_files[fi], mmap_mode='r')
+                    parts['infill'].append(data_prep({'infill': draw}, cg.PREP)['infill'].astype('float32')[local])
+
         out = {name: np.concatenate(pl)[back] for name, pl in parts.items() if pl}
         out.update({name: arr[rows] for name, arr in reco_inputs.items()})
         return out

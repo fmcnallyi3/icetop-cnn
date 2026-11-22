@@ -2,9 +2,14 @@
 import sys
 import os
 from glob import glob
+import getpass
+import json
 import argparse
 import subprocess
 from pathlib import Path
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pysubmit import pysubmit
 
 """
 TO DO:
@@ -141,19 +146,75 @@ def getGCD(path, sim):
 
 def defineOutput():
     folderName = input("Extraction folder? (Will be located in /data/user/<yourlogin>/sim/<yourfolder>) ")
-    out_dir = Path(f"/data/user/{os.getlogin()}/sim/{folderName}")
+    out_dir = Path(f"/data/user/{getpass.getuser()}/icetop-cnn/sim/{folderName}")
     while(out_dir.exists()):
         print("ALERT! Folder already exists, data has a high chance of being overwritten!")
         new_folder = input("Enter new folder name, or leave blank to stick with current path.")
         if(len(new_folder) == 0):
             break
         else:
-            out_dir = Path(f"/data/user/{os.getlogin()}/sim/{new_folder}")
+            out_dir = Path(f"/data/user/{getpass.getuser()}/sim/{new_folder}")
     return out_dir
     
+def run_plan(plan, args):
+    # rough condor job estimate: one job per ~20000 files; ceph find takes a moment
+    _roots = " ".join(f"'{cmd[cmd.index('-i') + 1]}'" for cmd in plan)
+    _n_files = int(subprocess.run(
+        f"find {_roots} -type f ! -type l 2>/dev/null | wc -l",
+        shell=True, capture_output=True, text=True).stdout.strip() or 0)
+    _jobs = max(1, -(-_n_files // 20000))
+    print(f"\n{len(plan)} extractions planned (~{_jobs} condor jobs from ~{_n_files} files):")
+    for cmd in plan:
+        print(" ", " ".join(cmd))
+    if(args.dryrun or input("Run them? [y/N] ").strip().lower() == "y"):
+        for cmd in plan:
+            if(not args.dryrun):
+                subprocess.run(cmd)
+
+def submit_convert(outPath):
+    _user = getpass.getuser()
+    conv_exe = f"/home/{_user}/icetop-cnn/data_extraction/sim-converter.py -s {outPath}"
+    pysubmit(conv_exe, outdir=f"/home/{_user}/icetop-cnn/data_extraction/condor",
+             sublines=['request_memory = 12 GB'])
+    print("Converter queued as a condor job; it runs after all extractor jobs finish.")
 def main(args):
     outPath = defineOutput()
     
+    if(args.he == True):
+        # HE productions live outside the regular trees (no comp level): year/
+        # simset dirs; comp + energy range come from the production json. GCDs
+        # stay in the regular year GCD dirs, so pass -g per simset. Only sets
+        # reaching past 10^8.0 GeV count as high energy; bad_* is quarantine.
+        he_base = os.path.join('/', 'data', 'ana', 'CosmicRay', 'IceTop_level3', 'sim', 'NewL3_MC')
+        info = json.load(open(os.path.join(os.path.dirname(he_base), 'dataset_info_v0.json')))
+        primaries = {'PPlus': 'proton', 'He4Nucleus': 'helium', 'O16Nucleus': 'oxygen', 'Fe56Nucleus': 'iron'}
+        plan = []
+        for year in sorted(y for y in os.listdir(he_base) if y.startswith('IC86.')):
+            year_path = updatePath(he_base, year)
+            gcd_dir = updatePath(updatePath(os.path.dirname(he_base), year), 'GCD')
+            for simset in sorted(os.listdir(year_path)):
+                meta = info.get(simset, {})
+                if(simset.startswith('bad_') or float(meta.get('ebin_last', 0)) <= 8.0):
+                    continue
+                gcd_file = updatePath(gcd_dir, f'Level3_{simset}_GCD.i3.gz')
+                if(not os.path.exists(gcd_file)):
+                    print(f'No GCD for {simset}; skipping.')
+                    continue
+                cmd = [f"/home/{getpass.getuser()}/icetop-cnn/data_extraction/sim-maker.py",
+                       "-g", gcd_file, "-i", updatePath(year_path, simset),
+                       "-o", str(outPath), "-n", "20000"]
+                prim = primaries.get(meta.get('primary'))
+                if(prim):
+                    cmd += ["-c", prim]
+                plan.append(cmd)
+        if(not plan):
+            print("No extractable high-energy sets found.")
+            return
+        run_plan(plan, args)
+        if(args.convert == True):
+            submit_convert(outPath)
+        return
+
     if(args.test == True):
         print("Testing mode enabled, running on the default path of .../IC86.2012/oldstructure/12360/")
         
@@ -186,17 +247,14 @@ def main(args):
                             continue
 
                         for comp in comps:
-                            for simInfo in getSimSet(updatePath(model_path, comp)):
-                                data_sel, sim_name = simInfo
-                                GCD_path = getGCD(gcd_base, sim_name)
-                                # ponytail: -n 5000 keeps condor job count sane
-                                # (~70 jobs/year-comp instead of ~340); extractor
-                                # RAM scales with batch events, still well under 8 GB.
-                                cmd = [f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-maker.py",
-                                       "-g", GCD_path, "-i", data_sel, "-o", str(outPath), "-n", "5000"]
-                                if(comp in compFlags):
-                                    cmd += ["-c", compFlags[comp]]
-                                plan.append(cmd)
+                            # whole tree and resolves the per-simset GCD per batch,
+                            # so ~5000 files per condor job actually happens
+                            # (724 tiny jobs -> ~8 per year-comp pair).
+                            cmd = [f"/home/{getpass.getuser()}/icetop-cnn/data_extraction/sim-maker.py",
+                                   "-i", updatePath(model_path, comp), "-o", str(outPath), "-n", "20000"]
+                            if(comp in compFlags):
+                                cmd += ["-c", compFlags[comp]]
+                            plan.append(cmd)
             except Back:
                 print("Backed out - start over.")
                 continue
@@ -207,27 +265,13 @@ def main(args):
             if(not plan):
                 print("Nothing selected.")
                 continue
-
-            # rough condor job estimate: -n 5000 -> one job per ~5000 files.
-            # one find over all -i roots (ceph walk, takes a moment on big trees)
-            _roots = " ".join(f"'{cmd[cmd.index('-i') + 1]}'" for cmd in plan)
-            _n_files = int(subprocess.run(
-                f"find {_roots} -type f 2>/dev/null | wc -l",
-                shell=True, capture_output=True, text=True).stdout.strip() or 0)
-            _jobs = max(1, -(-_n_files // 5000))
-            print(f"\n{len(plan)} extractions planned (~{_jobs} condor jobs from ~{_n_files} files):")
-            for cmd in plan:
-                print(" ", " ".join(cmd))
-            if(args.dryrun or input("Run them? [y/N] ").strip().lower() == "y"):
-                for cmd in plan:
-                    if(not args.dryrun):
-                        subprocess.run(cmd)
+            run_plan(plan, args)
             break
 
-    #Now run sim-converter.py if that argument was passed
+    #Run sim-converter on the cluster once extraction finishes: one condor job,
+    #submitted last, so it naturally queues after every extractor job.
     if(args.convert == True):
-        print("Now converting data:")
-        subprocess.run([f"/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-converter.py", f"-s {outPath}"])
+        submit_convert(outPath)
     
 if __name__ == "__main__":
     p = argparse.ArgumentParser(
@@ -239,5 +283,7 @@ if __name__ == "__main__":
                   help="Run sim-converter.py after extraction")
     p.add_argument('-d', '--dryrun', dest="dryrun", default=False, action='store_true',
                   help="Print the sim-maker commands without running them")
+    p.add_argument('-e', '--he', dest="he", default=False, action='store_true',
+                  help="Extract high-energy sets from NewL3_MC (log10E/GeV up to 9.5)")
     
     main(p.parse_args())

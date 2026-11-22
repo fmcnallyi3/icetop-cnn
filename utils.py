@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from collections import defaultdict
 from glob import glob
+import shutil
 from typing import Any
 from warnings import catch_warnings, filterwarnings 
 
@@ -28,7 +29,8 @@ def mod_ilog(n: np.ndarray[int | float]):
 
 def r_log(m: np.ndarray[int | float]):
     '''Modified antilogarithm convenient for dealing with zeros and maintaining sign.'''
-    return np.sign(m) * (10**np.abs(m) - 1)
+    with np.errstate(over='ignore'):
+        return np.sign(m) * (10**np.abs(m) - 1)
 
 def r_ilog(m: np.ndarray[int | float]):
     """Modified antilogarithm convenient for dealing with zeros and maintaining sign. \\
@@ -109,21 +111,22 @@ def get_detector_inputs(simdata_folder_path: str, infill: bool, composition: str
 def load_event_parameters(composition_files: list[str]) -> dict[str, np.ndarray]:
     '''Returns event parameters as a dictionary mapping strings to numpy arrays'''
 
-    # It is faster to convert the array items to lists while
-    # appending and convert back to an np.ndarray when done. I feel like this
-    # probably has to do with a difference in Python vs. NumPy memory
-    # allocation optimizations.
-
-    # Load data from disk into a default-dictionary
-    event_parameters = defaultdict(list)
+    # Accumulate raw pieces per key, then join once. list(+=) boxes every
+    # event as a python object (~minutes on 7.8M-event sets); concat of the
+    # per-file arrays is C-speed.
+    pieces = defaultdict(list)
     for composition_file in composition_files:
         composition_data = np.load(composition_file, allow_pickle=True).item()
         for key, key_data in composition_data.items():
-            event_parameters[key] += list(key_data)
-    
-    # Convert lists to numpy arrays
-    for key, key_data in event_parameters.items():
-        event_parameters[key] = np.asarray(key_data)
+            pieces[key].append(key_data)
+
+    event_parameters = {}
+    for key, parts in pieces.items():
+        # ponytail: lists of scalars (file_info) and lists of 2D arrays (dir) both
+        # pass through np.asarray + concatenate; swap for structured dtypes if a
+        # future key mixes shapes within one file.
+        parts = [np.asarray(p) for p in parts]
+        event_parameters[key] = np.concatenate(parts) if len(parts) > 1 else parts[0]
 
     return event_parameters
 
@@ -133,7 +136,34 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
 
     # Prepare event parameter files/data
     event_files = files(simdata_folder_path, 'event_parameters', composition=composition, test=test)
+
+    # ponytail: pickled-object files unpickle at ~20 s/4M events regardless of load
+    # strategy; the only real win is not unpickling. First call writes the merged
+    # per-key arrays to plain .npy (fast, mmap-able); later calls mmap them. Cache
+    # dir is keyed by an md5 of source names+sizes, so reconversion invalidates it.
+    import hashlib
+    tag = hashlib.md5('|'.join(f'{os.path.basename(f)}:{os.path.getsize(f)}' for f in event_files).encode()).hexdigest()[:12]
+    cache_dir = os.path.join(simdata_folder_path, 'event_parameters', f'_merged_{composition}_{tag}')
+
+    if os.path.isdir(cache_dir):
+        event_parameters = {}
+        for f in glob(os.path.join(cache_dir, '*.npy')):
+            name = os.path.basename(f)[:-4]
+            try:
+                event_parameters[name] = np.load(f, mmap_mode='r')
+            except ValueError:
+                # ponytail: object-dtype keys (dir etc) can't mmap; load straight
+                event_parameters[name] = np.load(f, allow_pickle=True)
+        return event_parameters
+
     event_parameters = load_event_parameters(event_files)
+    os.makedirs(cache_dir, exist_ok=True)
+    try:
+        for key, arr in event_parameters.items():
+            np.save(os.path.join(cache_dir, key), arr)
+    except OSError:
+        # ponytail: read-only simdata mount -> cache silently unavailable, still correct
+        shutil.rmtree(cache_dir, ignore_errors=True)
 
     return event_parameters
 

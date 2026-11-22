@@ -3,6 +3,7 @@
 
 import argparse
 import os
+import getpass
 from glob import glob
 
 import numpy as np
@@ -18,7 +19,8 @@ def main(args):
     if not os.path.exists(source):
         raise Exception('Source folder containing extracted simulation data was not found.')
     # Verify destination folder exists, create otherwise.
-    dest = os.path.join(os.environ['ICETOP_CNN_DATA_DIR'], 'simdata', sim_name)
+    data_dir = os.environ.get('ICETOP_CNN_DATA_DIR', f'/data/user/{getpass.getuser()}/icetop-cnn')
+    dest = os.path.join(data_dir, 'simdata', sim_name)
     print(dest)
     for sub in ('icetop', 'event_parameters'):
         os.makedirs(os.path.join(dest, sub), exist_ok=True)
@@ -32,8 +34,11 @@ def main(args):
         d = load_data(f, infill=args.infill)
         batch = f.rsplit('_', 1)[-1]
         alias = comp_aliases[comp[d['comp'][0]]]
-        array_out = os.path.join(dest, 'icetop', f'icetop_{alias}_{sim_name}_{batch}')
-        param_out = os.path.join(dest, 'event_parameters', f'event_parameters_{alias}_{sim_name}_{batch}')
+        # simset ID in the name: batch numbers restart at 000 per simset, so
+        # alias+batch alone collides across simsets and skip-if-exists drops data
+        simset = f.split('_')[-2]
+        array_out = os.path.join(dest, 'icetop', f'icetop_{alias}_{simset}_{sim_name}_{batch}')
+        param_out = os.path.join(dest, 'event_parameters', f'event_parameters_{alias}_{simset}_{sim_name}_{batch}')
 
         # Skip files already created if not overwriting
         if not args.overwrite and any([

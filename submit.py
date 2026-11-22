@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
+import getpass
 import os
+import numpy as np
 import sys
 from glob import glob
 
@@ -15,14 +17,15 @@ ERROR_MODEL_ALREADY_FOUND = 'Model folder already found with this name, but it i
 # Check that the environment has been activated
 # Not necessary to check if ran on the cluster
 # Should check first before the rest of the code is parsed
-ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR', '')
+# default to the checkout this script lives in; env only overrides
+ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR') or os.path.dirname(os.path.abspath(__file__))
 venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
 assert os.getenv('VIRTUAL_ENV'), ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 
 #NOTE: THIS CODE IS USELESS BUT IM TOO SCARED TO REMOVE IT
-ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR')
-ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR')
+ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR') or f'/data/user/{os.environ.get("USER", getpass.getuser())}/icetop-cnn'
+ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR') or f'/scratch/{getpass.getuser()}/icetop-cnn'
 LOGS_DIR = os.path.join(ICETOP_CNN_SCRATCH_DIR, 'condor', 'logs')
 
 def main(args):
@@ -57,7 +60,7 @@ def main(args):
     lines = [
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
         f'arguments = "{" ".join(sys.argv[1:])}"',
-        f'environment = "PATH=/usr/bin:/bin ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR}"',
+        f'environment = "PATH=/usr/bin:/bin ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR} TF_FORCE_GPU_ALLOW_GROWTH=true SLOT_GB={max(8, int((_ram_gb + 7) // 4 * 4))}"',
         f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py',
         'getenv = True',
         '',
@@ -75,7 +78,7 @@ def main(args):
         'when_to_transfer_output = ON_EXIT',
         f'initialdir = {ICETOP_CNN_DIR}',
         '',
-        'request_memory = 20G',
+        f'request_memory = {max(8, int((_ram_gb + 7) // 4 * 4))}G',
         'request_gpus = 1',
         '',
         # Old cards only: the TF/cuDNN stack cannot initialize on compute capability >= 8.0
@@ -197,7 +200,7 @@ if __name__ == '__main__':
     '''
     # Ensure that there are no unrecognized characters in the composition string
     #Resolve simdata: full --simdata wins, else -d dataset name, else upstream default
-    args.simdata = args.simdata or (os.path.join(ICETOP_CNN_DATA_DIR, 'simdata', args.dataset) if args.dataset else '/data/user/fmcnally/icetop-cnn/simdata')
+    args.simdata = args.simdata or (os.path.join(ICETOP_CNN_DATA_DIR, 'simdata', args.dataset) if args.dataset else os.path.join(ICETOP_CNN_DATA_DIR, 'simdata'))
 
     #Forward one full path to trainer.py: strip dataset flags, append resolved
     def _strip(argv, flag):
@@ -218,6 +221,28 @@ if __name__ == '__main__':
     sys.argv[1:] = argv + ['--simdata', args.simdata]
 
     assert os.path.exists(args.simdata), f'Simdata folder not found: {args.simdata}'
+
+    # Rough cost estimate from dataset size. Constants derived from the
+    # snow2012/2015/2018 runs (see memory notes): detector arrays are float64
+    # 8-channel raw (~6.4 kB/event), data_prep merges to float32 4-channel
+    # (~1.6 kB/event kept in RAM), plus ~5 GB TF/model/dataloader overhead.
+    # Epoch time measured 1-2 min on GTX 1080-class GPUs for 6M events.
+    _n_events = sum(
+        len(np.load(f, allow_pickle=True).item()['energy'])
+        for f in __import__('glob').glob(os.path.join(args.simdata, 'event_parameters', '*.npy'))
+    )
+    _ram_gb = _n_events * 800 / 1e9 + 5  # fp16 cache
+    _slots = (int(_ram_gb // 20) + 1) * 20
+    if _slots > 20:
+        print(f'NOTE: estimated RAM {_ram_gb:.0f} GB exceeds the largest slot (20 GB).')
+        print('      Trainer preps per file and gathers per batch; it will still run,')
+        print('      but condor may kill it. Consider trimming the dataset or splitting.')
+    print(f'Estimate: ~{_n_events/1e6:.1f}M events -> ~{_ram_gb:.0f} GB RAM (requesting {_slots} GB)')
+    _epochs = args.epochs or 100
+    _secs_per_epoch = 60 * (1 + _n_events / 6e6)   # ~1 min at 6M, scales ~linearly
+    print(f'          ~{_secs_per_epoch/60:.0f} min/epoch x up to {_epochs} epochs')
+    _tot = _secs_per_epoch * _epochs / 3600
+    print(f'          worst case ~{_tot:.1f} h; early stopping usually cuts this by 2-4x')
     if not all(c in 'phof' for c in args.composition):
         p.error('Unrecognized composition dataset combination requested')
      

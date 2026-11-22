@@ -28,13 +28,22 @@ def uncompress(tray, name):
     from icecube import dataio
     from icecube.icetray import I3Frame
     needs_diff = False
-    # peek: check the first input file for a geometry diff frame
+    # peek: the GCD file and/or the first data file may carry geometry diffs
+    # (Level3_*_GCD files are diff-only); if EITHER does, uncompress must run
     import sys
-    peek = dataio.I3File(str(sys.argv[sys.argv.index('-f') + 1].split()[0]))
-    while peek.more():
-        fr = peek.pop_frame()
-        if fr.Stop == I3Frame.Geometry:
-            needs_diff = 'I3GeometryDiff' in fr
+    try:
+        gcd = sys.argv[sys.argv.index('-g') + 1]
+    except ValueError:
+        gcd = None
+    for f in ([gcd] if gcd else []) + [sys.argv[sys.argv.index('-f') + 1].split()[0]]:
+        peek = dataio.I3File(f)
+        while peek.more():
+            fr = peek.pop_frame()
+            if fr.Stop == I3Frame.Geometry:
+                if 'I3GeometryDiff' in fr:
+                    needs_diff = True
+                break
+        if needs_diff:
             break
     if needs_diff:
         _uncompress_segment(tray, name)

@@ -3,12 +3,18 @@
 import sys
 import argparse
 import os
+import getpass
 from glob import glob
 import subprocess
 import stat, random
 from pathlib import Path
 
 from pysubmit import pysubmit
+
+def simset_of(path):
+    # simset dir: '12360_v1' in the regular trees, bare '20144' in NewL3_MC
+    return next((pt.split('_')[0] for pt in reversed(Path(path).parts)
+                 if pt.split('_')[0].isdigit()), None)
 
 def main(args):
     gcd_path = Path(args.gcd_path) if args.gcd_path else None
@@ -19,37 +25,24 @@ def main(args):
     sim_name = args.out_dir.lstrip()[args.out_dir.lstrip().rfind('/')+1:]
     
     #Path to extractor
-    exe = f'/home/{os.getlogin()}/icetop-cnn/data_extraction/sim-extractor.py'
+    exe = f'/home/{getpass.getuser()}/icetop-cnn/data_extraction/sim-extractor.py'
     #Path to data 
     l3sim = '/data/ana/CosmicRay/IceTop_level3/sim/IC86.2012'
 
     comp = {'proton': [12360], 'helium': [12630], 'oxygen': [12631], 'iron': [12362], 'all': [12360, 12630, 12631, 12362]}
     c = comp[args.composition]    
 
-    for ID in c:
-        # Auto-resolve the per-simset GCD from the input tree unless one was given.
-        # Weak spot fix: a single -g GCD is wrong for multi-primary extractions,
-        # every sim set has its own GCD (Level3_<simset>_GCD.i3.gz).
-        gcd = args.gcd_path
-        if not gcd:
-            # simset comes from the <simset>_v1 directory itself; input may
-            # point at the simset root or a nested energy-bin directory
-            base = file_path
-            if '_' not in base.name:
-                base = base.parent
-            simset = base.name.split('_')[0]
-            gcd_dir = base.parents[2] / 'GCD'
-            gcd = str(gcd_dir / f'Level3_{simset}_GCD.i3.gz')
-            # Newer productions (IC86.2018+) ship one year-wide GeoCalib file
-            if not Path(gcd).exists():
-                geo = sorted(glob(str(gcd_dir / '*.i3.gz')))
-                if len(geo) == 1:
-                    gcd = geo[0]
-        files = sorted(f for f in file_path.rglob('*.i3*') if not any(x in f.parts for x in ('_ITonly', 'incomplete_obsolete')))
-
+    # per-ID loop re-globbed the SAME files once per composition (4x jobs AND
+    # 4x duplicate data with -c all). One pass for real data; per-ID loop is
+    # an --mc-only concern. Drop this whole block if --mc dies.
+    for ID in (c if args.mc else [c[0]]):
         if args.mc:
             mc_prefix = '/data/sim/IceTop/2012/generated/CORSIKA-ice-top'
             files = glob(f'{mc_prefix}/{ID}/topsimulator/*/*.i3.gz')
+        else:
+            # -i may be a comp root spanning many simsets; per-simset GCD is
+            # resolved per BATCH below (each sim set has its own GCD).
+            files = sorted(f for f in file_path.rglob('*.i3*') if f.is_file() and not f.is_symlink() and not any(x in f.parts for x in ('_ITonly', 'incomplete_obsolete')))
         files.sort()
         
         # empty dir guard: version dirs / filtered dirs can hold zero extractable files
@@ -59,15 +52,46 @@ def main(args):
         if not(".i3" in str(files[0])):
             files = files[1:]
 
-        batch_list = [[str(f) for f in files[i:i+args.n]] for i in range(0, len(files), args.n)]
+        # Group by simset dir, chunk each group; jobs = ceil(files_in_simset/n).
+        by_simset = {}
+        for f in files:
+            simset = simset_of(f)
+            if(not simset):
+                print(f'No simset dir in {f}; skipping file.')
+                continue
+            by_simset.setdefault(simset, []).append(str(f))
+        batch_list = []
+        for group in by_simset.values():
+            batch_list += [[str(x) for x in group[i:i+args.n]] for i in range(0, len(group), args.n)]
 
         for i, batch in enumerate(batch_list):
+            # per-batch GCD: files in one batch can still span energy-bin dirs of
+            # one simset, and batches are sequential over the sorted list, so a
+            # batch boundary can split a simset. Resolve from batch[0]'s path.
+            # simset from the batch's first file drives out_file naming
+            simset = simset_of(batch[0])
+            # -g wins outright; else walk up: tree depth differs by production
+            # year (2012 nests energy bins, 2018 does not), so probe each
+            # ancestor for a GCD dir with this simset's file, else a lone
+            # year-wide GeoCalib
+            gcd = str(gcd_path) if gcd_path else None
+            if gcd is None:
+                for anc in list(Path(batch[0]).parents)[:6]:
+                    cands = [anc / 'GCD' / f'Level3_{simset}_GCD.i3.gz']
+                    if cands[0].exists():
+                        gcd = str(cands[0]); break
+                    geo = sorted(glob(str(anc / 'GCD' / '*.i3.gz')))
+                    if len(geo) == 1:
+                        gcd = geo[0]; break
+                if not gcd:
+                    print(f'No GCD found for simset {simset} (batch {i}); skipping batch.')
+                    continue
             if args.test:
                 batch = batch[:5]
             batched_files = ' '.join(batch)            
             # Weak spot fix: include the sim set ID so batches from different
             # primaries in one extraction cannot overwrite each other.
-            out_file = f'{args.out_dir}/sim_{sim_name}_{ID}_{i:03}.npy'
+            out_file = f'{args.out_dir}/sim_{sim_name}_{simset}_{i:03}.npy'
 
             if args.mc:
                 exe = exe.replace('extractor', 'mc_extractor')
@@ -78,7 +102,7 @@ def main(args):
             exelines = f'{exe} -g {gcd} -f {batched_files} -o {out_file}'
             
             pysubmit(exelines, outdir=f'./condor', test=args.test,
-                      sublines=['request_memory = 8 GB'])
+                      sublines=['request_memory = 12 GB'])
 
             if args.test:
                 break
@@ -95,7 +119,7 @@ if __name__ == "__main__":
         default=1000,
         help='Number of files to run per batch')
     p.add_argument('-o', '--out', dest='out_dir', type=str,
-        default=f'/data/user/{os.getlogin()}/sim',
+        default=f'/data/user/{getpass.getuser()}/sim',
         help='Output directory')
     p.add_argument('--mc', dest='mc',
         default=False, action='store_true',
