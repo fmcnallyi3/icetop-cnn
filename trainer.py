@@ -120,7 +120,7 @@ def get_training_datasets():
 
     detector_mmaps = None
     if _ram_ok:
-        # ponytail: mmap during prep - full float64 loads once pooled ~18 GB of
+        # Mmap during prep - full float64 loads once pooled ~18 GB of
         # freed-but-unreturned glibc arena; mmap reads sequentially and frees.
         detector_mmaps = {
             'icetop': [data_prep({'icetop': np.load(bf, mmap_mode='r')}, cg.PREP)['icetop'].astype('float16') for bf in batch_files],

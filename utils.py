@@ -83,7 +83,7 @@ def load_detector_array(filepaths: list[str]) -> np.ndarray:
     detector_array = np.empty((num_events,) + detector_shape, dtype=np.float32) # Pre-allocate
 
     # Replace the garbage pre-allocated data with detector data in-place.
-    # ponytail: chunked copy - a full np.load() materializes the float64 file (~2x the
+    # Chunked copy - a full np.load() materializes the float64 file (~2x the
     # float32 result) and blew up 16 GB kernels on snow2018 batches. 100k-event chunks
     # cap peak at ~1.3 GB over the final array; upgrade to fewer, larger chunks if slow.
     start_idx = 0
@@ -129,7 +129,7 @@ def load_event_parameters(composition_files: list[str]) -> dict[str, np.ndarray]
 
     event_parameters = {}
     for key, parts in pieces.items():
-        # ponytail: lists of scalars (file_info) and lists of 2D arrays (dir) both
+        # Lists of scalars (file_info) and lists of 2D arrays (dir) both
         # pass through np.asarray + concatenate; swap for structured dtypes if a
         # future key mixes shapes within one file.
         parts = [np.asarray(p) for p in parts]
@@ -144,7 +144,7 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
     # Prepare event parameter files/data
     event_files = files(simdata_folder_path, 'event_parameters', composition=composition, test=test)
 
-    # ponytail: pickled-object files unpickle at ~20 s/4M events regardless of load
+    # Pickled-object files unpickle at ~20 s/4M events regardless of load
     # strategy; the only real win is not unpickling. First call writes the merged
     # per-key arrays to plain .npy (fast, mmap-able); later calls mmap them. Cache
     # dir is keyed by an md5 of source names+sizes, so reconversion invalidates it.
@@ -159,7 +159,7 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
             try:
                 event_parameters[name] = np.load(f, mmap_mode='r')
             except ValueError:
-                # ponytail: object-dtype keys (dir etc) can't mmap; load straight
+                # Object-dtype keys (dir etc) can't mmap; load straight
                 event_parameters[name] = np.load(f, allow_pickle=True)
         # 4 GB kernel: float64 dirs/energies are plot/cut precision only; f32 halves RSS
         for name, arr in event_parameters.items():
@@ -173,7 +173,7 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
         for key, arr in event_parameters.items():
             np.save(os.path.join(cache_dir, key), arr)
     except OSError:
-        # ponytail: read-only simdata mount -> cache silently unavailable, still correct
+        # Read-only simdata mount -> cache silently unavailable, still correct
         shutil.rmtree(cache_dir, ignore_errors=True)
 
     return event_parameters

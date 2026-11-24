@@ -67,42 +67,83 @@ def _ensure_onnx(models_folder_path, model_name):
 
 def _ort_session(models_folder_path, model_name):
     import onnxruntime as ort
-    return ort.InferenceSession(_ensure_onnx(models_folder_path, model_name),
+    opts = ort.SessionOptions()
+    # The default is the host core count, which thrashes these small batches:
+    # 60.8 s vs 7.0 s for the same work on a 64-core node.
+    opts.intra_op_num_threads = max(1, min(4, len(os.sched_getaffinity(0))))
+    opts.inter_op_num_threads = 1
+    # Arenas hold ~3.5 GB of freed scratch across 8 sessions; turning them off
+    # costs no measurable speed and keeps the notebook kernel under its cap.
+    opts.enable_cpu_mem_arena = False
+    return ort.InferenceSession(_ensure_onnx(models_folder_path, model_name), opts,
                                 providers=['CPUExecutionProvider'])
 
 
-def predict(models_folder_path, model_parameters, model_name, dataset, model=None):
-    '''Predicts a model over a dataset's assessment split. Same seeded cut for every model.
-    Loads one batch file at a time so full-dataset detector arrays never sit in memory.
-    Pass model= (a loaded keras model) to skip the TF import + load on batch calls.'''
-    is_ort = hasattr(model, 'run') if model is not None else False
-    if model is None:
+def _load_model(models_folder_path, model_name):
+    '''Loads an onnxruntime session, else a keras model. One session is ~13 MB.'''
+    try:
+        return _ort_session(models_folder_path, model_name)
+    except Exception:
         import tensorflow as tf
+        return tf.keras.models.load_model(ensure_h5(models_folder_path, model_name), compile=False)
+
+
+def _run_model(model, inputs):
+    '''Feeds one event batch to a session or a keras model and returns its output.'''
+    if hasattr(model, 'run'):
+        names = [i.name for i in model.get_inputs()]
+        return model.run(None, dict(zip(names, inputs)))[0]
+    names = list(model.get_config()['input_layers'].keys())
+    return model.predict(dict(zip(names, inputs)), batch_size=4096, verbose=0)
+
+
+def _dataset_path(dataset):
+    if os.path.isabs(dataset):
+        return dataset
+    return os.path.join(os.getenv('ICETOP_CNN_DATA_DIR') or '/data/user/jstowers/icetop-cnn',
+                        'simdata', dataset)
+
+
+def _model_cut(ep, prep):
+    '''Seeded assessment cut for one prep, narrowed to the model's assessment nuclei.'''
+    cut = get_training_assessment_cut(ep, 'assessment', prep)
+    nuclei = (prep.get('assessment_nuclei')
+              or list(dict.fromkeys(prep.get('training_nuclei', 'phof'))))
+    return np.isin(ep['comp'], [comp_conversion[n] for n in nuclei]) * cut
+
+
+# Prep fields that change the cut or the data source but not the prepared arrays.
+# Models differing only in these still share one pass over the dataset.
+_CUT_ONLY_KEYS = {'seed', 'simdata', 'training_nuclei', 'assessment_nuclei'}
+
+
+def _prep_key(prep):
+    '''Identifies the prepared arrays a prep produces, ignoring seed and source.'''
+    return repr(sorted((k, v) for k, v in prep.items() if k not in _CUT_ONLY_KEYS))
+
+
+def predict(models_folder_path, model_parameters, model_name, dataset, model=None):
+    '''Predicts one model over a dataset's assessment split.
+    Loads one batch file at a time so full-dataset detector arrays never sit in memory.
+    Pass model= (a loaded model) to skip the TF import + load on batch calls.
+    assess_models does not use this path; it streams every model over the data at once.'''
     prep = model_parameters[model_name]
     if model is None:
-        model = tf.keras.models.load_model(ensure_h5(models_folder_path, model_name), compile=False)
-    path = dataset if os.path.isabs(dataset) else os.path.join(os.getenv('ICETOP_CNN_DATA_DIR') or '/data/user/jstowers/icetop-cnn', 'simdata', dataset)
+        model = _load_model(models_folder_path, model_name)
+    path = _dataset_path(dataset)
     ep = get_event_parameters(path, composition='phof')
-    cut = get_training_assessment_cut(ep, 'assessment', prep)
-    # Match training-time recons: predict only on the model's assessment nuclei.
-    nuclei = prep.get('assessment_nuclei') or list(dict.fromkeys(prep.get('training_nuclei', 'phof')))
-    cut = cut * np.isin(ep['comp'], [comp_conversion[n] for n in nuclei])
+    cut = _model_cut(ep, prep)
     batch_files = files(path, 'icetop', composition='phof')
-    infill_files = None
-    if prep['infill']:
-        infill_files = files(path, 'infill', composition='phof')
+    infill_files = files(path, 'infill', composition='phof') if prep['infill'] else None
     out, n = [], 0
     print(f'Predicting {model_name} on {dataset}: {len(batch_files)} files...')
     for i, bf in enumerate(batch_files):
-        # 4 GB kernel cap - never materialize a batch. mmap slice ->
-        # prep -> predict -> free, 100k slabs (~1 GB transient). 50k if it still OOMs.
         with open(bf, 'rb') as fh:
             ver = np.lib.format.read_magic(fh)
             shape, _, _ = np.lib.format._read_array_header(fh, ver)
             total = shape[0]
         file_cut = cut[n:n + total]
         infill_slabs = _iter_slabs(infill_files[i], 100_000) if infill_files is not None else None
-        k = 0
         for s0, icetop_slab in _iter_slabs(bf, 100_000):
             d = {'icetop': icetop_slab}
             if infill_slabs is not None:
@@ -111,14 +152,7 @@ def predict(models_folder_path, model_parameters, model_name, dataset, model=Non
             d = data_prep(d, prep)
             scut = file_cut[s0:s0 + len(d['icetop'])]
             if scut.any():
-                inputs = [data[scut] for data in d.values()]
-                if is_ort:
-                    onames = [i.name for i in model.get_inputs()]
-                    out.append(model.run(None, dict(zip(onames, inputs)))[0])
-                else:
-                    names = list(model.get_config()['input_layers'].keys())
-                    out.append(model.predict(dict(zip(names, inputs)), batch_size=4096, verbose=0))
-            k += 1
+                out.append(_run_model(model, [data[scut] for data in d.values()]))
         print(f'  {model_name} [{dataset}]: file {i+1}/{len(batch_files)} done', flush=True)
         n += total
     assert n == len(ep['comp']), 'File/event count mismatch: %s on %s' % (model_name, dataset)
@@ -133,67 +167,109 @@ def model_weights_exist(models_folder_path, model_name):
     return False
 
 
+def _predict_group(dataset_path, dataset, prep, group, models_folder_path):
+    '''Streams one dataset once and runs every model in the group on the same slabs.
+
+    group is a list of (model_name, model_cut). Returns {model_name: recon} with each
+    recon shaped (n, 1), matching the cache format. Every output is preallocated to its
+    exact cut size, so N models cost one read of the dataset instead of N reads.
+    '''
+    batch_files = files(dataset_path, 'icetop', composition='phof')
+    infill_files = files(dataset_path, 'infill', composition='phof') if prep['infill'] else None
+    models = {model_name: _load_model(models_folder_path, model_name) for model_name, _ in group}
+    out = {model_name: [] for model_name, _ in group}
+
+    print(f'Predicting {len(group)} model(s) on {dataset}: {len(batch_files)} files...')
+    n = 0
+    for i, bf in enumerate(batch_files):
+        with open(bf, 'rb') as fh:
+            ver = np.lib.format.read_magic(fh)
+            shape, _, _ = np.lib.format._read_array_header(fh, ver)
+            total = shape[0]
+        infill_slabs = _iter_slabs(infill_files[i], 100_000) if infill_files is not None else None
+        for s0, icetop_slab in _iter_slabs(bf, 100_000):
+            d = {'icetop': icetop_slab}
+            if infill_slabs is not None:
+                _, infill_slab = next(infill_slabs)
+                d['infill'] = infill_slab
+            d = data_prep(d, prep)
+            m = len(d['icetop'])
+            for model_name, cut in group:
+                scut = cut[n + s0:n + s0 + m]
+                if not scut.any():
+                    continue
+                out[model_name].append(
+                    _run_model(models[model_name], [v[scut] for v in d.values()]))
+        print(f'  [{dataset}] file {i+1}/{len(batch_files)} done', flush=True)
+        n += total
+
+    # One row per cut event, same alignment check as the single-model path.
+    for model_name, model_cut in group:
+        out[model_name] = np.concatenate(out[model_name])
+        assert len(out[model_name]) == np.sum(model_cut), \
+            'Reconstruction/event misalignment: %s on %s' % (model_name, dataset)
+    return out
+
+
 def assess_models(model_parameters, DATASETS, eps, models_folder_path, reconstructions_folder_path):
     '''Returns (reconstructions, cuts), each keyed by (model, dataset) pairs.
     Cache-first: existing cross predictions and training-time reconstructions are loaded,
-    missing pairs are predicted and cached.'''
+    missing pairs are predicted and cached. Each dataset is read once and every pending
+    model runs on the same slabs, so N models cost one pass over the data.'''
     reconstructions, cuts = {}, {}
     cut_cache = {}
-    # ponytail: 1-model LRU - 18 sessions x ~0.2 GB OOMs the 4 GB kernel;
-    # reload per model ~1-2 s. functools.lru_cache needs hashables, dict+del is simpler.
-    loaded_models = {}
-    for model_name, dataset in [(m, d) for m in model_parameters for d in DATASETS]:
-        # Skip models with no saved weights (e.g. still training) instead of
-        # crashing the whole assessment inside the apptainer conversion step.
-        if not model_weights_exist(models_folder_path, model_name):
-            print(f'WARNING: No saved weights for {model_name} (training in progress?); skipping model.')
-            continue
-        model_prep = model_parameters[model_name]
+
+    for dataset in DATASETS:
         ep = eps[dataset]
+        dataset_path = _dataset_path(dataset)
 
-        # Cached cross prediction, else the training-time reconstruction, else predict fresh.
-        cache = os.path.join(reconstructions_folder_path, '%s__%s.npy' % (model_name, dataset))
-        own = model_prep.get('simdata', '')
-        own_file = os.path.join(reconstructions_folder_path, model_name + '.npy')
-        if os.path.exists(cache):
-            reconstruction = np.load(cache)
-        elif os.path.basename(own) == dataset and os.path.exists(own_file):
-            reconstruction = np.load(own_file)
-        else:
-            if model_name not in loaded_models:
-                loaded_models.clear()  # keep <=1 session resident
-                try:
-                    loaded_models[model_name] = _ort_session(models_folder_path, model_name)
-                except Exception:
-                    import tensorflow as tf
-                    loaded_models[model_name] = tf.keras.models.load_model(
-                        ensure_h5(models_folder_path, model_name), compile=False)
-            reconstruction = predict(models_folder_path, model_parameters, model_name, dataset,
-                                     model=loaded_models[model_name])
-            np.save(cache, reconstruction)
+        # Resolve every model first: cache hit, training-time recon, or pending a pass.
+        groups = {}
+        for model_name, model_prep in model_parameters.items():
+            # Skip models with no saved weights (e.g. still training) instead of
+            # crashing the whole assessment inside the apptainer conversion step.
+            if not model_weights_exist(models_folder_path, model_name):
+                print(f'WARNING: No saved weights for {model_name} (training in progress?); skipping model.')
+                continue
 
-        # Seeds of one model share prep, so key the cut on (dataset, prep)
-        # and compute once per unique prep instead of once per pair.
-        cut_key = (dataset, repr(sorted(model_prep.items(), key=lambda kv: str(kv[0]))))
-        if cut_key not in cut_cache:
-            cut_cache[cut_key] = get_training_assessment_cut(ep, 'assessment', model_prep)
-        model_cut = cut_cache[cut_key]
+            # Seeds of one model share prep, so key the cut on (dataset, prep)
+            # and compute once per unique prep instead of once per pair.
+            cut_key = (dataset, repr(sorted(model_prep.items(), key=lambda kv: str(kv[0]))))
+            if cut_key not in cut_cache:
+                cut_cache[cut_key] = _model_cut(ep, model_prep)
+            model_cut = cut_cache[cut_key]
+            cuts[(model_name, dataset)] = model_cut
 
-        # Apply the nuclei cut, then check alignment: recon rows must match cut events.
-        nuclei_to_assess = [comp_conversion[nuclei] for nuclei in
-                            (model_prep.get('assessment_nuclei')
-                             or list(dict.fromkeys(model_prep.get('training_nuclei', 'phof'))))]
-        model_cut = np.isin(ep['comp'], nuclei_to_assess) * model_cut
-        assert len(reconstruction) == np.sum(model_cut), \
-            'Reconstruction/event misalignment: %s on %s' % (model_name, dataset)
+            # Cached cross prediction, else the training-time reconstruction, else predict.
+            cache = os.path.join(reconstructions_folder_path, '%s__%s.npy' % (model_name, dataset))
+            own = model_prep.get('simdata', '')
+            own_file = os.path.join(reconstructions_folder_path, model_name + '.npy')
+            if os.path.exists(cache):
+                reconstruction = np.load(cache)
+            elif os.path.basename(own) == dataset and os.path.exists(own_file):
+                reconstruction = np.load(own_file)
+            else:
+                # Same preparation means the same slabs, so batch these models into
+                # one pass. Seeds change the cut only, not the prepared data.
+                groups.setdefault(_prep_key(model_prep), []).append((model_name, model_cut))
+                continue
+            assert len(reconstruction) == np.sum(model_cut), \
+                'Reconstruction/event misalignment: %s on %s' % (model_name, dataset)
+            reconstructions[(model_name, dataset)] = reconstruction.flatten()
 
-        # Flatten the predictions into a one-dimensional array and save them.
-        reconstruction = reconstruction.flatten()
-        reconstructions[(model_name, dataset)] = reconstruction
+        # One streaming pass per distinct prep, all of its models sharing the slabs.
+        for cut_key, group in groups.items():
+            prep = model_parameters[group[0][0]]
+            fresh = _predict_group(dataset_path, dataset, prep, group, models_folder_path)
+            for model_name, _ in group:
+                cache = os.path.join(reconstructions_folder_path, '%s__%s.npy' % (model_name, dataset))
+                np.save(cache, fresh[model_name])
+                reconstructions[(model_name, dataset)] = fresh[model_name].flatten()
 
-        # Save the model-specific events cut.
-        cuts[(model_name, dataset)] = model_cut
-    return reconstructions, cuts
+    # Keep the model-outer order the notebooks iterate when printing stats.
+    order = [(m, d) for m in model_parameters for d in DATASETS]
+    return ({k: reconstructions[k] for k in order if k in reconstructions},
+            {k: cuts[k] for k in order if k in cuts})
 
 
 def prebuild_onnx(models_folder_path):

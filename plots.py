@@ -1,4 +1,4 @@
-PLOTS_VERSION = 6
+PLOTS_VERSION = 8
 
 # Colour cycle and interaction helpers for the assessment notebooks.
 # Importing this module sets the notebook-wide colour cycle (60 dark, then lights).
@@ -8,15 +8,14 @@ from matplotlib import cycler
 
 plt.rcParams['legend.labelcolor'] = '0.35'
 plt.rcParams['legend.edgecolor'] = '0.35'
+# 72 dpi keeps the plots and their control rows on one screen. Font sizes are in
+# points, so proportions are unchanged; only the raster gets smaller.
+plt.rcParams['figure.dpi'] = 72
 
 
 def _lum(c):
     r, g, b = c[:3]
     return 0.299*r + 0.587*g + 0.114*b
-
-
-def _dark_only(cmap, n):
-    return [cmap(i / max(n - 1, 1)) for i in range(n) if _lum(cmap(i / max(n - 1, 1))) < 0.62]
 
 
 _pool = ([plt.cm.tab20(2*i) for i in range(10)]
@@ -41,19 +40,25 @@ for _c in _cycle:
 plt.rcParams['axes.prop_cycle'] = cycler(color=_dedup)
 
 
-def unique_handles(fig):
-    # One artist per label across all axes; first wins. fig.legend over
-    # multi-axes repeats each label without this.
-    out, seen = [], set()
+def _labelled_artists(fig):
+    # Every labelled artist, grouped by label, across all axes. Subplots that
+    # sit side by side draw one copy of each curve per axes, so a toggle has to
+    # reach all of them, not just the first one it finds.
+    groups = {}
     for ax in fig.axes:
         # mpl 3.11: errorbar labels live on the ErrorbarContainer, its Line2D
         # children are '_nolegend_'. Containers first, then stray labeled lines.
         for a in list(ax.containers) + list(ax.lines) + list(ax.patches):
             lab = a.get_label()
-            if lab and not lab.startswith('_') and lab not in seen:
-                seen.add(lab)
-                out.append(a)
-    return out
+            if lab and not lab.startswith('_'):
+                groups.setdefault(lab, []).append(a)
+    return groups
+
+
+def unique_handles(fig):
+    # One artist per label, first wins. fig.legend over multi-axes repeats each
+    # label without this.
+    return [group[0] for group in _labelled_artists(fig).values()]
 
 
 def _split_label(label):
@@ -75,21 +80,53 @@ def _set_visible(artist, visible):
             _set_visible(part, visible)
 
 
-def make_interactive(fig):
-    '''Adds show/hide controls to a finished figure.
+def _detach_auto_display(fig):
+    # ipympl queues every figure for display at the end of the cell. The control
+    # panel already holds this canvas, so drop the queued copy or the cell
+    # renders a second, static version of the same figure.
+    try:
+        from ipympl.backend_nbagg import _Backend_ipympl
+        _Backend_ipympl._to_show.remove(fig)
+    except (ImportError, AttributeError, ValueError):
+        pass
 
-    Clicking a legend entry toggles that one curve. The buttons above the
-    figure toggle a whole model (one column) or a whole dataset (one row).
-    Both layers apply at once, so a legend hide survives a button filter.'''
-    handles = unique_handles(fig)
-    if not handles:
+
+# Panels built while deferring waits here until show_all() runs.
+_defer = False
+_pending = []
+
+
+def defer(enable=True):
+    '''Hold every interactive panel back until show_all().
+
+    A full notebook run builds a dozen large canvases; rendering each one as its
+    cell finishes floods the widget channel while the next cell is still
+    working. Deferring shows them all at the end instead.'''
+    global _defer
+    _defer = enable
+
+
+def show_all():
+    '''Display every panel built since the last show_all().'''
+    from IPython.display import display
+    while _pending:
+        display(_pending.pop(0))
+
+
+def make_interactive(fig):
+    '''Adds show/hide controls under a figure.
+
+    One button per model (a column) and per dataset (a row), all on at the
+    start. Clicking a button or a legend entry hides that model or dataset in
+    every subplot at once.'''
+    groups = _labelled_artists(fig)
+    if not groups:
         return fig
 
-    labels = [h.get_label() for h in handles]
-    shown = {lab: True for lab in labels}
+    shown = {lab: True for lab in groups}
     hidden = {'model': set(), 'dataset': set()}
     models, datasets = [], []
-    for lab in labels:
+    for lab in groups:
         model, dataset = _split_label(lab)
         if model not in models:
             models.append(model)
@@ -98,14 +135,17 @@ def make_interactive(fig):
 
     buttons = {}
 
+    def is_on(kind, name):
+        return name not in hidden[kind]
+
     def refresh():
-        for h, lab in zip(handles, labels):
+        for lab, artists in groups.items():
             model, dataset = _split_label(lab)
-            _set_visible(h, shown[lab]
-                         and model not in hidden['model']
-                         and dataset not in hidden['dataset'])
+            visible = shown[lab] and is_on('model', model) and is_on('dataset', dataset)
+            for artist in artists:
+                _set_visible(artist, visible)
         for (kind, name), button in buttons.items():
-            button.button_style = 'warning' if name in hidden[kind] else ''
+            button.button_style = 'success' if is_on(kind, name) else ''
         fig.canvas.draw_idle()
 
     def toggle(kind, name):
@@ -130,7 +170,6 @@ def make_interactive(fig):
 
     fig.canvas.mpl_connect('pick_event', on_pick)
 
-    # Buttons live outside the canvas; constrained layout leaves no room inside.
     try:
         import ipywidgets as widgets
         from IPython.display import display
@@ -145,9 +184,20 @@ def make_interactive(fig):
         buttons[(kind, name)] = button
         return button
 
-    model_row = widgets.HBox([make_button('model', m) for m in models])
-    dataset_row = widgets.HBox([make_button('dataset', d) for d in datasets])
-    panel = widgets.VBox([model_row, dataset_row])
+    panel_children = []
+    if isinstance(fig.canvas, widgets.Widget):
+        # ipympl: the canvas is a widget, so it belongs inside the panel and the
+        # buttons can sit directly under it.
+        panel_children.append(fig.canvas)
+    panel_children.append(widgets.HBox([make_button('model', m) for m in models]))
+    panel_children.append(widgets.HBox([make_button('dataset', d) for d in datasets]))
+    panel = widgets.VBox(panel_children)
     fig._controls = panel
-    display(panel)
+    refresh()
+    if len(panel_children) == 3:
+        _detach_auto_display(fig)
+    if _defer:
+        _pending.append(panel)
+    else:
+        display(panel)
     return fig
