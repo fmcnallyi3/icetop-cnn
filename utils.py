@@ -82,11 +82,18 @@ def load_detector_array(filepaths: list[str]) -> np.ndarray:
 
     detector_array = np.empty((num_events,) + detector_shape, dtype=np.float32) # Pre-allocate
 
-    # Replace the garbage pre-allocated data with detector data in-place
+    # Replace the garbage pre-allocated data with detector data in-place.
+    # ponytail: chunked copy - a full np.load() materializes the float64 file (~2x the
+    # float32 result) and blew up 16 GB kernels on snow2018 batches. 100k-event chunks
+    # cap peak at ~1.3 GB over the final array; upgrade to fewer, larger chunks if slow.
     start_idx = 0
     for filepath in filepaths:
-        composition_data = np.load(filepath).astype(np.float32)
-        detector_array[start_idx : (start_idx := start_idx + composition_data.shape[0])] = composition_data
+        composition_data = np.load(filepath, mmap_mode='r')
+        n = composition_data.shape[0]
+        for c0 in range(0, n, 100_000):
+            c1 = min(c0 + 100_000, n)
+            detector_array[start_idx + c0 : start_idx + c1] = composition_data[c0:c1]
+        start_idx += n
 
     return detector_array
 
@@ -154,6 +161,10 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
             except ValueError:
                 # ponytail: object-dtype keys (dir etc) can't mmap; load straight
                 event_parameters[name] = np.load(f, allow_pickle=True)
+        # 4 GB kernel: float64 dirs/energies are plot/cut precision only; f32 halves RSS
+        for name, arr in event_parameters.items():
+            if getattr(arr, 'dtype', None) == np.float64:
+                event_parameters[name] = arr.astype(np.float32)
         return event_parameters
 
     event_parameters = load_event_parameters(event_files)

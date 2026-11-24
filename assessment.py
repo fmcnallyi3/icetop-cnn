@@ -6,9 +6,27 @@ import os
 import subprocess
 
 import numpy as np
-import plots  # sets the notebook-wide color cycle
+try:
+    import plots  # sets the notebook-wide color cycle
+except ImportError:
+    pass
 
 from utils import data_prep, files, get_event_parameters, get_training_assessment_cut, load_detector_array
+
+
+def _iter_slabs(bf, slab_events):
+    # 4 GB kernel cap: np.load(mmap) page-cache reads count against kernel RSS
+    # (~10 GB on snow2018 batches); seek+fromfile reads the same bytes at ~4 GB.
+    with open(bf, 'rb') as fh:
+        ver = np.lib.format.read_magic(fh)
+        shape, fortran, dtype = np.lib.format._read_array_header(fh, ver)
+        off = fh.tell()
+        rowbytes = int(np.prod(shape[1:])) * dtype.itemsize
+        for s0 in range(0, shape[0], slab_events):
+            n = min(slab_events, shape[0] - s0)
+            fh.seek(off + s0 * rowbytes)
+            arr = np.fromfile(fh, dtype=dtype, count=n * int(np.prod(shape[1:])))
+            yield s0, arr.reshape(n, *shape[1:]).astype('float32')
 
 # Map the nuclei string representations to their atomic weights.
 comp_conversion = {'p':1, 'h':4, 'o':16, 'f':56}
@@ -26,7 +44,7 @@ def ensure_h5(models_folder_path, model_name):
     if (not os.path.exists(h5_path)
             or os.path.getmtime(h5_path) < os.path.getmtime(keras_path)):
         code = 'import tensorflow as tf; m = tf.keras.models.load_model(%r); m.save(%r)' % (keras_path, h5_path)
-        subprocess.run(['apptainer', 'exec', '--bind', '/data/user', SIF_PATH, 'python3', '-c', code], check=True)
+        subprocess.run(['/usr/bin/apptainer', 'exec', '--bind', '/data/user', SIF_PATH, 'python3', '-c', code], check=True)
     return h5_path
 
 
@@ -36,6 +54,9 @@ def _ensure_onnx(models_folder_path, model_name):
     onnx = os.path.join(models_folder_path, model_name, model_name + '.onnx')
     if os.path.exists(onnx):
         return onnx
+    # Imported here rather than at module scope so that a run which already has
+    # an .onnx file never pays the TensorFlow import.
+    import tensorflow as tf
     import tf2onnx
     h5 = ensure_h5(models_folder_path, model_name)
     m = tf.keras.models.load_model(h5, compile=False)
@@ -60,7 +81,7 @@ def predict(models_folder_path, model_parameters, model_name, dataset, model=Non
     prep = model_parameters[model_name]
     if model is None:
         model = tf.keras.models.load_model(ensure_h5(models_folder_path, model_name), compile=False)
-    path = dataset if os.path.isabs(dataset) else os.path.join(os.getenv('ICETOP_CNN_DATA_DIR'), 'simdata', dataset)
+    path = dataset if os.path.isabs(dataset) else os.path.join(os.getenv('ICETOP_CNN_DATA_DIR') or '/data/user/jstowers/icetop-cnn', 'simdata', dataset)
     ep = get_event_parameters(path, composition='phof')
     cut = get_training_assessment_cut(ep, 'assessment', prep)
     # Match training-time recons: predict only on the model's assessment nuclei.
@@ -73,23 +94,33 @@ def predict(models_folder_path, model_parameters, model_name, dataset, model=Non
     out, n = [], 0
     print(f'Predicting {model_name} on {dataset}: {len(batch_files)} files...')
     for i, bf in enumerate(batch_files):
-        detector_inputs = {'icetop': load_detector_array([bf])}
-        if infill_files is not None:
-            detector_inputs['infill'] = load_detector_array([infill_files[i]])
-        detector_inputs = data_prep(detector_inputs, prep)
-        file_cut = cut[n:n + len(detector_inputs['icetop'])]
-        if file_cut.any():
-            inputs = [data[file_cut] for data in detector_inputs.values()]
-            if is_ort:
-                out.append(model.run(None, {'icetop': inputs[0]})[0])
-            else:
-                # keras 3 functional models name inputs 'input_1' etc; feed by the
-                # model's own input spec (list for unnamed single input, dict otherwise).
-                names = [t.name for t in model.inputs]
-                feed = dict(zip(names, inputs)) if any(n and not n.isdigit() and n.startswith('input') for n in names) and len(inputs) > 1 else inputs
-                out.append(model.predict(feed, verbose=0))
-            print(f'  {model_name} [{dataset}]: file {i+1}/{len(batch_files)} done', flush=True)
-        n += len(detector_inputs['icetop'])
+        # 4 GB kernel cap - never materialize a batch. mmap slice ->
+        # prep -> predict -> free, 100k slabs (~1 GB transient). 50k if it still OOMs.
+        with open(bf, 'rb') as fh:
+            ver = np.lib.format.read_magic(fh)
+            shape, _, _ = np.lib.format._read_array_header(fh, ver)
+            total = shape[0]
+        file_cut = cut[n:n + total]
+        infill_slabs = _iter_slabs(infill_files[i], 100_000) if infill_files is not None else None
+        k = 0
+        for s0, icetop_slab in _iter_slabs(bf, 100_000):
+            d = {'icetop': icetop_slab}
+            if infill_slabs is not None:
+                _, infill_slab = next(infill_slabs)
+                d['infill'] = infill_slab
+            d = data_prep(d, prep)
+            scut = file_cut[s0:s0 + len(d['icetop'])]
+            if scut.any():
+                inputs = [data[scut] for data in d.values()]
+                if is_ort:
+                    onames = [i.name for i in model.get_inputs()]
+                    out.append(model.run(None, dict(zip(onames, inputs)))[0])
+                else:
+                    names = list(model.get_config()['input_layers'].keys())
+                    out.append(model.predict(dict(zip(names, inputs)), batch_size=4096, verbose=0))
+            k += 1
+        print(f'  {model_name} [{dataset}]: file {i+1}/{len(batch_files)} done', flush=True)
+        n += total
     assert n == len(ep['comp']), 'File/event count mismatch: %s on %s' % (model_name, dataset)
     return np.concatenate(out)
 
@@ -108,6 +139,8 @@ def assess_models(model_parameters, DATASETS, eps, models_folder_path, reconstru
     missing pairs are predicted and cached.'''
     reconstructions, cuts = {}, {}
     cut_cache = {}
+    # ponytail: 1-model LRU - 18 sessions x ~0.2 GB OOMs the 4 GB kernel;
+    # reload per model ~1-2 s. functools.lru_cache needs hashables, dict+del is simpler.
     loaded_models = {}
     for model_name, dataset in [(m, d) for m in model_parameters for d in DATASETS]:
         # Skip models with no saved weights (e.g. still training) instead of
@@ -128,6 +161,7 @@ def assess_models(model_parameters, DATASETS, eps, models_folder_path, reconstru
             reconstruction = np.load(own_file)
         else:
             if model_name not in loaded_models:
+                loaded_models.clear()  # keep <=1 session resident
                 try:
                     loaded_models[model_name] = _ort_session(models_folder_path, model_name)
                 except Exception:
@@ -162,5 +196,19 @@ def assess_models(model_parameters, DATASETS, eps, models_folder_path, reconstru
     return reconstructions, cuts
 
 
+def prebuild_onnx(models_folder_path):
+    '''Converts every model to .onnx in one pass. Run once, offline: after this the
+    notebooks only import onnxruntime (~2 s) and never touch TensorFlow.'''
+    for model_name in sorted(os.listdir(models_folder_path)):
+        if not model_weights_exist(models_folder_path, model_name):
+            continue
+        print('%s -> %s' % (model_name, _ensure_onnx(models_folder_path, model_name)), flush=True)
+
+
 if __name__ == '__main__':
-    print('Imported by the assessment notebooks; nothing to run standalone.')
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'prebuild':
+        prebuild_onnx(sys.argv[2] if len(sys.argv) > 2 else
+                      os.path.join(os.getenv('ICETOP_CNN_DATA_DIR') or '/data/user/jstowers/icetop-cnn', 'models'))
+    else:
+        print('Imported by the assessment notebooks; nothing to run standalone.')
