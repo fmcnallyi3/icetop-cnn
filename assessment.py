@@ -11,22 +11,8 @@ try:
 except ImportError:
     pass
 
-from utils import data_prep, files, get_event_parameters, get_training_assessment_cut, load_detector_array
+from utils import data_prep, files, get_event_parameters, get_training_assessment_cut, iter_slabs, load_detector_array
 
-
-def _iter_slabs(bf, slab_events):
-    # 4 GB kernel cap: np.load(mmap) page-cache reads count against kernel RSS
-    # (~10 GB on snow2018 batches); seek+fromfile reads the same bytes at ~4 GB.
-    with open(bf, 'rb') as fh:
-        ver = np.lib.format.read_magic(fh)
-        shape, fortran, dtype = np.lib.format._read_array_header(fh, ver)
-        off = fh.tell()
-        rowbytes = int(np.prod(shape[1:])) * dtype.itemsize
-        for s0 in range(0, shape[0], slab_events):
-            n = min(slab_events, shape[0] - s0)
-            fh.seek(off + s0 * rowbytes)
-            arr = np.fromfile(fh, dtype=dtype, count=n * int(np.prod(shape[1:])))
-            yield s0, arr.reshape(n, *shape[1:]).astype('float32')
 
 # Map the nuclei string representations to their atomic weights.
 comp_conversion = {'p':1, 'h':4, 'o':16, 'f':56}
@@ -143,8 +129,8 @@ def predict(models_folder_path, model_parameters, model_name, dataset, model=Non
             shape, _, _ = np.lib.format._read_array_header(fh, ver)
             total = shape[0]
         file_cut = cut[n:n + total]
-        infill_slabs = _iter_slabs(infill_files[i], 100_000) if infill_files is not None else None
-        for s0, icetop_slab in _iter_slabs(bf, 100_000):
+        infill_slabs = iter_slabs(infill_files[i], 100_000) if infill_files is not None else None
+        for s0, icetop_slab in iter_slabs(bf, 100_000):
             d = {'icetop': icetop_slab}
             if infill_slabs is not None:
                 _, infill_slab = next(infill_slabs)
@@ -186,8 +172,8 @@ def _predict_group(dataset_path, dataset, prep, group, models_folder_path):
             ver = np.lib.format.read_magic(fh)
             shape, _, _ = np.lib.format._read_array_header(fh, ver)
             total = shape[0]
-        infill_slabs = _iter_slabs(infill_files[i], 100_000) if infill_files is not None else None
-        for s0, icetop_slab in _iter_slabs(bf, 100_000):
+        infill_slabs = iter_slabs(infill_files[i], 100_000) if infill_files is not None else None
+        for s0, icetop_slab in iter_slabs(bf, 100_000):
             d = {'icetop': icetop_slab}
             if infill_slabs is not None:
                 _, infill_slab = next(infill_slabs)

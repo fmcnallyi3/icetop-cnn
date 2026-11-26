@@ -97,6 +97,29 @@ def load_detector_array(filepaths: list[str]) -> np.ndarray:
 
     return detector_array
 
+def iter_slabs(filepath: str, slab_events: int = 100_000, dtype: str | None = 'float32'):
+    '''Yields (start row, slab) for one .npy file without loading it whole.
+
+    A full np.load(mmap) makes the page cache count against kernel RSS (~10 GB
+    on snow2018 batches). Seek and fromfile read the same bytes at ~4 GB.
+
+    dtype casts each slab on the way out. Pass None to keep the file's own
+    dtype, which is what a result must match when it is compared against a
+    whole-file computation.
+    '''
+
+    with open(filepath, 'rb') as fh:
+        version = np.lib.format.read_magic(fh)
+        shape, _, file_dtype = np.lib.format._read_array_header(fh, version)
+        offset = fh.tell()
+        row_bytes = int(np.prod(shape[1:])) * file_dtype.itemsize
+        for start in range(0, shape[0], slab_events):
+            count = min(slab_events, shape[0] - start)
+            fh.seek(offset + start * row_bytes)
+            slab = np.fromfile(fh, dtype=file_dtype, count=count * int(np.prod(shape[1:])))
+            slab = slab.reshape(count, *shape[1:])
+            yield start, slab if dtype is None else slab.astype(dtype)
+
 
 def get_detector_inputs(simdata_folder_path: str, infill: bool, composition: str = 'pf', test: bool = False) -> dict[str, np.ndarray]:
     '''Loads detector inputs of desired composition. Returns a dictionary mapping input names to numpy ndarrays.'''
@@ -168,8 +191,8 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
         return event_parameters
 
     event_parameters = load_event_parameters(event_files)
-    os.makedirs(cache_dir, exist_ok=True)
     try:
+        os.makedirs(cache_dir, exist_ok=True)
         for key, arr in event_parameters.items():
             np.save(os.path.join(cache_dir, key), arr)
     except OSError:

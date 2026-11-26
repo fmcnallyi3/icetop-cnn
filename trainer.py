@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import gc
 import json
 import os
 from glob import glob
@@ -25,7 +26,7 @@ import numpy as np
 import tensorflow as tf
 
 import config as cg
-from utils import data_prep, files, get_event_parameters, load_detector_array, get_preprocessed, get_training_assessment_cut
+from utils import data_prep, files, get_event_parameters, get_training_assessment_cut, iter_slabs
 from model import get_compiled_model
 
 ICETOP_CNN_DIR = os.getenv('ICETOP_CNN_DIR')
@@ -45,6 +46,10 @@ def main():
     # Train the model
     if args.test: print('Training model...')
     model = train_model(model, training_dataset, validation_dataset)
+
+    # The prepared detector cache (several GB) is only needed while training.
+    del training_dataset, validation_dataset
+    gc.collect()
 
     # Assess the model
     if args.test: print('Assessing model...')
@@ -118,15 +123,21 @@ def get_training_datasets():
     print(f'detector cache: {"RAM" if _ram_ok else "streaming"} '
           f'({ _footprint_gb:.1f} GB prepared vs {_slot_gb or "?"} GB slot)')
 
+    def prep_file(filepath, detector_name):
+        '''Prepares one batch file slab by slab, so the float64 array
+        (4.2 GB per file here) never sits whole on top of the cache.
+
+        Slabs keep the file dtype: data_prep in float32 rounds twice and gives
+        a different float16 cache than the whole-file path.'''
+        slabs = [data_prep({detector_name: slab}, cg.PREP)[detector_name].astype('float16')
+                 for _, slab in iter_slabs(filepath, 50_000, dtype=None)]
+        return np.concatenate(slabs)
+
     detector_mmaps = None
     if _ram_ok:
-        # Mmap during prep - full float64 loads once pooled ~18 GB of
-        # freed-but-unreturned glibc arena; mmap reads sequentially and frees.
-        detector_mmaps = {
-            'icetop': [data_prep({'icetop': np.load(bf, mmap_mode='r')}, cg.PREP)['icetop'].astype('float16') for bf in batch_files],
-        }
+        detector_mmaps = {'icetop': [prep_file(bf, 'icetop') for bf in batch_files]}
         if infill_files:
-            detector_mmaps['infill'] = [data_prep({'infill': np.load(bf, mmap_mode='r')}, cg.PREP)['infill'].astype('float16') for bf in infill_files]
+            detector_mmaps['infill'] = [prep_file(bf, 'infill') for bf in infill_files]
 
     # Optional reco input (zenith) comes from parameters, already in RAM
     reco_inputs = {}
@@ -155,12 +166,9 @@ def get_training_datasets():
                 if infill_files:
                     parts['infill'].append(detector_mmaps['infill'][fi][local].astype('float32'))
             else:
-                raw = np.load(batch_files[fi], mmap_mode='r')
-                prep = data_prep({'icetop': raw}, cg.PREP)['icetop'].astype('float32')
-                parts['icetop'].append(prep[local])
+                parts['icetop'].append(prep_file(batch_files[fi], 'icetop')[local].astype('float32'))
                 if infill_files:
-                    draw = np.load(infill_files[fi], mmap_mode='r')
-                    parts['infill'].append(data_prep({'infill': draw}, cg.PREP)['infill'].astype('float32')[local])
+                    parts['infill'].append(prep_file(infill_files[fi], 'infill')[local].astype('float32'))
 
         out = {name: np.concatenate(pl)[back] for name, pl in parts.items() if pl}
         out.update({name: arr[rows] for name, arr in reco_inputs.items()})
@@ -195,42 +203,6 @@ def get_training_datasets():
         tf.data.Dataset.from_generator(training_gen, output_signature=sig).prefetch(2),
         tf.data.Dataset.from_generator(validation_gen, output_signature=sig),
     ), input_shapes
-
-
-def get_datasets(composition, mode, test=False):
-    '''Loads and prepares simulation data from files'''
-    
-    # Load detector inputs and event parameters
-    simdata_folder_path = args.simdata
-    detector_data, event_parameters = get_preprocessed(simdata_folder_path, cg.PREP['infill'], composition=composition, test=test)
-
-    # Get training/assessment cut
-    training_assessment_cut = get_training_assessment_cut(event_parameters, mode, cg.PREP)
-
-    # Apply cuts
-    detector_data = {
-        detector_name: data[training_assessment_cut] for detector_name, data in detector_data.items()
-    }
-    event_parameters = {
-        key: val[training_assessment_cut] for key, val in event_parameters.items()
-    }
-    
-    # Prepare simulation data
-    model_inputs = data_prep(detector_data, cg.PREP)
-    
-    # Add reconstruction data if it is used
-    # TODO: Isolate into its own thing? Should not go in data_prep, that is designed for detector data
-    if cg.PREP['reco']:
-        assert f'{cg.PREP["reco"]}_dir' in event_parameters, f"Invalid reco choice, received {cg.PREP['reco']}"
-        # Get and compute the zenith angle
-        zenith = np.pi - event_parameters[f"{cg.PREP['reco']}_dir"].transpose()[0].astype('float32')
-        # Normalize if specified
-        if cg.PREP['normed']:
-            zenith /= np.amax(zenith)
-        # Add zenith to model inputs
-        model_inputs[cg.PREP['reco']] = zenith
-    
-    return model_inputs, event_parameters
 
 
 def create_or_restore_model(input_shapes):
@@ -295,26 +267,32 @@ def train_model(model, training_dataset, validation_dataset):
     return model
 
 
-def assess_model(model: tf.keras.Model, assess_comp: str = 'phof'):
-    '''Assesses the model once it has finished training'''
+def assess_model(model: tf.keras.Model):
+    '''Assesses the model once it has finished training.
 
-    # Load data used for training/testing in its entirety
-    model_inputs, _ = get_datasets(assess_comp, 'assessment')
+    Streams the dataset one slab at a time. Loading it whole needs ~45 GB of
+    float64 detector data, which gets the job held for exceeding slot memory.
+    '''
+    import assessment
 
-    # Assess the model
-    reconstructions = model.predict(list(model_inputs.values()))
+    reconstructions = assessment.predict(
+        os.path.join(ICETOP_CNN_DATA_DIR, 'models'),
+        {args.model_name: cg.PREP}, args.model_name, args.simdata, model=model
+    )
 
     # Save the reconstruction(s)
     for i, prediction in enumerate(args.predict):
-        if not os.path.exists(os.path.join(ICETOP_CNN_DATA_DIR, 'reconstructions', prediction)):
-            os.makedirs(os.path.join(ICETOP_CNN_DATA_DIR, 'reconstructions', prediction))
+        prediction_folder = os.path.join(ICETOP_CNN_DATA_DIR, 'reconstructions', prediction)
+        if not os.path.exists(prediction_folder):
+            os.makedirs(prediction_folder)
         np.save(
-            os.path.join(ICETOP_CNN_DATA_DIR, 'reconstructions', prediction, f'{args.model_name}.npy'),
+            os.path.join(prediction_folder, f'{args.model_name}.npy'),
             reconstructions if len(args.predict) == 1 else reconstructions[i]
         )
-    
+
     # Create loss graphs
     os.system(f'python loss_grapher.py {args.model_name}')
+
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(

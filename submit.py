@@ -61,7 +61,7 @@ def main(args):
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
         f'arguments = "{" ".join(sys.argv[1:])}"',
         f'environment = "PATH=/usr/bin:/bin ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR} TF_FORCE_GPU_ALLOW_GROWTH=true SLOT_GB={max(8, int((_ram_gb + 7) // 4 * 4))}"',
-        f'transfer_input_files = config.py,loss_grapher.py,model.py,utils.py',
+        f'transfer_input_files = assessment.py,config.py,loss_grapher.py,model.py,utils.py',
         'getenv = True',
         '',
 
