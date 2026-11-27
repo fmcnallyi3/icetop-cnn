@@ -91,6 +91,14 @@ Under the hood, `sim-maker.py` groups files by simulation set, splits them into 
 
 By default, the converter skips existing outputs so you can safely re-run interrupted jobs unless you pass `--overwrite`.
 
+## Traing a model on extracted data 
+
+To train a model on the extracted dataset, you must take advatatage of the `-d` or `--dataset` flag in `submit.py`.
+
+`-d` accepts the name of the dataset, and resolves to your default `ICETOP_CNN_DATA_DIR` path in your venv.
+
+`--dataset` accepts the absolute path to any converted dataset path.
+
 ## File reference
 
 | File | What it does |
