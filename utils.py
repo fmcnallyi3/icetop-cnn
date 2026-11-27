@@ -73,6 +73,12 @@ def load_detector_array(filepaths: list[str]) -> np.ndarray:
     # space for the detector array. The entire sequence takes a fraction of
     # a second to compute, so we don't have to hard-code the length, which
     # may (will) change during the course of the project.
+    if not filepaths:
+        raise ValueError('load_detector_array received an empty filepaths list.')
+
+    if not filepaths:
+        raise ValueError('load_detector_array received an empty filepaths list.')
+
     num_events = 0
     for filepath in filepaths:
         composition_data = np.load(filepath, mmap_mode='r')
@@ -110,7 +116,8 @@ def iter_slabs(filepath: str, slab_events: int = 100_000, dtype: str | None = 'f
 
     with open(filepath, 'rb') as fh:
         version = np.lib.format.read_magic(fh)
-        shape, _, file_dtype = np.lib.format._read_array_header(fh, version)
+        shape, fortran_order, file_dtype = np.lib.format._read_array_header(fh, version)
+        assert not fortran_order, f'Fortran-ordered .npy files are not supported by iter_slabs: {filepath}'
         offset = fh.tell()
         row_bytes = int(np.prod(shape[1:])) * file_dtype.itemsize
         for start in range(0, shape[0], slab_events):
@@ -191,6 +198,9 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
         return event_parameters
 
     event_parameters = load_event_parameters(event_files)
+    for name, arr in event_parameters.items():
+        if getattr(arr, 'dtype', None) == np.float64:
+            event_parameters[name] = arr.astype(np.float32)
     try:
         os.makedirs(cache_dir, exist_ok=True)
         for key, arr in event_parameters.items():
@@ -252,21 +262,25 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 
         if prep['clc']:
             # Want locations of maximum charge pulses
+            out = np.empty(array.shape[:-1] + (4,), dtype=array.dtype)
             tank1mask = array[..., 0] > array[..., 1]
             tank2mask = array[..., 2] > array[..., 3]
-            
-            # Create channels from locations of maximum charge pulses
-            q1 = np.where(tank1mask, array[..., 0], array[..., 1])
-            q2 = np.where(tank2mask, array[..., 2], array[..., 3])
-            t1 = np.where(tank1mask, array[..., 4], array[..., 5])
-            t2 = np.where(tank2mask, array[..., 6], array[..., 7])
 
-            # Return new array with merged tank layers
-            return np.stack((q1, q2, t1, t2), axis=-1)
+            # Populate preallocated output in-place to avoid intermediate array copies
+            out[..., 0] = array[..., 1]
+            np.copyto(out[..., 0], array[..., 0], where=tank1mask)
+            out[..., 1] = array[..., 3]
+            np.copyto(out[..., 1], array[..., 2], where=tank2mask)
+            out[..., 2] = array[..., 5]
+            np.copyto(out[..., 2], array[..., 4], where=tank1mask)
+            out[..., 3] = array[..., 7]
+            np.copyto(out[..., 3], array[..., 6], where=tank2mask)
+
+            return out
 
         else:
-            # Return every other layer excluding soft local coincidences
-            return array[..., ::2]
+            # Return an independent copy excluding soft local coincidences
+            return array[..., ::2].copy()
         
     def merge_qt_layers(array: np.ndarray) -> np.ndarray:
         '''Merges charge and time values. Options are: None, False, "mean", "sum", "product", "min", or "max"'''
@@ -366,8 +380,9 @@ def data_prep(detector_inputs: dict[str, np.ndarray], prep: dict[str, Any]):
 
         if prep['t'] == False or not prep['t_shift']: return array
 
-        # Subtract nonzero mimimum time from all nonzero times across all time layers
-        array[..., layer_slices['time']][array[..., layer_slices['time']].astype(bool)] -= minimums['time']
+        # Subtract nonzero minimum time from all nonzero times across all time layers
+        t = array[..., layer_slices['time']]
+        np.subtract(t, minimums['time'], out=t, where=(t != 0))
 
         return array
 
@@ -445,12 +460,12 @@ def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: s
     if mode is None:
         return np.full(num_events, True)
 
-    # Create the same randomized cut each time
+    # Create the same randomized cut each time without mutating global numpy RNG state
     # Seed is arbitrary - what's important is that it's set and never changed
-    np.random.seed(1148)
+    rng = np.random.RandomState(1148)
 
     # Create training cut
-    cut = np.random.rand(num_events) > ASSESSMENT_SPLIT
+    cut = rng.rand(num_events) > ASSESSMENT_SPLIT
     # Assessment cut is the complement of the training cut
     if mode == 'assessment':
         cut = np.logical_not(cut)
@@ -470,7 +485,8 @@ def get_training_assessment_cut(event_parameters: dict[str, np.ndarray], mode: s
 def get_cuts(data_cut: np.ndarray, event_parameters: dict[str, np.ndarray], cut_str: str):
     '''Returns a cut for reconstructed parameter and a cut for true parameter'''
     available_cuts = {'Uncut', 'Uncontained', 'Quality'}
-    assert cut_str.title() in available_cuts, f'Bad cut! Options are {available_cuts}'
+    cut_str = cut_str.title()
+    assert cut_str in available_cuts, f'Bad cut! Options are {available_cuts}'
 
     # No Cut
     if cut_str == 'Uncut':

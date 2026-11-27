@@ -7,6 +7,8 @@ import numpy as np
 import sys
 from glob import glob
 
+import utils
+
 ERROR_ENVIRONMENT_NOT_ACTIVATED = 'Virtual environment not activated. Activate with the command "icetop-cnn"'
 ERROR_ARCHITECTURE_NOT_FOUND = f'Model architecture not found in "architectures" folder. Please check for typos.'
 ERROR_MODEL_ALREADY_FOUND = 'Model folder already found with this name, but it is incomplete.\n'\
@@ -39,7 +41,7 @@ def main(args):
     # Check if the user is okay overwriting files if a new model is being trained
     if new_model and not ok_to_overwrite_files(args): return
 
-    assert os.path.exists(f'architectures/{args.model_design}.py'), ERROR_ARCHITECTURE_NOT_FOUND
+    assert os.path.exists(os.path.join(ICETOP_CNN_DIR, 'architectures', f'{args.model_design}.py')), ERROR_ARCHITECTURE_NOT_FOUND
 
     # Create model folder
     os.makedirs(os.path.join(ICETOP_CNN_DATA_DIR, 'models', args.model_name), exist_ok=True)
@@ -49,7 +51,13 @@ def main(args):
         if not args.epochs or args.epochs > 10:
             print('Defaulting to 10 epochs...')
             args.epochs = 10
-        command = f'python trainer.py -c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} {("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design} -d {args.simdata}'
+        seed_arg = f' --seed {args.seed}' if args.seed is not None else ''
+        command = (
+            f'{sys.executable} {os.path.join(ICETOP_CNN_DIR, "trainer.py")} '
+            f'-c {args.composition} -p {" ".join(args.predict)} -e {args.epochs} '
+            f'{("-r", "-o")[new_model]} -t -n {args.model_name} -m {args.model_design} '
+            f'-d {args.simdata}{seed_arg}'
+        )
         print('Starting training...')
         return os.system(command)
     
@@ -59,9 +67,8 @@ def main(args):
     lines = [
         f'executable = {os.path.join(ICETOP_CNN_DIR, "trainer.py")}',
         f'arguments = "{" ".join(sys.argv[1:])}"',
-        f'environment = "PATH=/usr/bin:/bin ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR} TF_FORCE_GPU_ALLOW_GROWTH=true SLOT_GB={max(8, int((_ram_gb + 7) // 4 * 4))}"',
-        f'transfer_input_files = assessment.py,config.py,loss_grapher.py,model.py,utils.py',
-        'getenv = True',
+        f'environment = "PATH=/usr/bin:/bin ICETOP_CNN_DIR={ICETOP_CNN_DIR} ICETOP_CNN_DATA_DIR={ICETOP_CNN_DATA_DIR} ICETOP_CNN_SCRATCH_DIR={ICETOP_CNN_SCRATCH_DIR} TF_FORCE_GPU_ALLOW_GROWTH=true SLOT_GB={_slots}"',
+        f'transfer_input_files = assessment.py,config.py,loss_grapher.py,model.py,utils.py,architectures/{args.model_design}.py',
         '',
 
         f'log = {os.path.join("condor", "logs", f"{args.model_name}.log")}',
@@ -76,7 +83,7 @@ def main(args):
         'when_to_transfer_output = ON_EXIT',
         f'initialdir = {ICETOP_CNN_DIR}',
         '',
-        f'request_memory = {max(8, int((_ram_gb + 7) // 4 * 4))}G',
+        f'request_memory = {_slots}G',
         'request_gpus = 1',
         '',
         # Old cards only: the TF/cuDNN stack cannot initialize on compute capability >= 8.0
@@ -118,7 +125,7 @@ def ok_to_overwrite_files(args):
         # Data files
         glob(os.path.join('*', '*', f'{args.model_name}.*'), root_dir=ICETOP_CNN_DATA_DIR) +
         # Submission files
-        glob(os.path.join('condor', '*', f'{args.model_name}.*')) + 
+        glob(os.path.join('condor', '*', f'{args.model_name}.*'), root_dir=ICETOP_CNN_DIR) + 
         # Log file
         glob(os.path.join(LOGS_DIR, f'{args.model_name}.log'))
     )
@@ -225,12 +232,24 @@ if __name__ == '__main__':
     # 8-channel raw (~6.4 kB/event), data_prep merges to float32 4-channel
     # (~1.6 kB/event kept in RAM), plus ~5 GB TF/model/dataloader overhead.
     # Epoch time measured 1-2 min on GTX 1080-class GPUs for 6M events.
-    _n_events = sum(
-        len(np.load(f, allow_pickle=True).item()['energy'])
-        for f in __import__('glob').glob(os.path.join(args.simdata, 'event_parameters', '*.npy'))
-    )
+    if not all(c in 'phof' for c in args.composition):
+        p.error('Unrecognized composition dataset combination requested')
+    args.composition = ''.join(sorted(args.composition, key=lambda c: list('phof').index(c)))
+
+    # Ensure epochs are a valid number
+    if args.epochs and args.epochs <= 0:
+        p.error('Epochs must be a positive value')
+
+    def _npy_row_count(filepath):
+        with open(filepath, 'rb') as fh:
+            ver = np.lib.format.read_magic(fh)
+            shape, _, _ = np.lib.format._read_array_header(fh, ver)
+            return shape[0]
+
+    _icetop_files = utils.files(args.simdata, 'icetop', composition=args.composition, test=args.test)
+    _n_events = sum(_npy_row_count(f) for f in _icetop_files)
     _ram_gb = _n_events * 800 / 1e9 + 5  # fp16 cache
-    _slots = (int(_ram_gb // 20) + 1) * 20
+    _slots = max(8, int((_ram_gb + 7) // 4 * 4))
     if _slots > 20:
         print(f'NOTE: estimated RAM {_ram_gb:.0f} GB exceeds the largest slot (20 GB).')
         print('      Trainer preps per file and gathers per batch; it will still run,')
@@ -241,11 +260,5 @@ if __name__ == '__main__':
     print(f'          ~{_secs_per_epoch/60:.0f} min/epoch x up to {_epochs} epochs')
     _tot = _secs_per_epoch * _epochs / 3600
     print(f'          worst case ~{_tot:.1f} h; early stopping usually cuts this by 2-4x')
-    if not all(c in 'phof' for c in args.composition):
-        p.error('Unrecognized composition dataset combination requested')
-     
-    # Ensure epochs are a valid number
-    if args.epochs and args.epochs <= 0:
-        p.error('Epochs must be a positive value')
     
     main(args)

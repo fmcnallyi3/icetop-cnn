@@ -12,6 +12,7 @@ icerec/V05-01-06
 """
 
 import argparse
+import math
 from pathlib import Path
 
 import numpy as np
@@ -21,7 +22,7 @@ from icecube.icetray import I3Tray
 from icecube.frame_object_diff.segments import uncompress as _uncompress_segment
 
 
-def uncompress(tray, name):
+def uncompress(tray, name, files=None):
     # Newer productions (IC86.2018+) ship full geometry frames instead of
     # I3GeometryDiff; the stock uncompress segment KeyErrors on them. Detect
     # the layout from the first file and only add the segment when needed.
@@ -30,19 +31,19 @@ def uncompress(tray, name):
     needs_diff = False
     # peek: the GCD file and/or the first data file may carry geometry diffs
     # (Level3_*_GCD files are diff-only); if EITHER does, uncompress must run
-    import sys
-    try:
-        gcd = sys.argv[sys.argv.index('-g') + 1]
-    except ValueError:
-        gcd = None
-    for f in ([gcd] if gcd else []) + [sys.argv[sys.argv.index('-f') + 1].split()[0]]:
+    for f in (files or []):
         peek = dataio.I3File(f)
-        while peek.more():
-            fr = peek.pop_frame()
-            if fr.Stop == I3Frame.Geometry:
-                if 'I3GeometryDiff' in fr:
-                    needs_diff = True
-                break
+        try:
+            while peek.more():
+                fr = peek.pop_frame()
+                if fr.Stop == I3Frame.Geometry:
+                    if 'I3GeometryDiff' in fr:
+                        needs_diff = True
+                    break
+        finally:
+            if hasattr(peek, 'close'):
+                peek.close()
+            del peek
         if needs_diff:
             break
     if needs_diff:
@@ -58,7 +59,7 @@ def get_omkey(om):
 def find_max_q(om, pulses):
     max_q, max_idx = float('-inf'), None
     for i, pulse in enumerate(pulses):
-        if pulse.charge > max_q and np.isfinite(pulse.charge) and np.isfinite(pulse.time):
+        if pulse.charge > max_q and math.isfinite(pulse.charge) and math.isfinite(pulse.time):
             max_q, max_idx = pulse.charge, i
     return max_idx
 
@@ -148,8 +149,8 @@ class extraction(icetray.I3ConditionalModule):
                     tankx[omstr] = tank.position.x
                     tanky[omstr] = tank.position.y
 
-        self.gain += [gain]
-        self.position += [tankx, tanky]
+        self.gain[:] = [gain]
+        self.position[:] = [tankx, tanky]
         self.PushFrame(frame)
 
 
@@ -162,9 +163,11 @@ class extraction(icetray.I3ConditionalModule):
             return
 
         data = [[{}, {}], [{}, {}]]
-        slc = next((k for k in ('OfflineIceTopSLCTankPulses', 'OfflineIceTopSLCVEMPulses') if k in frame.keys()), None)
+        slc = next((k for k in ('OfflineIceTopSLCTankPulses', 'OfflineIceTopSLCVEMPulses') if k in frame), None)
         pulse_frames = ['OfflineIceTopHLCTankPulses', slc]
         for i, (data_pair, pulse_frame) in enumerate(zip(data, pulse_frames)):
+            if pulse_frame is None or pulse_frame not in frame:
+                continue
             pulse_map = frame[pulse_frame]
             for om, pulses in pulse_map.items():
                 pulse_max_index = find_max_q(om, pulses)
@@ -194,7 +197,7 @@ class extraction(icetray.I3ConditionalModule):
         self.direction += [[primary.dir.theta, primary.dir.phi]]
 
         plane_reco = [None, None]
-        if 'ShowerPlane' in frame.keys():
+        if 'ShowerPlane' in frame:
             planeFit = frame['ShowerPlane']
             if planeFit.fit_status.name == 'OK':
                 plane_reco = [planeFit.dir.theta, planeFit.dir.phi]
@@ -202,14 +205,14 @@ class extraction(icetray.I3ConditionalModule):
 
         lap_reco = [None, None]
         small_reco = [None, None]
-        if 'Laputop' in frame.keys():
+        if 'Laputop' in frame:
             laputopFit = frame['Laputop']
             check = laputopFit.fit_status.name == 'OK'
             if check:
                 lap_reco = [laputopFit.dir.theta, laputopFit.dir.phi]
             # Additionally extract small shower reco if Laputop fails
-            smallFit = laputopFit if check else frame['LaputopSmall']
-            if smallFit.fit_status.name == 'OK':
+            smallFit = laputopFit if check else (frame['LaputopSmall'] if 'LaputopSmall' in frame else None)
+            if smallFit is not None and smallFit.fit_status.name == 'OK':
                 small_reco = [smallFit.dir.theta, smallFit.dir.phi]
         self.laputop_dir.append(lap_reco)
         self.small_dir.append(small_reco)
@@ -221,12 +224,12 @@ class extraction(icetray.I3ConditionalModule):
             self.passed_STA5 += [frame['QFilterMask'][sta5].condition_passed]
         else:
             self.passed_STA5 += [sta3 is not None and frame['QFilterMask'][sta3].condition_passed]
-        if 'IT73AnalysisIceTopQualityCuts' in frame.keys():
+        if 'IT73AnalysisIceTopQualityCuts' in frame:
             cuts = frame['IT73AnalysisIceTopQualityCuts']
             self.uncontained_cut += [cuts['IceTop_StandardFilter'] and not cuts['IceTopMaxSignalInside']]
         else:
             self.uncontained_cut += [sta3 is not None and frame['QFilterMask'][sta3].condition_passed]
-        if 'IT73AnalysisIceTopQualityCuts' in frame.keys() and 'Laputop' in frame.keys():
+        if 'IT73AnalysisIceTopQualityCuts' in frame and 'Laputop' in frame:
             self.quality_cut += [all(frame['IT73AnalysisIceTopQualityCuts'].values()) and np.pi - frame['Laputop'].dir.theta <= 40 * np.pi/180]
         else:
             self.quality_cut += [sta3 is not None and frame['QFilterMask'][sta3].condition_passed]
@@ -246,13 +249,26 @@ if __name__ == "__main__":
     parser.add_argument('-g', '--gcd', dest='gcdFile', 
         default=default_gcd)
     parser.add_argument('-f', '--files', dest='files', nargs='*',
-        default=[default_file],
+        default=None,
         help='List of input files to run over')
+    parser.add_argument('--file-list', dest='file_list', type=str,
+        default=None,
+        help='Path to file containing newline-separated input .i3 files')
     parser.add_argument('-o', '--out', dest='out',
         help='Output file name')
     args = parser.parse_args()
 
-    args.files.insert(0, args.gcdFile) 
+    data_files = []
+    if args.file_list:
+        with open(args.file_list) as fh:
+            data_files.extend(line.strip() for line in fh if line.strip())
+    if args.files:
+        data_files.extend(args.files)
+    if not data_files:
+        data_files = [default_file]
+
+    probe_files = ([args.gcdFile] if args.gcdFile else []) + [data_files[0]]
+    all_files = ([args.gcdFile] if args.gcdFile else []) + data_files
 
     kwargs = ['position', 'gain', # Detector parameters
               'charge_HLC', 'charge_SLC', 'time_HLC', 'time_SLC', # DOM data
@@ -264,8 +280,8 @@ if __name__ == "__main__":
     data = {k:[] for k in kwargs}
 
     tray = I3Tray()
-    tray.AddModule('I3Reader','reader', FileNameList=args.files)
-    tray.AddSegment(uncompress, 'uncompress')
+    tray.AddModule('I3Reader','reader', FileNameList=all_files)
+    tray.AddSegment(uncompress, 'uncompress', files=probe_files)
     tray.AddModule(extraction, **data)
     tray.Execute()
 

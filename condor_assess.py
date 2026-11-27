@@ -7,44 +7,41 @@ Cell usage (before the assess_models call):
     reconstructions, cuts = assess_models(model_parameters, DATASETS, eps,
                                           MODELS_FOLDER_PATH, RECONSTRUCTIONS_FOLDER_PATH)
 
-The first call submits one condor job per cold pair (they run in parallel), then
-BLOCKS on condor_wait until every cluster terminates - the cell returning IS the
-notification. The second call loads everything from cache (fast).
-
-One condor cluster per pair; condor_wait polls the shared event log per pair.
+Submits one condor job per cold (dataset, prep) group (they run in parallel and
+stream each dataset once for all models in that group), then BLOCKS on
+condor_wait until every cluster terminates. The second call loads caches (fast).
 """
 import getpass
 import json
 import os
 import re
 import subprocess
-import time
 
 import numpy as np
 
 SUBMIT_HOST = 'npx-submitter'
 ROOT = os.getenv('ICETOP_CNN_DIR') or os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR') or f'/data/user/{getpass.getuser()}/icetop-cnn'
 _SCRATCH = os.getenv('ICETOP_CNN_SCRATCH_DIR') or f'/scratch/{getpass.getuser()}/icetop-cnn'
 LOG_DIR = os.path.join(_SCRATCH, 'assess')
 
-_SUB = '''Universe   = container
+_SUB = """Universe   = container
 Executable = {root}/condor_shard.py
-Arguments  = {model} {dataset} {models} {recon}
-Log        = {logdir}/{model}__{dataset}.condor.log
-Output     = {model}__{dataset}.out
-Error      = {model}__{dataset}.err
+Arguments  = {dataset} {models} {recon} {model_args}
+Log        = {log}
+Output     = condor/assess/{tag}.out
+Error      = condor/assess/{tag}.err
 container_image = /data/user/fmcnally/icetop-cnn/tf.sif
-environment = "PATH=/usr/bin:/bin ICETOP_CNN_DATA_DIR=/data/user/jstowers/icetop-cnn"
-getenv = True
+environment = "PATH=/usr/bin:/bin ICETOP_CNN_DATA_DIR={datadir}"
 initialdir = {root}
-transfer_input_files = assessment.py,utils.py,condor_shard.py,condor/assess/assess_params.json,condor/assess/assess_{dataset}_ep.npz
+transfer_input_files = {transfer_files}
 request_memory = 8G
 request_cpus = 2
 requirements = HasSingularity
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 Queue 1
-'''
+"""
 
 
 def _ssh(cmd, timeout=120):
@@ -56,9 +53,13 @@ def _ssh(cmd, timeout=120):
     return r.stdout
 
 
+def _dataset_tag(dataset):
+    return os.path.basename(dataset.rstrip('/')) or 'dataset'
+
+
 def assess_on_condor(model_parameters, DATASETS, eps, models_folder_path,
                      reconstructions_folder_path):
-    from assessment import model_weights_exist
+    from assessment import _dataset_path, _prep_key, model_weights_exist
 
     cold = [(m, d) for m in model_parameters for d in DATASETS
             if not os.path.exists(os.path.join(reconstructions_folder_path,
@@ -71,41 +72,97 @@ def assess_on_condor(model_parameters, DATASETS, eps, models_folder_path,
     _rt = os.path.join(ROOT, 'condor', 'assess')
     os.makedirs(_rt, exist_ok=True)
 
-    # Stage the shared inputs in initialdir (root on the submit host):
-    params = {m: model_parameters[m] for m, _ in cold}
-    with open(os.path.join(_rt, 'assess_params.json'), 'w') as f:
-        json.dump(params, f)
-    for d in sorted({d for _, d in cold}):
-        np.savez(os.path.join(_rt, 'assess_%s_ep.npz' % d), **eps[d])
+    # Clean stale shard stdout/stderr files at staging so failures never show old logs.
+    for fname in os.listdir(_rt):
+        if fname.endswith(('.out', '.err')):
+            os.remove(os.path.join(_rt, fname))
 
-    clusters = {}
+    # Group cold pairs by (dataset, _prep_key) so each shard streams the dataset once
+    # across all matching models (e.g. multiple seeds).
+    groups = {}
     for m, d in cold:
-        sub = os.path.join(_rt, 'assess_%s__%s.sub' % (m, d))
-        with open(sub, 'w') as f:
-            f.write(_SUB.format(root=ROOT, model=m, dataset=d,
-                                models=models_folder_path,
-                                recon=reconstructions_folder_path,
-                                logdir=LOG_DIR))
-        out = _ssh('condor_submit %s' % sub)
-        cid = re.findall(r'\d{6,}', out)[-1]
-        clusters[(m, d)] = cid
-        print('  submitted %s on %s: cluster %s' % (m, d, cid), flush=True)
+        groups.setdefault((d, _prep_key(model_parameters[m])), []).append(m)
 
-    for (m, d), cid in clusters.items():
-        log = '%s/%s__%s.condor.log' % (LOG_DIR, m, d)
-        while True:
-            try:
-                out = _ssh('condor_wait %s' % log, timeout=3600)
-            except subprocess.TimeoutExpired:
-                continue  # pair still running past the ssh window; re-attach
-            if 'All jobs' in out:
-                break
-            time.sleep(15)
-        cache = os.path.join(reconstructions_folder_path, '%s__%s.npy' % (m, d))
-        if os.path.exists(cache):
-            print('  %s on %s: cached (cluster %s)' % (m, d, cid), flush=True)
-        else:
-            err = _ssh('strings %s/%s__%s.err | tail -8' % (ROOT, m, d))
-            raise RuntimeError('shard %s on %s finished without a cache:\n%s'
-                               % (m, d, err))
+    staged_files = []
+    params_file = os.path.join(_rt, 'assess_params.json')
+    params = {m: model_parameters[m] for m, _ in cold}
+    with open(params_file, 'w') as f:
+        json.dump(params, f)
+    staged_files.append(params_file)
+
+    # Avoid writing/transferring huge ep npz files when /data/user is directly readable
+    # inside the container; stage ep npz only when the dataset is not on /data/user.
+    ep_staged = {}
+    for d in sorted({d for d, _ in groups}):
+        ds_path = _dataset_path(d)
+        on_data_user = os.path.abspath(ds_path).startswith('/data/user/') and os.path.isdir(
+            os.path.join(ds_path, 'event_parameters'))
+        if not on_data_user:
+            ds_tag = _dataset_tag(d)
+            npz_path = os.path.join(_rt, 'assess_%s_ep.npz' % ds_tag)
+            np.savez(npz_path, **eps[d])
+            ep_staged[d] = 'condor/assess/assess_%s_ep.npz' % ds_tag
+            staged_files.append(npz_path)
+
+    try:
+        clusters = []
+        for idx, ((d, _pkey), shard_models) in enumerate(groups.items()):
+            tag = '%s_g%d' % (_dataset_tag(d), idx)
+            log = '%s/%s.condor.log' % (LOG_DIR, tag)
+            _ssh('mkdir -p %s && rm -f %s' % (LOG_DIR, log))
+            transfer = ['assessment.py', 'utils.py', 'condor_shard.py', 'condor/assess/assess_params.json']
+            if d in ep_staged:
+                transfer.append(ep_staged[d])
+            sub = os.path.join(_rt, 'assess_%s.sub' % tag)
+            with open(sub, 'w') as f:
+                f.write(_SUB.format(
+                    root=ROOT,
+                    dataset=d,
+                    models=models_folder_path,
+                    recon=reconstructions_folder_path,
+                    model_args=' '.join(shard_models),
+                    log=log,
+                    tag=tag,
+                    datadir=_DATA_DIR,
+                    transfer_files=','.join(transfer),
+                ))
+            staged_files.append(sub)
+            out = _ssh('condor_submit %s' % sub)
+            m_cid = re.search(r'submitted to cluster (\d+)', out)
+            if not m_cid:
+                raise RuntimeError('Unexpected condor_submit output: %s' % out.strip())
+            cid = m_cid.group(1)
+            clusters.append((tag, d, shard_models, log, cid))
+            print('  submitted %d model(s) on %s: cluster %s' % (len(shard_models), d, cid), flush=True)
+
+        for tag, d, shard_models, log, cid in clusters:
+            while True:
+                r = subprocess.run(
+                    ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+                     SUBMIT_HOST, 'condor_wait -wait 60 %s' % log],
+                    capture_output=True, text=True, timeout=120)
+                if r.returncode == 0 and 'All jobs' in r.stdout:
+                    break
+                q = _ssh('condor_q %s -af JobStatus HoldReason' % cid)
+                for line in q.splitlines():
+                    parts = line.split(None, 1)
+                    if parts and parts[0] == '5':
+                        reason = parts[1] if len(parts) > 1 else 'unknown'
+                        raise RuntimeError('shard %s on %s (cluster %s) held: %s' % (tag, d, cid, reason))
+                if r.returncode not in (0, 1):
+                    raise RuntimeError('condor_wait failed for %s: %s' % (tag, r.stderr.strip()))
+
+            missing = [
+                m for m in shard_models
+                if not os.path.exists(os.path.join(reconstructions_folder_path, '%s__%s.npy' % (m, d)))
+            ]
+            if missing:
+                err = _ssh('strings %s/condor/assess/%s.err | tail -12' % (ROOT, tag))
+                raise RuntimeError('shard %s on %s finished without caches for %s:\n%s'
+                                   % (tag, d, missing, err))
+            print('  %s (%d model(s)): cached (cluster %s)' % (d, len(shard_models), cid), flush=True)
+    finally:
+        for path in staged_files:
+            if os.path.exists(path):
+                os.remove(path)
     print('assessment complete - assess_models now loads warm caches')

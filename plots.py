@@ -1,4 +1,5 @@
 PLOTS_VERSION = 8
+LEGEND_COLUMNS = 4
 
 # Colour cycle and interaction helpers for the assessment notebooks.
 # Importing this module sets the notebook-wide colour cycle (60 dark, then lights).
@@ -185,16 +186,18 @@ def make_interactive(fig):
         return button
 
     panel_children = []
-    if isinstance(fig.canvas, widgets.Widget):
+    is_widget = isinstance(fig.canvas, widgets.Widget)
+    if is_widget:
         # ipympl: the canvas is a widget, so it belongs inside the panel and the
         # buttons can sit directly under it.
         panel_children.append(fig.canvas)
     panel_children.append(widgets.HBox([make_button('model', m) for m in models]))
-    panel_children.append(widgets.HBox([make_button('dataset', d) for d in datasets]))
+    if datasets:
+        panel_children.append(widgets.HBox([make_button('dataset', d) for d in datasets]))
     panel = widgets.VBox(panel_children)
     fig._controls = panel
     refresh()
-    if len(panel_children) == 3:
+    if is_widget:
         _detach_auto_display(fig)
     if _defer:
         _pending.append(panel)

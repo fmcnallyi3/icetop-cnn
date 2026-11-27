@@ -6,6 +6,8 @@ import os
 
 import tensorflow as tf
 
+import config as cg
+
 def get_compiled_model(input_shapes, model_name, model_design, prep, predictions):
     
     # Converts scalars to a shape of size 1
@@ -14,8 +16,12 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
     # Create dictionary of input tensors
     inputs = {input_name: tf.keras.layers.Input(shape=shape) for input_name, shape in input_shapes.items()}
 
-    # Import desired model architecture
-    spec = importlib.util.spec_from_file_location(model_design, f'{os.getenv("ICETOP_CNN_DIR")}/architectures/{model_design}.py')
+    # Import desired model architecture (check repo path, then condor sandbox CWD)
+    icetop_dir = os.getenv("ICETOP_CNN_DIR") or os.path.dirname(os.path.abspath(__file__))
+    arch_path = os.path.join(icetop_dir, "architectures", f"{model_design}.py")
+    if not os.path.exists(arch_path):
+        arch_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"{model_design}.py")
+    spec = importlib.util.spec_from_file_location(model_design, arch_path)
     arch = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(arch)
 
@@ -37,7 +43,7 @@ def get_compiled_model(input_shapes, model_name, model_design, prep, predictions
         'energy': [None]
     }
     model.compile( # Compile model
-        optimizer=tf.keras.optimizers.Adam(),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=cg.INITIAL_LR),
         loss={prediction: loss_functions[prediction] for prediction in predictions},
         metrics={prediction: metrics[prediction] for prediction in predictions}
     )

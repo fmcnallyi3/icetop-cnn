@@ -25,7 +25,7 @@ REG_ACTIVATION = 'relu'       # 'relu' forces non-negative regression; 'linear' 
 #Model Architecture 
 def get_architecture(inputs, prep):
     # Convolutional feature extractor
-    conv1 = tf.keras.layers.BatchNormalization()(inputs)
+    conv1 = tf.keras.layers.BatchNormalization()(inputs['icetop'])
     conv1 = tf.keras.layers.Conv2D(
         CONV1_FILTERS,
         kernel_size=KERNEL_SIZE,
@@ -42,11 +42,18 @@ def get_architecture(inputs, prep):
         data_format='channels_last'
     )(conv1)
 
-    # Flatten and concatenate CNN features with prep input
-    dense_input = tf.keras.layers.Concatenate()([
-        tf.keras.layers.Flatten()(conv1),
-        tf.keras.layers.Flatten()(prep)
-    ])
+    # Flatten and concatenate CNN features with optional infill / reco inputs
+    dense_input = tf.keras.layers.Flatten()(conv1)
+    if prep['infill']:
+        dense_input = tf.keras.layers.Concatenate()([
+            dense_input,
+            tf.keras.layers.Flatten()(inputs['infill'])
+        ])
+    if prep['reco']:
+        dense_input = tf.keras.layers.Concatenate()([
+            dense_input,
+            tf.keras.layers.Flatten()(inputs[prep['reco']])
+        ])
     dense_input = tf.keras.layers.BatchNormalization()(dense_input)
 
     # Dense layers

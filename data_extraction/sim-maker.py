@@ -6,6 +6,7 @@ import os
 import getpass
 from glob import glob
 import subprocess
+import shlex
 import stat, random
 from pathlib import Path
 
@@ -13,16 +14,17 @@ from pysubmit import pysubmit
 
 def simset_of(path):
     # simset dir: '12360_v1' in the regular trees, bare '20144' in NewL3_MC
-    return next((pt.split('_')[0] for pt in reversed(Path(path).parts)
+    return next((pt.split('_')[0] for pt in reversed(Path(path).parent.parts)
                  if pt.split('_')[0].isdigit()), None)
 
 def main(args):
-    gcd_path = Path(args.gcd_path) if args.gcd_path else None
-    file_path = Path(args.inp_path.lstrip())
+    gcd_path = Path(args.gcd_path.lstrip()) if args.gcd_path else None
+    file_path = Path(args.inp_path.lstrip()) if args.inp_path else None
 
     #Create the output folder and parse the sim name
-    Path(args.out_dir.lstrip()).mkdir(parents=True, exist_ok=True)
-    sim_name = args.out_dir.lstrip()[args.out_dir.lstrip().rfind('/')+1:]
+    out_dir = args.out_dir.lstrip().rstrip('/')
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    sim_name = os.path.basename(out_dir)
     
     #Path to extractor
     exe = f'/home/{getpass.getuser()}/icetop-cnn/data_extraction/sim-extractor.py'
@@ -88,18 +90,26 @@ def main(args):
                     continue
             if args.test:
                 batch = batch[:5]
-            batched_files = ' '.join(batch)            
+            execs_dir = Path('./condor/npx4-execs').resolve()
+            execs_dir.mkdir(parents=True, exist_ok=True)
+            manifest_file = execs_dir / f'filelist_{sim_name}_{simset}_{i:03}_{os.getpid()}_{random.randint(0, 999999):06d}.txt'
+            manifest_file.write_text('\n'.join(batch) + '\n')
+
             # Weak spot fix: include the sim set ID so batches from different
             # primaries in one extraction cannot overwrite each other.
-            out_file = f'{args.out_dir}/sim_{sim_name}_{simset}_{i:03}.npy'
-
+            # Put --mc/--test tags before _{simset}_{i:03} so sim-converter's
+            # split('_')[-2] still parses simset and rsplit('_', 1)[-1] gets batch.
+            tags = []
+            batch_exe = exe
             if args.mc:
-                exe = exe.replace('extractor', 'mc_extractor')
-                out_file = out_file.replace('.npy', '_mc.npy')
+                batch_exe = exe.replace('sim-extractor.py', 'sim-mc_extractor.py')
+                tags.append('mc')
             if args.test:
-                out_file = out_file.replace('.npy','_test.npy')
+                tags.append('test')
+            tag_str = ('_' + '_'.join(tags)) if tags else ''
+            out_file = f'{out_dir}/sim_{sim_name}{tag_str}_{simset}_{i:03}.npy'
 
-            exelines = f'{exe} -g {gcd} -f {batched_files} -o {out_file}'
+            exelines = f'{batch_exe} -g {shlex.quote(gcd)} --file-list {shlex.quote(str(manifest_file))} -o {shlex.quote(out_file)}'
             
             pysubmit(exelines, outdir=f'./condor', test=args.test,
                       sublines=['request_memory = 12 GB'])

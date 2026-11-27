@@ -237,7 +237,7 @@ queue
 """)
     log = condor_dir / f"npx4-logs/{conv_id}.watch.log"
     log.parent.mkdir(parents=True, exist_ok=True)
-    watcher = condor_dir / f"convert-watch-{outPath.name}.sh"
+    watcher = condor_dir / f"convert-watch-{outPath.name}-{conv_id}.sh"
     watcher.write_text("#!/bin/bash\n" + "".join(
         f"condor_wait {condor_dir}/npx4-logs/{j}.log "
         f"|| {{ echo 'WAIT FAILED {j}' >> {log}; exit 1; }}\n" for j in job_ids)
@@ -297,7 +297,8 @@ def main(args):
         GCD_path = os.path.join('/', 'data', 'ana', 'CosmicRay', 'IceTop_level3', 'sim', 'IC86.2012','GCD', 'Level3_12360_GCD.i3.gz')
 
         #Run sim-maker.py
-        subprocess.run([f"{os.getcwd()}/./sim-maker.py", f"-g {GCD_path}", f"-i {data_path}", f"-o {outPath}", "--test"])
+        subprocess.run([os.path.join(os.path.dirname(os.path.abspath(__file__)), "sim-maker.py"),
+                        "-g", GCD_path, "-i", data_path, "-o", str(outPath), "--test"])
     else:
         data_path = os.path.join('/','data', 'ana', 'CosmicRay', 'IceTop_level3', 'sim')
         compFlags = {"p": "proton", "He": "helium", "O": "oxygen", "Fe": "iron"}
@@ -333,8 +334,6 @@ def main(args):
             except Back:
                 print("Backed out - start over.")
                 continue
-            except AllRest:
-                pass  # _autoall flag set; loop replans with every pick auto-answered
 
 
             if(not plan):

@@ -105,7 +105,7 @@ def pysubmit(executable, jobID=None, outdir=None,
             lines.insert(-1, f'{l}\n')
 
     # Submission script for condor
-    condor_script = f'{outdir}/2sub.sub'
+    condor_script = f'{outdir}/{jobID}.sub'
     with open(condor_script, 'w') as f:
         f.writelines(lines)
 
