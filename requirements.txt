@@ -1,0 +1,10 @@
+tensorflow==2.16.1
+keras==3.3.3
+numpy==1.26.4
+h5py==3.11.0
+onnx==1.16.2
+onnxruntime==1.32.0
+tf2onnx==1.16.1
+matplotlib==3.11.2
+ipympl==0.10.0
+ipywidgets==8.1.9

@@ -145,7 +145,7 @@ For an introduction to machine learning, be sure to check out the folder labeled
 
 For help on getting started with the project, see our [User Guide](https://github.com/fmcnallyi3/icetop-cnn/wiki/User-Guide).
 
-For using the data-extraction pipeline, view the dedicated [Extraction Guide](https://github.com/fmcnallyi3/icetop-cnn/blob/jstowers/data_extraction/EXTRACTION_GUIDE.md)
+For using the data-extraction pipeline, view the dedicated [Extraction Guide](data_extraction/EXTRACTION_GUIDE.md)
 
 ## Known Issues (WIP)
 This section is a work and progress and may be expanded as issues arise.\

@@ -13,6 +13,7 @@ notification. The second call loads everything from cache (fast).
 
 One condor cluster per pair; condor_wait polls the shared event log per pair.
 """
+import getpass
 import json
 import os
 import re
@@ -22,8 +23,9 @@ import time
 import numpy as np
 
 SUBMIT_HOST = 'npx-submitter'
-ROOT = '/home/jstowers/icetop-cnn'
-LOG_DIR = '/scratch/jstowers/icetop-cnn/assess'
+ROOT = os.getenv('ICETOP_CNN_DIR') or os.path.dirname(os.path.abspath(__file__))
+_SCRATCH = os.getenv('ICETOP_CNN_SCRATCH_DIR') or f'/scratch/{getpass.getuser()}/icetop-cnn'
+LOG_DIR = os.path.join(_SCRATCH, 'assess')
 
 _SUB = '''Universe   = container
 Executable = {root}/condor_shard.py

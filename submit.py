@@ -23,7 +23,6 @@ venv_path = os.path.join(ICETOP_CNN_DIR, '.venv')
 assert os.getenv('VIRTUAL_ENV'), ERROR_ENVIRONMENT_NOT_ACTIVATED
 
 
-#NOTE: THIS CODE IS USELESS BUT IM TOO SCARED TO REMOVE IT
 ICETOP_CNN_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR') or f'/data/user/{os.environ.get("USER", getpass.getuser())}/icetop-cnn'
 ICETOP_CNN_SCRATCH_DIR = os.getenv('ICETOP_CNN_SCRATCH_DIR') or f'/scratch/{getpass.getuser()}/icetop-cnn'
 LOGS_DIR = os.path.join(ICETOP_CNN_SCRATCH_DIR, 'condor', 'logs')
@@ -65,9 +64,8 @@ def main(args):
         'getenv = True',
         '',
 
-        #THIS WAS THE LINE I CHANGED TO GAIN ACCESS TO THE LOGS IN THE VE
         f'log = {os.path.join("condor", "logs", f"{args.model_name}.log")}',
-    
+
         f'output = {os.path.join("condor", "output", f"{args.model_name}.out")}',
         f'error = {os.path.join("condor", "errors", f"{args.model_name }.err")}',
         'notification = never',

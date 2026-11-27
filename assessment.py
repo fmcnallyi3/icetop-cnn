@@ -2,6 +2,7 @@
 # Loads or generates reconstructions for every (model, dataset) pair.
 # Called by the assessment notebooks; cache-checking happens here.
 
+import getpass
 import os
 import subprocess
 
@@ -20,6 +21,7 @@ comp_conversion = {'p':1, 'h':4, 'o':16, 'f':56}
 # Training container image. The venv's keras cannot load container-era .keras files,
 # so each model is converted to .h5 once, inside the container.
 SIF_PATH = '/data/user/fmcnally/icetop-cnn/tf.sif'
+_DATA_DIR = os.getenv('ICETOP_CNN_DATA_DIR') or f'/data/user/{getpass.getuser()}/icetop-cnn'
 
 
 def ensure_h5(models_folder_path, model_name):
@@ -86,7 +88,7 @@ def _run_model(model, inputs):
 def _dataset_path(dataset):
     if os.path.isabs(dataset):
         return dataset
-    return os.path.join(os.getenv('ICETOP_CNN_DATA_DIR') or '/data/user/jstowers/icetop-cnn',
+    return os.path.join(_DATA_DIR,
                         'simdata', dataset)
 
 
@@ -271,6 +273,6 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == 'prebuild':
         prebuild_onnx(sys.argv[2] if len(sys.argv) > 2 else
-                      os.path.join(os.getenv('ICETOP_CNN_DATA_DIR') or '/data/user/jstowers/icetop-cnn', 'models'))
+                      os.path.join(_DATA_DIR, 'models'))
     else:
         print('Imported by the assessment notebooks; nothing to run standalone.')
