@@ -7,11 +7,11 @@ import json
 import argparse
 import subprocess
 import math
+import random
 import re
 from pathlib import Path
 import sys as _sys
 _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pysubmit import pysubmit
 
 """
 TO DO:
@@ -172,6 +172,12 @@ def convert_mem_gb(n_files):
     gb = events * CONVERT_KB_PER_EVENT / 1e6  # kB -> GB
     return max(12, math.ceil(gb / 4) * 4)
 
+def converter_python():
+    # Condor jobs get no login env; the converter needs the venv numpy, and the
+    # venv is what every working converter job has used.
+    venv = f"/data/user/{getpass.getuser()}/.venv/bin/python"
+    return venv if os.path.exists(venv) else sys.executable
+
 def run_plan(plan, args):
     # rough condor job estimate: one job per ~20000 files; ceph find takes a moment
     _roots = " ".join(f"'{cmd[cmd.index('-i') + 1]}'" for cmd in plan)
@@ -182,37 +188,68 @@ def run_plan(plan, args):
     print(f"\n{len(plan)} extractions planned (~{_jobs} condor jobs from ~{_n_files} files):")
     for cmd in plan:
         print(" ", " ".join(cmd))
-    clusters = []
+    job_ids = []
     if(args.dryrun):
         print(f"\nConverter would request {convert_mem_gb(_n_files)} GB, "
-              f"depending on the extractor clusters.")
-        return clusters, _n_files
+              f"submitted by a watcher once every extractor job exits.")
+        return job_ids, _n_files
     if(input("Run them? [y/N] ").strip().lower() != "y"):
-        return clusters, _n_files
+        return job_ids, _n_files
     for cmd in plan:
-        # Capture so the cluster ids can be parsed; sim-maker prints them.
+        # Capture so the per-job ids can be parsed; pysubmit prints one per batch.
         out = subprocess.run(cmd, capture_output=True, text=True)
         sys.stdout.write(out.stdout)
         sys.stderr.write(out.stderr)
-        clusters += re.findall(r"submitted to cluster (\d+)", out.stdout)
-    return clusters, _n_files
+        job_ids += re.findall(r"npx4-\d{6}", out.stdout)
+    return job_ids, _n_files
 
-def submit_convert(outPath, clusters, n_files):
-    # The converter must not start before extraction finishes. Queue order alone
-    # does not guarantee that (it raced 21 h ahead on 2026-11-19), so make the
-    # ordering explicit with a condor dependency on every extractor cluster.
-    if(not clusters):
-        print("No extractor cluster ids captured; NOT submitting the converter.")
+def submit_convert(outPath, job_ids, n_files):
+    # A plain submit file cannot depend on another cluster (DAGMan is the
+    # supported way, and sim-maker submits its own jobs), and queue order alone
+    # let the converter race 21 h ahead of the extraction on 2026-11-19. So a
+    # detached watcher condor_waits each extractor log, then submits the job.
+    if(not job_ids):
+        print("No extractor job ids captured; NOT submitting the converter.")
         print(f"Run it yourself once the queue drains: "
-              f"{sys.executable} {__file__.replace('sim-wrapper', 'sim-converter')} -s {outPath}")
+              f"{converter_python()} {os.path.dirname(os.path.abspath(__file__))}"
+              f"/sim-converter.py -s {outPath}")
         return
+    # sim-maker submits with outdir='./condor', so mirror that exact location.
+    condor_dir = Path.cwd().resolve() / "condor"
     mem = convert_mem_gb(n_files)
-    conv_exe = f"{sys.executable} {os.path.dirname(os.path.abspath(__file__))}/sim-converter.py -s {outPath}"
-    pysubmit(conv_exe, outdir=f"/home/{getpass.getuser()}/icetop-cnn/data_extraction/condor",
-             sublines=[f'request_memory = {mem} GB',
-                       'dependencies = ' + " ".join(clusters)])
-    print(f"Converter queued behind {len(clusters)} extractor cluster(s) "
-          f"({', '.join(clusters)}), {mem} GB.")
+    conv_id = f"npx4-{random.randint(0, 999999):06d}"
+    exe = condor_dir / "npx4-execs" / f"{conv_id}.sh"
+    exe.parent.mkdir(parents=True, exist_ok=True)
+    exe.write_text("#!/bin/bash\n"
+                   f"{converter_python()} {os.path.dirname(os.path.abspath(__file__))}"
+                   f"/sim-converter.py -s {outPath}\n")
+    exe.chmod(0o755)
+    sub = condor_dir / f"{conv_id}.sub"
+    sub.write_text(f"""universe = vanilla
+getenv = True
+executable = {exe}
+log = {condor_dir}/npx4-logs/{conv_id}.log
+output = {condor_dir}/npx4-out/{conv_id}.out
+error = {condor_dir}/npx4-error/{conv_id}.error
+notification = never
+request_memory = {mem} GB
+queue
+""")
+    log = condor_dir / f"npx4-logs/{conv_id}.watch.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    watcher = condor_dir / f"convert-watch-{outPath.name}.sh"
+    watcher.write_text("#!/bin/bash\n" + "".join(
+        f"condor_wait {condor_dir}/npx4-logs/{j}.log "
+        f"|| {{ echo 'WAIT FAILED {j}' >> {log}; exit 1; }}\n" for j in job_ids)
+        + f"condor_submit {sub} >> {log} 2>&1\n"
+        + f"echo \"converter {conv_id} submitted $(date)\" >> {log}\n")
+    watcher.chmod(0o755)
+    with open(log, "a") as fh:
+        subprocess.Popen(["setsid", "bash", str(watcher)],
+                         stdout=fh, stderr=fh, start_new_session=True)
+    print(f"Watcher armed on {len(job_ids)} extractor job(s); converter {conv_id} "
+          f"({mem} GB) submits when they exit. Progress: {log}")
+
 
 def main(args):
     outPath = defineOutput()
@@ -247,12 +284,12 @@ def main(args):
         if(not plan):
             print("No extractable high-energy sets found.")
             return
-        clusters, n_files = run_plan(plan, args)
+        job_ids, n_files = run_plan(plan, args)
         if(args.convert == True):
-            submit_convert(outPath, clusters, n_files)
+            submit_convert(outPath, job_ids, n_files)
         return
 
-    clusters, n_files = [], 0
+    job_ids, n_files = [], 0
     if(args.test == True):
         print("Testing mode enabled, running on the default path of .../IC86.2012/oldstructure/12360/")
         
@@ -303,13 +340,13 @@ def main(args):
             if(not plan):
                 print("Nothing selected.")
                 continue
-            clusters, n_files = run_plan(plan, args)
+            job_ids, n_files = run_plan(plan, args)
             break
 
-    #Run sim-converter on the cluster once extraction finishes: one condor job
-    #that DEPENDS on every extractor cluster, so it cannot start early.
+    #Run sim-converter on the cluster once extraction finishes: a watcher waits
+    #on every extractor job, then submits it. Queue order alone is not enough.
     if(args.convert == True):
-        submit_convert(outPath, clusters, n_files)
+        submit_convert(outPath, job_ids, n_files)
     
 if __name__ == "__main__":
     p = argparse.ArgumentParser(
