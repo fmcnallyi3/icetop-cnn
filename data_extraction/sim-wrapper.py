@@ -6,6 +6,8 @@ import getpass
 import json
 import argparse
 import subprocess
+import math
+import re
 from pathlib import Path
 import sys as _sys
 _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -153,30 +155,65 @@ def defineOutput():
         if(len(new_folder) == 0):
             break
         else:
-            out_dir = Path(f"/data/user/{getpass.getuser()}/sim/{new_folder}")
+            out_dir = Path(f"/data/user/{getpass.getuser()}/icetop-cnn/sim/{new_folder}")
     return out_dir
     
+# Converter sizing, calibrated 2026-11-26: one raw npy peaks at ~17.8 kB/event
+# RSS (measured 19.3 GB for 1,086,241 events from a 1.97 GB file). Rounded to
+# 20 kB for headroom. sim-maker caps a batch at -n 20000 i3 files, and a batch
+# yields at least 55 events per file (1.09M events in 20000 files = 54.3), so
+# peak RAM depends on the batch, not on dataset size.
+CONVERT_KB_PER_EVENT = 20
+EVENTS_PER_I3 = 55
+BATCH_FILES = 20000
+
+def convert_mem_gb(n_files):
+    events = min(n_files or BATCH_FILES, BATCH_FILES) * EVENTS_PER_I3
+    gb = events * CONVERT_KB_PER_EVENT / 1e6  # kB -> GB
+    return max(12, math.ceil(gb / 4) * 4)
+
 def run_plan(plan, args):
     # rough condor job estimate: one job per ~20000 files; ceph find takes a moment
     _roots = " ".join(f"'{cmd[cmd.index('-i') + 1]}'" for cmd in plan)
     _n_files = int(subprocess.run(
         f"find {_roots} -type f ! -type l 2>/dev/null | wc -l",
         shell=True, capture_output=True, text=True).stdout.strip() or 0)
-    _jobs = max(1, -(-_n_files // 20000))
+    _jobs = max(1, -(-_n_files // BATCH_FILES))
     print(f"\n{len(plan)} extractions planned (~{_jobs} condor jobs from ~{_n_files} files):")
     for cmd in plan:
         print(" ", " ".join(cmd))
-    if(args.dryrun or input("Run them? [y/N] ").strip().lower() == "y"):
-        for cmd in plan:
-            if(not args.dryrun):
-                subprocess.run(cmd)
+    clusters = []
+    if(args.dryrun):
+        print(f"\nConverter would request {convert_mem_gb(_n_files)} GB, "
+              f"depending on the extractor clusters.")
+        return clusters, _n_files
+    if(input("Run them? [y/N] ").strip().lower() != "y"):
+        return clusters, _n_files
+    for cmd in plan:
+        # Capture so the cluster ids can be parsed; sim-maker prints them.
+        out = subprocess.run(cmd, capture_output=True, text=True)
+        sys.stdout.write(out.stdout)
+        sys.stderr.write(out.stderr)
+        clusters += re.findall(r"submitted to cluster (\d+)", out.stdout)
+    return clusters, _n_files
 
-def submit_convert(outPath):
-    _user = getpass.getuser()
-    conv_exe = f"/home/{_user}/icetop-cnn/data_extraction/sim-converter.py -s {outPath}"
-    pysubmit(conv_exe, outdir=f"/home/{_user}/icetop-cnn/data_extraction/condor",
-             sublines=['request_memory = 12 GB'])
-    print("Converter queued as a condor job; it runs after all extractor jobs finish.")
+def submit_convert(outPath, clusters, n_files):
+    # The converter must not start before extraction finishes. Queue order alone
+    # does not guarantee that (it raced 21 h ahead on 2026-11-19), so make the
+    # ordering explicit with a condor dependency on every extractor cluster.
+    if(not clusters):
+        print("No extractor cluster ids captured; NOT submitting the converter.")
+        print(f"Run it yourself once the queue drains: "
+              f"{sys.executable} {__file__.replace('sim-wrapper', 'sim-converter')} -s {outPath}")
+        return
+    mem = convert_mem_gb(n_files)
+    conv_exe = f"{sys.executable} {os.path.dirname(os.path.abspath(__file__))}/sim-converter.py -s {outPath}"
+    pysubmit(conv_exe, outdir=f"/home/{getpass.getuser()}/icetop-cnn/data_extraction/condor",
+             sublines=[f'request_memory = {mem} GB',
+                       'dependencies = ' + " ".join(clusters)])
+    print(f"Converter queued behind {len(clusters)} extractor cluster(s) "
+          f"({', '.join(clusters)}), {mem} GB.")
+
 def main(args):
     outPath = defineOutput()
     
@@ -210,11 +247,12 @@ def main(args):
         if(not plan):
             print("No extractable high-energy sets found.")
             return
-        run_plan(plan, args)
+        clusters, n_files = run_plan(plan, args)
         if(args.convert == True):
-            submit_convert(outPath)
+            submit_convert(outPath, clusters, n_files)
         return
 
+    clusters, n_files = [], 0
     if(args.test == True):
         print("Testing mode enabled, running on the default path of .../IC86.2012/oldstructure/12360/")
         
@@ -265,13 +303,13 @@ def main(args):
             if(not plan):
                 print("Nothing selected.")
                 continue
-            run_plan(plan, args)
+            clusters, n_files = run_plan(plan, args)
             break
 
-    #Run sim-converter on the cluster once extraction finishes: one condor job,
-    #submitted last, so it naturally queues after every extractor job.
+    #Run sim-converter on the cluster once extraction finishes: one condor job
+    #that DEPENDS on every extractor cluster, so it cannot start early.
     if(args.convert == True):
-        submit_convert(outPath)
+        submit_convert(outPath, clusters, n_files)
     
 if __name__ == "__main__":
     p = argparse.ArgumentParser(
