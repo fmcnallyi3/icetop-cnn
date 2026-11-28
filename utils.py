@@ -201,6 +201,12 @@ def get_event_parameters(simdata_folder_path: str, composition: str = 'pf', test
     for name, arr in event_parameters.items():
         if getattr(arr, 'dtype', None) == np.float64:
             event_parameters[name] = arr.astype(np.float32)
+        elif getattr(arr, 'dtype', None) == object and name.endswith('_dir'):
+            # Object-dtype dir arrays cannot mmap and unpickle into Python lists,
+            # which costs ~10x RAM on every notebook load. [None, None] -> NaN.
+            event_parameters[name] = np.asarray(
+                [[np.nan, np.nan] if (r is None or r[0] is None) else r for r in arr],
+                dtype=np.float32)
     try:
         os.makedirs(cache_dir, exist_ok=True)
         for key, arr in event_parameters.items():
